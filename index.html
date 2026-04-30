@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-<title>🎮 런치롤탐 리더보드 2024-2026</title>
+<title>런치롤탐 리더보드 2024-2026</title>
 <style>
 html{font-size:18px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -122,7 +122,7 @@ function calcCompScores(data){var kdas=data.map(function(p){return p.kda;});var 
 function pCSV(t){var ls=t.split('\n'),res=[];for(var i=0;i<ls.length;i++){var r=[],c='',q=false,l=ls[i];for(var j=0;j<l.length;j++){var x=l[j];if(x==='"'){q=!q;}else if(x===','&&!q){r.push(c.trim());c='';}else{c+=x;}}r.push(c.trim());res.push(r);}return res;}
 function p26(csv){var rows=pCSV(csv),PC=[4,14,24,34,44,54,64,74,84,94,104,114],EX=['탑내커','또벅초','쪼비'];var r7=rows[7],r8=rows[8],r9=rows[9],r10=rows[10],r11=rows[11],r12=rows[12],r14=rows[14],r34=rows[34],r35=rows[35],r37=rows[37];return PC.map(function(c){var n=r7[c]||'';if(!n||EX.includes(n))return null;return{name:n,games:+r9[c]||0,kda:+r10[c]||0,wins:+r11[c]||0,losses:+r11[c+2]||0,winRate:+(r12[c]||'0').replace('%','')||0,score:+r14[c]||0,dpm:+r34[c]||0,gpm:+r35[c]||0,compScore:+r37[c]||0,tier:TM[n]||'',k:+r8[c]||0,a:+r8[c+2]||0};}).filter(Boolean);}
 function kC(k){return k>=3.5?'#a78bfa':k>=2.5?'#4ade80':k>=2?'#60a5fa':'#94a3b8';}
-function at(t){return '<span class="at tier-'+t.toLowerCase()+'">'+t+'</span>';}
+function at(t){return '<span class="at tier-'+t.toLowerCase()+'" data-tip-id="grade-'+t.toLowerCase()+'" style="cursor:pointer">'+t+'</span>';}
 function tb(tier){var m={'다이아':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'다이아':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return '<span class="b '+c[tier]+'">'+m[tier]+'</span>';}
 function wr(p,w,l){var col=p>=55?'#4ade80':p>=50?'#60a5fa':'#f87171';return '<div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(p,100)+'%;background:'+col+'"></div></div><span>'+p.toFixed(1)+'%</span><small>'+w+'W/'+l+'L</small></div>';}
 function pod(arr,k,fmt){if(!arr||arr.length<3)return '';var s=[...arr].sort(function(a,b){return b[k]-a[k];});return '<div class="podium"><div class="pod p2"><div class="pn2">2nd</div><div class="pm">'+s[1].name+'</div><div class="pv">'+fmt(s[1][k])+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div><div class="pm">'+s[0].name+'</div><div class="pv">'+fmt(s[0][k])+'</div></div><div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+s[2].name+'</div><div class="pv">'+fmt(s[2][k])+'</div></div></div>';}
