@@ -91,7 +91,7 @@ td.rk{color:#94a3b8;font-weight:700}td.nm{text-align:left;font-weight:600}td.cs{
 .acc-header:hover{border-color:#818cf8}
 .acc-header.open{border-radius:10px 10px 0 0;border-color:#818cf8}
 .acc-preview{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;margin-right:8px}
-.acc-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(129,140,248,.12);color:#94a3b8;border:1px solid #334155;width:122px;box-sizing:border-box;overflow:hidden}
+.acc-chip{display:inline-flex;align-items:center;gap:5px;padding:16px 8px 5px 8px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(129,140,248,.12);color:#94a3b8;border:1px solid #334155;width:136px;box-sizing:border-box;overflow:hidden;position:relative}
 .acc-chip.hot{color:#f1f5f9;border-color:#818cf8}.acc-chip-name{line-height:1.3}.acc-chip-wr{font-size:.65rem}
 .acc-arrow{font-size:.75rem;color:#64748b;flex-shrink:0}
 .acc-body{display:none;border:1px solid #818cf8;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;margin-bottom:14px}
@@ -229,10 +229,10 @@ function renderChampPage(champData){
       var wrCol=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
       var rankCol=ri===0?'#fbbf24':ri===1?'#94a3b8':'#cd7f32';
       return'<span class="acc-chip hot">'
-        +'<span style="font-size:.65rem;font-weight:900;color:'+rankCol+';flex-shrink:0;min-width:16px">'+rankLabels[ri]+'</span>'
+        +'<span style="position:absolute;top:3px;left:5px;font-size:.62rem;font-weight:900;color:'+rankCol+';line-height:1">'+rankLabels[ri]+'</span>'
         +champIcon(d.ch,22)
         +'<span class="acc-chip-name"><span style="display:block">'+d.ch+'</span>'
-        +'<span class="acc-chip-wr" style="color:'+wrCol+'">'+d.picks+'픽 · '+d.wr+'%</span></span></span>';
+        +'<span class="acc-chip-wr" style="color:'+wrCol+'">'+d.picks+'픽·'+d.wr+'%</span></span></span>';
     }).join('');
     // 헤더
     html+='<div class="acc-header" onclick="toggleAcc(\''+uid+'\')" id="hd-'+uid+'">';
