@@ -205,7 +205,7 @@ function parseLogCSV(csv){
     var cols=line.split(',').map(function(v){return v.replace(/^"|"$/g,'').trim();});
     var first=cols[0];
     if(first.indexOf('## CHAMPION_STATS')===0){section='champ';return;}
-    if(first.indexOf('## AWARDS')===0){section='awards';return;}
+    if(first.indexOf('## AWARDS')===0){section='awards';return;}if(first.indexOf('## UPDATED')===0){section=null;return;}
     if(first==='선수'||first==='')return;
     if(section==='champ'&&cols.length>=6){
       var p=first,ch=cols[1],picks=+cols[2],wins=+cols[3],losses=+cols[4],wr=+cols[5];
