@@ -207,6 +207,7 @@ function renderAwardsPage(awardsData){
       +'<div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+arr[2].name+'</div><div class="pv" style="color:'+color+'">'+arr[2][key]+'</div></div>'
       +'</div></div>';
   }
+  var desc='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #fbbf24"><div style="font-size:.72rem;color:#94a3b8">👑 MOM</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">승리를 견인한 MVP</div></div><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #818cf8"><div style="font-size:.72rem;color:#94a3b8">⭐ 스페셜</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">가장 돋보인 활약</div></div><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #f472b6"><div style="font-size:.72rem;color:#94a3b8">💪 투혼상</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">비운의 에이스</div></div></div>';
   var pods='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">'
     +podAward(byMom,'mom','👑 MOM 누적 순위','#fbbf24')
     +podAward(bySpc,'special','⭐ 스페셜 누적 순위','#818cf8')
@@ -225,24 +226,7 @@ function renderAwardsPage(awardsData){
   var tbl='<table class="t"><thead><tr><th>#</th><th>소환사</th>'
     +'<th>👑 MOM</th><th>⭐ 스페셜</th><th>💪 투혼상</th><th>합계</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table>';
-  return pods+tbl;
-}
-function renderChampPlayerBtns(champData,active){
-  return ALL.map(function(p){
-    return'<button class="yb2'+(p===active?' act':'')+'" data-pl="'+p+'">'+p+'</button>';
-  }).join('');
-}
-function initChampPage(champData){
-  var activePlayer=ALL[0];
-  document.getElementById('champ-player-btns').innerHTML=renderChampPlayerBtns(champData,activePlayer);
-  document.getElementById('champ-inner').innerHTML=renderChampPage(champData,activePlayer);
-  document.querySelectorAll('[data-pl]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('[data-pl]').forEach(function(b){b.classList.remove('act');});
-      btn.classList.add('act');
-      document.getElementById('champ-inner').innerHTML=renderChampPage(champData,btn.getAttribute('data-pl'));
-    });
-  });
+  return desc+pods+tbl;
 }
 function calcCompScores(data){var kdas=data.map(function(p){return p.kda;});var wrs=data.map(function(p){return p.winRate;});var n=kdas.length;var mK=kdas.reduce(function(a,b){return a+b;},0)/n;var mW=wrs.reduce(function(a,b){return a+b;},0)/n;var sK=Math.sqrt(kdas.map(function(k){return Math.pow(k-mK,2);}).reduce(function(a,b){return a+b;},0)/(n-1));var sW=Math.sqrt(wrs.map(function(w){return Math.pow(w-mW,2);}).reduce(function(a,b){return a+b;},0)/(n-1));var res={};data.forEach(function(p){var zK=(p.kda-mK)/sK;var zW=(p.winRate-mW)/sW;res[p.name]=Math.round(Math.min(100,Math.max(0,60+5*(3.0*zK+0.6*zW)))*10)/10;});return res;}
 function pCSV(t){var ls=t.split('\n'),res=[];for(var i=0;i<ls.length;i++){var r=[],c='',q=false,l=ls[i];for(var j=0;j<l.length;j++){var x=l[j];if(x==='"'){q=!q;}else if(x===','&&!q){r.push(c.trim());c='';}else{c+=x;}}r.push(c.trim());res.push(r);}return res;}
@@ -288,7 +272,7 @@ function doFetch(){
 }
 (function(){render([],{},{},{});initChampPage({});document.getElementById('awards-inner').innerHTML='<div class="spinner">⏳ 2026 데이터 로딩 중...</div>';doFetch();})();
 
-function toggleAcc(uid){
+window.toggleAcc=function(uid){
   var body=document.getElementById(uid);
   var hd=document.getElementById('hd-'+uid);
   var ar=document.getElementById('ar-'+uid);
