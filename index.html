@@ -397,7 +397,7 @@ document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
 document.addEventListener('click',function(e){
   var tip=document.getElementById('g-tooltip');
-  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')){
+  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')){
     var id=e.target.getAttribute('data-tip-id');
     if(_tipOpen===id){tip.style.display='none';_tipOpen=null;}
     else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=e.target.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
