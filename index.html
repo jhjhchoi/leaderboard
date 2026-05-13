@@ -91,7 +91,7 @@ td.rk{color:#94a3b8;font-weight:700}td.nm{text-align:left;font-weight:600}td.cs{
 .acc-header:hover{border-color:#818cf8}
 .acc-header.open{border-radius:10px 10px 0 0;border-color:#818cf8}
 .acc-preview{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;margin-right:8px}
-.acc-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 6px 5px 6px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(129,140,248,.12);color:#94a3b8;border:1px solid #334155;width:136px;box-sizing:border-box;overflow:hidden;position:relative}
+.acc-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 6px 5px 6px;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(129,140,248,.12);color:#94a3b8;border:1px solid #334155;width:136px;box-sizing:border-box;overflow:hidden}
 .acc-chip.hot{color:#f1f5f9;border-color:#818cf8}.acc-chip-name{line-height:1.3}.acc-chip-wr{font-size:.65rem}
 .acc-arrow{font-size:.75rem;color:#64748b;flex-shrink:0}
 .acc-body{display:none;border:1px solid #818cf8;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;margin-bottom:14px}
@@ -130,7 +130,7 @@ var CHAMP_EN={
   '아트록스':'Aatrox','아리':'Ahri','아칼리':'Akali','아크샨':'Akshan',
   '알리스타':'Alistar','아무무':'Amumu','애니비아':'Anivia','애니':'Annie',
   '아펠리오스':'Aphelios','애쉬':'Ashe','아우렐리온 솔':'AurelionSol',
-  '오로라':'Aurora','아지르':'Azir','바드':'Bard','벨베스':'BelVeth',
+  '오로라':'Aurora','아지르':'Azir','바드':'Bard','벨베스':'Belveth',
   '블리츠크랭크':'Blitzcrank','브랜드':'Brand','브라움':'Braum','브라이어':'Briar',
   '케이틀린':'Caitlyn','케이트린':'Caitlyn','카밀':'Camille',
   '카시오페아':'Cassiopeia','초가스':'Chogath','코르키':'Corki',
@@ -148,7 +148,7 @@ var CHAMP_EN={
   '코그모':'KogMaw','크산테':'KSante','르블랑':'Leblanc','리 신':'LeeSin',
   '레오나':'Leona','릴리아':'Lillia','리산드라':'Lissandra','루시안':'Lucian',
   '럭스':'Lux','말파이트':'Malphite','말자하':'Malzahar','마오카이':'Maokai',
-  '마스터 이':'MasterYi','멜':'Mel','밀리오':'Milio','미스 포츈':'MissFortune',
+  '마스터 이':'MasterYi','멜':'Mel','암베사':'Ambessa','유나라':'Yunara','밀리오':'Milio','미스 포츈':'MissFortune',
   '미스포춘':'MissFortune','모데카이저':'Mordekaiser','모르가나':'Morgana',
   '나피리':'Naafiri','나미':'Nami','나서스':'Nasus','노틸러스':'Nautilus',
   '니달리':'Nidalee','닐라':'Nilah','닐':'Nilah','녹턴':'Nocturne',
@@ -173,18 +173,21 @@ var CHAMP_EN={
   '자크':'Zac','제드':'Zed','직스':'Ziggs','질리언':'Zilean',
   '조이':'Zoe','자이라':'Zyra',
   '리 신':'LeeSin','누누':'Nunu','탐켄치':'TahmKench',
-  '문도박사':'DrMundo'
+  '문도박사':'DrMundo','자헨':'Zaahen'
 };
 var _ddver='15.10.1';
 function champIcon(name,sz){
   var en=CHAMP_EN[name];
   if(!en){var nsp=name.replace(/\s/g,'');en=CHAMP_EN[nsp];}
-  if(!en)return'';
   sz=sz||22;
-  return'<img src="https://ddragon.leagueoflegends.com/cdn/'+_ddver+'/img/champion/'+en+'.png"'
-    +' width="'+sz+'" height="'+sz+'"'
-    +' style="border-radius:4px;vertical-align:middle;flex-shrink:0"'
-    +' onerror="this.style.display=\'none\'">';
+  var img=en
+    ?'<img src="https://ddragon.leagueoflegends.com/cdn/'+_ddver+'/img/champion/'+en+'.png"'
+      +' width="'+sz+'" height="'+sz+'" style="display:block"'
+      +' onerror="this.style.display=\'none\'">'
+    :'';
+  return'<span style="display:inline-flex;align-items:center;justify-content:center;'
+    +'width:'+sz+'px;height:'+sz+'px;border-radius:4px;background:#2d3748;'
+    +'flex-shrink:0;overflow:hidden;vertical-align:middle">'+img+'</span>';
 }
 // 페이지 로드 시 최신 DDragon 버전 조회
 fetch('https://ddragon.leagueoflegends.com/api/versions.json')
@@ -215,7 +218,7 @@ function parseLogCSV(csv){
 }
 
 function renderChampPage(champData){
-  var html='<div style="margin-bottom:12px;padding:8px 12px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">📌 2026 시즌 기준 · 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</div>';
+  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 2026 시즌 기준 · 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button onclick="toggleAllAcc(true)" style="padding:3px 10px;border-radius:6px;border:1px solid #818cf8;background:rgba(129,140,248,.15);color:#818cf8;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
     var totalPicks=data.reduce(function(s,d){return s+d.picks;},0);
@@ -373,7 +376,7 @@ function initAwardsSort(){
     });
   });
 }
-window.toggleAcc=function(uid){
+window.toggleAllAcc=function(open){document.querySelectorAll('.acc-body').forEach(function(b){b.classList.toggle('open',open);});document.querySelectorAll('.acc-header').forEach(function(h){h.classList.toggle('open',open);});document.querySelectorAll('.acc-arrow').forEach(function(a){a.textContent=open?'▲':'▼';});};window.toggleAcc=function(uid){
   var body=document.getElementById(uid);
   var hd=document.getElementById('hd-'+uid);
   var ar=document.getElementById('ar-'+uid);
