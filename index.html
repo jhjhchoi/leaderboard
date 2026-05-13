@@ -227,7 +227,7 @@ function renderChampPage(champData){
     var wrCol=wr>=55?'#4ade80':wr>=50?'#60a5fa':'#f87171';
     var uid='acc-'+p.replace(/\s/g,'_');
     // top3 미리보기 칩
-    var rankLabels=['#1','#2','#3'];
+    var rankLabels=['1','2','3'];
     var chips=data.slice(0,3).map(function(d,ri){
       var wrCol=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
       var rankCol=ri===0?'#fbbf24':ri===1?'#94a3b8':'#cd7f32';
