@@ -422,15 +422,18 @@ var tbs=document.querySelectorAll('.tb');for(var i=0;i<tbs.length;i++){tbs[i].ad
 var st=document.getElementById('status');
 function doFetch(){
   Promise.all([
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID25).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID24).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(e){return '__ERR__'+e.message;}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID25).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID24).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2026%20LOG').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2025%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2024%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=INSIGHTS%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';})
   ]).then(function(results){
-    var csv26=results[0],csv25=results[1],csv24=results[2],csvLog=results[3]||'',csvLog25=results[4]||'',csvLog24=results[5]||'';
+    var csv26=results[0]||'',csv25=results[1]||'',csv24=results[2]||'';
+    var _26err=csv26.startsWith('__ERR__');
+    if(_26err){st.innerHTML='<span class="ser">⚠️ 2026 로드 실패 · 2024·2025 데이터는 정상 표시 중</span>';csv26='';}
+    var _dummy=csv26,csvLog=results[3]||'',csvLog25=results[4]||'',csvLog24=results[5]||'';
     var d6new=p26(csv26);
     var ka26=parseKA(csv26,7,8),ka25=parseKA(csv25,5,6),ka24=parseKA(csv24,5,6);
     var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;computeWeightedTiers(d6new,d25,d24);sortAllByTier();render(d6new,ka26,ka25,ka24);document.getElementById('ptier-inner').innerHTML=renderTierPage(d6new);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));document.getElementById('analysis-inner').innerHTML=renderAnalysisPage(insightsData);setTimeout(function(){initAnalysisTabs(insightsData);},100);
