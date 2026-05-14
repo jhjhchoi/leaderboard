@@ -374,17 +374,19 @@ function calcCompScores(data){var kdas=data.map(function(p){return p.kda;});var 
 
 function p24(csv){
   var rows=pCSV(csv);
-  var PC=[4,14,24,34,44,54,64,74,84,94,104,114,124,134,144];
+  // 2024/2025 시트: 선수 컬럼이 3,7,11,15...로 4칸 간격
+  var PC=[3,7,11,15,19,23,27,31,35,39,43,47,51,55,59];
   var EX=['탑내커','또벅초','쪼비',''];
   var r5=rows[5]||[],r7=rows[7]||[],r8=rows[8]||[],r9=rows[9]||[],r10=rows[10]||[],r11=rows[11]||[];
-  return PC.map(function(c){
-    var n=(r5[c]||'').trim();
+  return PC.map(function(col){
+    var n=(r5[col]||'').trim();
     if(!n||EX.includes(n)||!ALL.includes(n))return null;
-    var wins=+r9[c]||0,losses=+r9[c+2]||0;
-    var wr=parseFloat((r10[c]||'0').replace('%',''))||0;
-    return{name:n,games:+r7[c]||0,kda:+r8[c]||0,wins:wins,losses:losses,winRate:wr,score:+r11[c]||0};
+    var wins=+r9[col]||0,losses=+r9[col+2]||0;
+    var wr=parseFloat((r10[col]||'0').replace('%',''))||0;
+    return{name:n,games:+r7[col]||0,kda:+r8[col]||0,wins:wins,losses:losses,winRate:wr,score:+r11[col]||0};
   }).filter(Boolean);
 }
+
 function pCSV(t){var ls=t.split('\n'),res=[];for(var i=0;i<ls.length;i++){var r=[],c='',q=false,l=ls[i];for(var j=0;j<l.length;j++){var x=l[j];if(x==='"'){q=!q;}else if(x===','&&!q){r.push(c.trim());c='';}else{c+=x;}}r.push(c.trim());res.push(r);}return res;}
 function p26(csv){var rows=pCSV(csv),PC=[4,14,24,34,44,54,64,74,84,94,104,114],EX=['탑내커','또벅초','쪼비'];var r7=rows[7],r8=rows[8],r9=rows[9],r10=rows[10],r11=rows[11],r12=rows[12],r14=rows[14],r34=rows[34],r35=rows[35],r26=rows[26],r37=rows[37];return PC.map(function(c){var n=r7[c]||'';if(!n||EX.includes(n))return null;return{name:n,games:+r9[c]||0,kda:+r10[c]||0,wins:+r11[c]||0,losses:+r11[c+2]||0,winRate:+(r12[c]||'0').replace('%','')||0,score:+r14[c]||0,dpm:+r34[c]||0,gpm:+r35[c]||0,dtpm:+r26[c]||0,compScore:+r37[c]||0,tier:TM[n]||'',k:+r8[c]||0,a:+r8[c+2]||0};}).filter(Boolean);}
 function kC(k){return k>=3.5?'#a78bfa':k>=2.5?'#4ade80':k>=2?'#60a5fa':'#94a3b8';}
