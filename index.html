@@ -219,7 +219,7 @@ function parseLogCSV(csv){
 }
 
 function renderChampPage(champData){
-  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 2026 시즌 기준 · 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button onclick="toggleAllAcc(true)" style="padding:3px 10px;border-radius:6px;border:1px solid #818cf8;background:rgba(129,140,248,.15);color:#818cf8;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
+  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button onclick="toggleAllAcc(true)" style="padding:3px 10px;border-radius:6px;border:1px solid #818cf8;background:rgba(129,140,248,.15);color:#818cf8;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
     var totalPicks=data.reduce(function(s,d){return s+d.picks;},0);
