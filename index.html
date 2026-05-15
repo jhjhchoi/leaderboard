@@ -237,7 +237,6 @@ function renderChampPage(champData){
         +champIcon(d.ch,22)
         +'<span class="acc-chip-name"><span style="display:block">'+d.ch+'</span>'
         +'<span class="acc-chip-wr" style="color:'+wrCol+'">'+d.picks+'픽·'+d.wr+'%</span>'
-        +(window._insights?champAwardBadge(p,d.ch,window._insights):'')
         +'</span></span>';
     }).join('');
     // 헤더
@@ -679,7 +678,7 @@ function renderFormWidget(insights){
   });
   var maxMom=Math.max.apply(null,ALL.map(function(p){return momCnt[p];}));
   var maxSpi=Math.max.apply(null,ALL.map(function(p){return spiCnt[p];}));
-  if(maxMom===0&&maxSpi===0)return''; // 데이터 없으면 숨김
+  if(maxMom===0&&maxSpi===0)return'<div style="padding:10px 16px 12px;border-bottom:1px solid #1e293b;margin-bottom:4px;font-size:.78rem;color:#475569">🔥 상승세 · 💜 투혼 — 인사이트 데이터 추출 후 표시됩니다</div>';
   var rising=ALL.slice().sort(function(a,b){return momCnt[b]-momCnt[a];}).slice(0,3);
   var falling=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).slice(0,3);
   function card(p,cnt,col){
@@ -771,6 +770,33 @@ function champAwardBadge(player,champ,insights){
   if(!parts.length)return'';
   return'<span style="margin-left:5px;display:inline-flex;gap:3px;vertical-align:middle">'+parts.join('')+'</span>';
 }
+
+window.toggleSynRow=function(uid,p){
+  var row=document.getElementById(uid);
+  if(!row)return;
+  var isOpen=row.style.display==='table-row';
+  // 모두 닫기
+  document.querySelectorAll('tr[id^="syn-"]').forEach(function(el){
+    if(el.id.indexOf('-detail')<0&&el.id!==uid)el.style.display='none';
+  });
+  if(isOpen){row.style.display='none';return;}
+  row.style.display='table-row';
+  var detail=document.getElementById(uid+'-detail');
+  if(!detail)return;
+  var insights=window._insights||{synergy:[]};
+  var pairs=insights.synergy.filter(function(s){return(s.p1===p||s.p2===p)&&s.together>=5;})
+    .map(function(s){var partner=s.p1===p?s.p2:s.p1;return{partner:partner,together:s.together,wins:s.wins,wr:s.wr};})
+    .sort(function(a,b){return b.wr-a.wr;});
+  var rows=pairs.map(function(s,i){
+    var wrCol=s.wr>=60?'#4ade80':s.wr>=50?'#60a5fa':'#f87171';
+    return'<tr><td class="rk">'+(i+1)+'</td>'
+      +'<td class="nm">'+at(AN[s.partner]?AN[s.partner].t:'B')+' '+s.partner+'</td>'
+      +'<td>'+s.together+'판</td>'
+      +'<td style="color:'+wrCol+';font-weight:700">'+s.wr+'%</td>'
+      +'<td style="color:'+wrCol+'">'+(s.wr>=65?'💚 최고 파트너':s.wr<40?'🔴 어려운 조합':'')+'</td></tr>';
+  }).join('');
+  detail.innerHTML='<table class="t"><thead><tr><th>#</th><th>파트너</th><th>동행경기</th><th>함께 승률</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="5" style="color:#475569;text-align:center">데이터 없음 (최소 5경기 필요)</td></tr>')+'</tbody></table>';
+};
 window.toggleAllAcc=function(open){
   document.querySelectorAll('.acc-body').forEach(function(b){b.classList.toggle('open',open);});
   document.querySelectorAll('.acc-header').forEach(function(h){h.classList.toggle('open',open);});
