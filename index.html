@@ -377,7 +377,23 @@ function renderAwardsPage(awardsData){
       +'<div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+arr[2].name+'</div><div class="pv" style="color:'+color+'">'+arr[2][key]+'</div></div>'
       +'</div></div>';
   }
-  var desc='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #fbbf24"><div style="font-size:.72rem;color:#94a3b8">👑 MOM</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">승리의 인도자</div></div><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #818cf8"><div style="font-size:.72rem;color:#94a3b8">⭐ 스페셜</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">숨겨진 조력자</div></div><div style="flex:1;min-width:160px;padding:10px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #f472b6"><div style="font-size:.72rem;color:#94a3b8">💪 투혼상</div><div style="font-size:.82rem;font-weight:700;color:#f1f5f9">비운의 에이스</div></div></div>';
+  var desc='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:200px;padding:12px 16px;background:#1e293b;border-radius:10px;border-left:3px solid #fbbf24">'
+      +'<div style="font-size:.72rem;color:#fbbf24;font-weight:700;margin-bottom:4px">👑 MOM</div>'
+      +'<div style="font-size:.88rem;font-weight:800;color:#f1f5f9;margin-bottom:6px">승리의 인도자</div>'
+      +'<div style="font-size:.76rem;color:#94a3b8;line-height:1.6">승리팀에서 경기를 가장 잘 이끈 선수에게 주어지는 최고 영예. 팀을 승리로 이끈 핵심 기여자.</div>'
+    +'</div>'
+    +'<div style="flex:1;min-width:200px;padding:12px 16px;background:#1e293b;border-radius:10px;border-left:3px solid #818cf8">'
+      +'<div style="font-size:.72rem;color:#818cf8;font-weight:700;margin-bottom:4px">⭐ 스페셜</div>'
+      +'<div style="font-size:.88rem;font-weight:800;color:#f1f5f9;margin-bottom:6px">숨겨진 조력자</div>'
+      +'<div style="font-size:.76rem;color:#94a3b8;line-height:1.6">승리팀에서 MOM만큼 돋보이진 않았지만, 팀의 승리에 결정적 역할을 한 숨은 공신.</div>'
+    +'</div>'
+    +'<div style="flex:1;min-width:200px;padding:12px 16px;background:#1e293b;border-radius:10px;border-left:3px solid #f472b6">'
+      +'<div style="font-size:.72rem;color:#f472b6;font-weight:700;margin-bottom:4px">💪 투혼상</div>'
+      +'<div style="font-size:.88rem;font-weight:800;color:#f1f5f9;margin-bottom:6px">비운의 에이스</div>'
+      +'<div style="font-size:.76rem;color:#94a3b8;line-height:1.6">패배팀에서 끝까지 포기하지 않고 분전한 선수에게 수여. 결과와 무관하게 가장 치열하게 싸운 증거.</div>'
+    +'</div>'
+    +'</div>';
   var pods='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">'
     +podAward(byMom,'mom','👑 MOM 누적 순위','#fbbf24')
     +podAward(bySpc,'special','⭐ 스페셜 누적 순위','#818cf8')
@@ -886,20 +902,4 @@ document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
 document.addEventListener('click',function(e){
   var tip=document.getElementById('g-tooltip');
-  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')||e.target.classList.contains('aw-tag')){
-    var id=e.target.getAttribute('data-tip-id');
-    if(_tipOpen===id){tip.style.display='none';_tipOpen=null;}
-    else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=e.target.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
-    e.stopPropagation();
-  } else if(tip&&tip.style.display==='block'){tip.style.display='none';_tipOpen=null;}
-});
-(function(){
-  render([],{},{},{});
-  document.getElementById('champ-player-btns').innerHTML='';
-  document.getElementById('champ-inner').innerHTML='<div class="spinner">⏳ 데이터 로딩 중...</div>';
-  document.getElementById('awards-inner').innerHTML='<div class="spinner">⏳ 데이터 로딩 중...</div>';
-  doFetch();
-})();
-})();</script>
-</body>
-</html>
+  if(e.
