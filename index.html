@@ -277,7 +277,7 @@ function renderChampPage(champData){
     html+='<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽수</th><th style="color:#4ade80">승</th><th style="color:#f87171">패</th><th>승률</th></tr></thead><tbody>';
     data.forEach(function(d,i){
       var col=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
-      var _ab=window._insights?champAwardBadge(p,d.ch,window._insights):'';html+='<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+champIcon(d.ch,22)+' '+d.ch+_ab+'</td><td>'+d.picks+'</td>'
+      var _ab=window._insights?champAwardBadge(p,d.ch,window._insights):'';html+='<tr><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%">'+champIcon(d.ch,22)+'<span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
         +'<td style="color:#4ade80;font-weight:700">'+d.wins+'</td>'
         +'<td style="color:#f87171;font-weight:700">'+d.losses+'</td>'
         +'<td><div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(d.wr,100)+'%;background:'+col+'"></div></div>'
@@ -673,20 +673,20 @@ function renderSynergyPage(insights){
     var best=pairs[0];
     var wrCol=best?(best.wr>=60?'#4ade80':best.wr>=50?'#60a5fa':'#f87171'):'#475569';
     var uid='syn-'+p.replace(/\s/g,'_');
+    var partnerBadge=best?(at(AN[best.partner]?AN[best.partner].t:'B')+' '+best.partner):'—';
     synRows+='<tr style="cursor:pointer" onclick="toggleSynRow(\''+uid+'\',\''+p+'\')">'
-      +'<td>'+at(AN[p]?AN[p].t:'B')+'</td>'
-      +'<td class="nm" style="font-weight:800">'+p+'</td>'
-      +'<td class="nm" style="color:#f1f5f9">'+(best?best.partner:'—')+'</td>'
+      +'<td class="nm" style="font-weight:800">'+at(AN[p]?AN[p].t:'B')+' '+p+'</td>'
+      +'<td class="nm" style="color:#f1f5f9">'+partnerBadge+'</td>'
       +'<td style="color:'+wrCol+';font-weight:700">'+(best?best.wr+'%':'—')+'</td>'
       +'<td style="color:#64748b">'+(best?best.together+'판':'—')+'</td>'
       +'<td style="color:#818cf8;font-size:.8rem">▼ 상세</td>'
       +'</tr>'
-      +'<tr id="'+uid+'" style="display:none"><td colspan="6" style="padding:0">'
+      +'<tr id="'+uid+'" style="display:none"><td colspan="5" style="padding:0">'
       +'<div style="padding:10px;background:rgba(129,140,248,.05);border-top:1px solid #334155" id="'+uid+'-detail"></div>'
       +'</td></tr>';
   });
   return'<div style="padding-bottom:20px">'+synInfo
-    +'<table class="t"><thead><tr><th>등급</th><th>선수</th><th>베스트 파트너</th><th>함께 승률</th><th>동행</th><th></th></tr></thead>'
+    +'<table class="t"><thead><tr><th style="text-align:left">선수</th><th style="text-align:left">베스트 파트너</th><th>함께 승률</th><th>동행</th><th></th></tr></thead>'
     +'<tbody>'+synRows+'</tbody></table></div>';
 }
 
@@ -814,17 +814,19 @@ function renderPerfPage(insights){
   }
   function perfTable(data,valLabel,valFmt){
     if(!data||!data.length)return'<div style="color:#64748b;padding:20px;text-align:center">데이터 없음</div>';
+    var isDmg=(valLabel!=='KDA'); // 피해량 테이블 여부
+    var valAlign=isDmg?'right':'left'; // 피해량→오른쪽, KDA→왼쪽
     var rows=data.slice(0,10).map(function(r,i){
       var val=valFmt(r);var wonCol=r.won==='승'?'#4ade80':'#f87171';
       return'<tr><td class="rk">'+(i+1)+'</td>'
         +'<td class="nm">'+at(AN[r.player]?AN[r.player].t:'B')+' '+r.player+'</td>'
-        +'<td>'+champIcon(r.champ,20)+' '+r.champ+'</td>'
-        +'<td style="color:#fbbf24;font-weight:900;font-size:.95rem">'+val+'</td>'
+        +'<td class="nm">'+champIcon(r.champ,20)+' '+r.champ+'</td>'
+        +'<td style="color:#fbbf24;font-weight:900;font-size:.95rem;text-align:'+valAlign+'">'+val+'</td>'
         +'<td style="color:#64748b;font-size:.8rem">'+(r.date||'-')+'</td>'
         +'<td style="color:'+wonCol+';font-weight:700">'+(r.won||'-')+'</td>'
         +'<td style="color:#475569;font-size:.75rem">'+r.year+'</td></tr>';
     }).join('');
-    return'<table class="t"><thead><tr><th>#</th><th>선수</th><th>챔피언</th><th>'+valLabel+'</th><th>날짜</th><th>승패</th><th>시즌</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    return'<table class="t"><thead><tr><th>#</th><th style="text-align:left">선수</th><th style="text-align:left">챔피언</th><th style="text-align:'+valAlign+'">'+valLabel+'</th><th>날짜</th><th>승패</th><th>시즌</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
   return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#64748b">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
     +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 10 <span class="ka-sub">단일 경기 최고 기록</span></div>'
@@ -917,5 +919,13 @@ document.addEventListener('click',function(e){
   doFetch();
 })();
 })();</script>
+<footer style="margin-top:60px;padding:36px 20px 40px;border-top:1px solid #1e293b;text-align:center;background:#0a111e">
+  <p style="font-size:1rem;font-weight:700;color:#f1f5f9;letter-spacing:.5px;margin-bottom:8px;font-style:italic">
+    "Victory is temporary. Match history is forever."
+  </p>
+  <p style="font-size:.78rem;font-weight:600;color:#334155;letter-spacing:2px;text-transform:uppercase">
+    Made by GOGO STUDIO
+  </p>
+</footer>
 </body>
 </html>
