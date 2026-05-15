@@ -471,7 +471,7 @@ function doFetch(){
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2026%20LOG').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2025%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2024%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=INSIGHTS%20LOG&_='+Date.now()).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';})
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid=513785736&_='+Date.now()).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';})
   ]).then(function(results){
     var csv26=results[0]||'',csv25=results[1]||'',csv24=results[2]||'';
     var _26err=csv26.startsWith('__ERR__');
