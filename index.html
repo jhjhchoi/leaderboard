@@ -499,7 +499,8 @@ function computeWeightedTiers(d6,d25data,d24data){
   var tg24=Object.keys(g24).reduce(function(s,k){return s+(g24[k]||0);},0)||1;
   var tierScores={};
   ALL.forEach(function(p){
-    var w26=(g26[p]||0)/tg26,w25=(g25[p]||0)/tg25,w24=(g24[p]||0)/tg24;
+    // 2026 가중치 2배: 최근 시즌 실력이 현재 등급에 더 잘 반영되도록
+    var w26=(g26[p]||0)/tg26*2,w25=(g25[p]||0)/tg25,w24=(g24[p]||0)/tg24;
     var tw=w26+w25+w24;if(tw===0){tierScores[p]=0;return;}
     var avgRank=((r26[p]||n)*w26+(r25[p]||n)*w25+(r24[p]||n)*w24)/tw;
     tierScores[p]=Math.round((n-avgRank)/(n-1)*100);
@@ -523,7 +524,8 @@ function renderTierPage(d6){
     +'<div style="font-size:.82rem;color:#94a3b8;line-height:1.8">'
     +'각 연도별 수집 지표가 달라 점수를 직접 비교하는 것은 공정하지 않습니다. 대신 <b style="color:#f1f5f9">연도별 상대 순위</b>를 경기 참여 비율로 가중 평균하여 최종 등급을 산출했습니다.<br>'
     +'이 방식은 특정 시즌의 데이터 차이에 의한 불공정함을 최소화하며, 3년간의 <b style="color:#f1f5f9">일관된 경쟁력</b>을 반영합니다.<br>'
-    +'<span style="color:#60a5fa">순위 점수 = (전체 선수 수 − 가중평균 순위) ÷ (전체 선수 수 − 1) × 100</span>'
+    +'<span style="color:#60a5fa">순위 점수 = (전체 선수 수 − 가중평균 순위) ÷ (전체 선수 수 − 1) × 100</span><br>'
+    +'<span style="color:#94a3b8;font-size:.75rem">* 2026 시즌 가중치 2배 적용 — 최근 성적이 현재 등급에 더 강하게 반영</span>'
     +'</div></div>'
     +'<div style="background:#1e293b;border-radius:12px;padding:18px;border:1px solid #334155">'
     +'<div style="font-size:.82rem;font-weight:800;color:#818cf8;margin-bottom:10px">🏆 등급 기준</div>'
