@@ -204,6 +204,9 @@ var CHAMP_EN={
   '문도박사':'DrMundo','자헨':'Zaahen'
 };
 var _ddver='15.10.1';
+// 챔피언 약어 맵
+var CHAMP_ABBREV={'트위스티드 페이트':'트페','아우렐리온 솔':'아우솔','누누와 윌럼프':'누누','레나타 글라스크':'레나타','문도 박사':'문도','마스터 이':'마이','미스 포츈':'미포'};
+function abbrevChamp(name){return CHAMP_ABBREV[name]||name;}
 function champIcon(name,sz){
   var en=CHAMP_EN[name];
   if(!en){var nsp=name.replace(/\s/g,'');en=CHAMP_EN[nsp];}
@@ -468,7 +471,8 @@ function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(funct
           +'<div class="stat-tip" data-tip-id="stat-champpool" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">챔피언폭 <b style="color:'+tc+'">'+rs.champPool+'</b></div>'
         +'</div></div>';
     }
-    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+a.ch+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
+        var topCh=(window._topChamps&&window._topChamps[nm])||a.ch;
+    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topCh+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
 function hC(i,l,n,v,cls){return '<div class="hc '+cls+'"><div class="hi">'+i+'</div><div class="hl2">'+l+'</div><div class="hn">'+n+'</div><div class="hv">'+v+'</div></div>';}
 
 // ── 육각형 레이더 차트 ─────────────────────────────────────────────
@@ -613,6 +617,12 @@ function doFetch(){
 var allLogAgg=aggregateLogs(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));
 var sc25r=calcCompScores(d25);var sc24r=calcCompScores(d24);
 window._radarStats=computeRadarStats(calcAll(d6new),window._dKA26||{},window._dKA25||{},window._dKA24||{},d6new,d25,d24,insightsData,allLogAgg.champData);
+// 선수별 top3 챔프 (출전 수 기준, 약어 적용)
+window._topChamps={};
+ALL.forEach(function(nm){
+  var champs=allLogAgg.champData[nm]||[];
+  window._topChamps[nm]=champs.slice(0,3).map(function(c){return abbrevChamp(c.ch);}).join(', ');
+});
 document.getElementById('cards-inner').innerHTML=bCards(d6new,sc25r,sc24r);
 }catch(logErr){console.warn('LOG render error:',logErr);}
     var ts=new Date().toLocaleString('ko-KR');
