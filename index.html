@@ -457,7 +457,7 @@ function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(funct
     if(rs){
       var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
       radarSection='<div style="border-top:1px solid rgba(51,65,85,.5);padding:10px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:4px">'
-        +'<div style="font-size:.68rem;color:#475569;letter-spacing:.5px">STAT SCORE <span style="color:'+tc+';font-weight:900;font-size:.78rem">'+total+'</span><span style="color:#334155"> / 600</span></div>'
+        +'<div style="font-size:.68rem;color:#64748b;letter-spacing:.5px">STAT SCORE <span style="color:'+tc+';font-weight:900;font-size:.78rem">'+total+'</span><span style="color:#64748b"> / 600</span></div>'
         +radarSVG(rs,tc)
         +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;font-size:.75rem;text-align:center">'
           +'<div class="stat-tip" data-tip-id="stat-atk"    style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px" title="">공격력 <b style="color:'+tc+'">'+rs.atk+'</b></div>'
@@ -519,7 +519,7 @@ function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights
     var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
     var rng = mx-mn || 1;
     ALL.forEach(function(nm){
-      norm[nm][k] = Math.round((raw[nm][k]-mn)/rng*100);
+      norm[nm][k] = Math.max(1, Math.round((raw[nm][k]-mn)/rng*100));
     });
   });
   return norm;
