@@ -249,7 +249,7 @@ function parseLogCSV(csv){
 }
 
 function renderChampPage(champData){
-  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button onclick="toggleAllAcc(true)" style="padding:3px 10px;border-radius:6px;border:1px solid #818cf8;background:rgba(129,140,248,.15);color:#818cf8;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
+  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
     var totalPicks=data.reduce(function(s,d){return s+d.picks;},0);
@@ -904,6 +904,7 @@ function renderFormWidget(insights){
 
   // usingFallback일 때만 "누적 기준" 표시 — hasData만으론 구분 불가
   var periodLabel=usingFallback?'누적 기준 (인사이트 재추출 시 최근 기준으로 전환)':'최근 10경기 기준';
+  var periodColor='#94a3b8';
 
   // 카드 렌더 — cnt=0이면 이름 흐리게, 횟수 '–' 표시
   function pCard(p,cnt,col,bg){
@@ -920,7 +921,7 @@ function renderFormWidget(insights){
   var spiHtml=topSpi.map(function(p){return pCard(p,spiCnt[p],'#f472b6','rgba(244,114,182,.06)');}).join('');
 
   return'<div style="padding:10px 16px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px">'
-    +'<div style="font-size:.65rem;color:#475569;letter-spacing:.3px;margin-bottom:8px">'+periodLabel+'</div>'
+    +'<div style="font-size:.65rem;color:'+periodColor+';letter-spacing:.3px;margin-bottom:8px">'+periodLabel+'</div>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
       +'<div style="flex:1;min-width:150px">'
         +'<div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">🔥 최근 승리 견인중 <span style="font-weight:400;opacity:.45;font-size:.66rem">(MOM)</span></div>'
@@ -959,21 +960,34 @@ function renderPerfPage(insights){
   }
   function perfTable(data,valLabel,valFmt){
     if(!data||!data.length)return'<div style="color:#64748b;padding:20px;text-align:center">데이터 없음</div>';
-    var isDmg=(valLabel!=='KDA'); // 피해량 테이블 여부
-    var valAlign=isDmg?'right':'left'; // 피해량→오른쪽, KDA→왼쪽
+    var isDmg=(valLabel!=='KDA');
+    var valAlign=isDmg?'right':'left';
+    // 고정 컬럼 너비 — 세 테이블이 동일한 세로 그리드 공유
+    var W={rk:'34px',player:'148px',champ:'148px',val:'118px',date:'96px',won:'46px',year:'44px'};
     var rows=data.slice(0,10).map(function(r,i){
       var val=valFmt(r);var wonCol=r.won==='승'?'#4ade80':'#f87171';
-      return'<tr><td class="rk">'+(i+1)+'</td>'
-        +'<td class="nm">'+at(AN[r.player]?AN[r.player].t:'B')+' '+r.player+'</td>'
-        +'<td class="nm">'+champIcon(r.champ,20)+' '+r.champ+'</td>'
-        +'<td style="color:#fbbf24;font-weight:900;font-size:.95rem;text-align:'+valAlign+'">'+val+'</td>'
-        +'<td style="color:#64748b;font-size:.8rem">'+(r.date||'-')+'</td>'
-        +'<td style="color:'+wonCol+';font-weight:700">'+(r.won||'-')+'</td>'
-        +'<td style="color:#475569;font-size:.75rem">'+r.year+'</td></tr>';
+      return'<tr>'
+        +'<td class="rk" style="width:'+W.rk+'">'+(i+1)+'</td>'
+        +'<td class="nm" style="width:'+W.player+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+at(AN[r.player]?AN[r.player].t:'B')+' '+r.player+'</td>'
+        +'<td class="nm" style="width:'+W.champ+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+champIcon(r.champ,20)+' '+r.champ+'</td>'
+        +'<td style="width:'+W.val+';color:#fbbf24;font-weight:900;font-size:.95rem;text-align:'+valAlign+'">'+val+'</td>'
+        +'<td style="width:'+W.date+';color:#64748b;font-size:.8rem;text-align:center">'+(r.date||'-')+'</td>'
+        +'<td style="width:'+W.won+';color:'+wonCol+';font-weight:700;text-align:center">'+(r.won||'-')+'</td>'
+        +'<td style="width:'+W.year+';color:#475569;font-size:.75rem;text-align:center">'+r.year+'</td>'
+        +'</tr>';
     }).join('');
-    return'<table class="t"><thead><tr><th>#</th><th style="text-align:left">선수</th><th style="text-align:left">챔피언</th><th style="text-align:'+valAlign+'">'+valLabel+'</th><th>날짜</th><th>승패</th><th>시즌</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    return'<table class="t" style="table-layout:fixed;width:100%">'
+      +'<thead><tr>'
+      +'<th style="width:'+W.rk+'">#</th>'
+      +'<th style="width:'+W.player+';text-align:left">선수</th>'
+      +'<th style="width:'+W.champ+';text-align:left">챔피언</th>'
+      +'<th style="width:'+W.val+';text-align:'+valAlign+'">'+valLabel+'</th>'
+      +'<th style="width:'+W.date+'">날짜</th>'
+      +'<th style="width:'+W.won+'">승패</th>'
+      +'<th style="width:'+W.year+'">시즌</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table>';
   }
-  return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#64748b">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
+  return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#94a3b8">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
     +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 10 <span class="ka-sub">단일 경기 최고 기록</span></div>'
     +perfTable(insights.topKDA,'KDA',function(r){return r.kda+' ('+r.k+'/'+r.d+'/'+r.a+')';})
     +'</div>'
@@ -1028,6 +1042,12 @@ window.toggleAllAcc=function(open){
   document.querySelectorAll('.acc-body').forEach(function(b){b.classList.toggle('open',open);});
   document.querySelectorAll('.acc-header').forEach(function(h){h.classList.toggle('open',open);});
   document.querySelectorAll('.acc-arrow').forEach(function(a){a.textContent=open?'▲':'▼';});
+  // 버튼 활성/비활성 전환
+  var ACT='border:1px solid #818cf8;background:rgba(129,140,248,.15);color:#818cf8';
+  var OFF='border:1px solid #475569;background:none;color:#64748b';
+  var bo=document.getElementById('btn-acc-open'), bc=document.getElementById('btn-acc-close');
+  if(bo) bo.style.cssText='padding:3px 10px;border-radius:6px;font-size:.72rem;cursor:pointer;font-family:inherit;'+(open?ACT:OFF);
+  if(bc) bc.style.cssText='padding:3px 10px;border-radius:6px;font-size:.72rem;cursor:pointer;font-family:inherit;'+(open?OFF:ACT);
 };
 window.toggleAcc=function(uid){
   var body=document.getElementById(uid);var hd=document.getElementById('hd-'+uid);var ar=document.getElementById('ar-'+uid);
