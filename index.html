@@ -740,13 +740,13 @@ function renderPerfPage(insights){
         +'<td class="nm">'+at(AN[r.player]?AN[r.player].t:'B')+' '+r.player+'</td>'
         +'<td>'+champIcon(r.champ,20)+' '+r.champ+'</td>'
         +'<td style="color:#fbbf24;font-weight:900;font-size:.95rem">'+val+'</td>'
-        +'<td style="color:#64748b;font-size:.8rem">'+r.date+'</td>'
-        +'<td style="color:'+wonCol+';font-weight:700">'+r.won+'</td>'
+        +'<td style="color:#64748b;font-size:.8rem">'+(r.date||'-')+'</td>'
+        +'<td style="color:'+wonCol+';font-weight:700">'+(r.won||'-')+'</td>'
         +'<td style="color:#475569;font-size:.75rem">'+r.year+'</td></tr>';
     }).join('');
     return'<table class="t"><thead><tr><th>#</th><th>선수</th><th>챔피언</th><th>'+valLabel+'</th><th>날짜</th><th>승패</th><th>시즌</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
-  return'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
+  return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#64748b">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
     +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 10 <span class="ka-sub">단일 경기 최고 기록</span></div>'
     +perfTable(insights.topKDA,'KDA',function(r){return r.kda+' ('+r.k+'/'+r.d+'/'+r.a+')';})
     +'</div>'
@@ -764,9 +764,9 @@ function champAwardBadge(player,champ,insights){
   var a=insights.champAwards.find(function(x){return x.player===player&&x.champ===champ;});
   if(!a||a.total===0)return'';
   var parts=[];
-  if(a.mom>0)parts.push('<span style="color:#fbbf24;font-size:.68rem" title="MOM '+a.mom+'회">👑'+a.mom+'</span>');
-  if(a.special>0)parts.push('<span style="color:#818cf8;font-size:.68rem" title="스페셜 '+a.special+'회">⭐'+a.special+'</span>');
-  if(a.spirit>0)parts.push('<span style="color:#f472b6;font-size:.68rem" title="투혼상 '+a.spirit+'회">💪'+a.spirit+'</span>');
+  if(a.mom>0)parts.push('<span class="tip-icon" data-tip-id="award-mom" style="color:#fbbf24;font-size:.68rem;cursor:pointer">👑'+a.mom+'</span>');
+  if(a.special>0)parts.push('<span class="tip-icon" data-tip-id="award-special" style="color:#818cf8;font-size:.68rem;cursor:pointer">⭐'+a.special+'</span>');
+  if(a.spirit>0)parts.push('<span class="tip-icon" data-tip-id="award-spirit" style="color:#f472b6;font-size:.68rem;cursor:pointer">💪'+a.spirit+'</span>');
   if(!parts.length)return'';
   return'<span style="margin-left:5px;display:inline-flex;gap:3px;vertical-align:middle">'+parts.join('')+'</span>';
 }
