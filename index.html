@@ -114,8 +114,8 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .cha{background:rgba(250,204,21,.2);color:#facc15;border:1px solid #facc15}
 .tip-icon{cursor:pointer;font-size:.65rem;font-weight:700;margin-left:4px;opacity:.55;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1.5px solid #94a3b8;border-radius:50%;line-height:1}
 .tip-icon:hover{opacity:1;color:#818cf8;border-color:#818cf8}
-.aw-tag{cursor:pointer;font-size:.72rem;font-weight:800;padding:1px 0;border-radius:5px;vertical-align:middle;user-select:none;border:1px solid;display:inline-flex;align-items:center;justify-content:center;line-height:1.5;opacity:.8;letter-spacing:-.3px;width:2.2em;text-align:center}
-.aw-tag:hover{opacity:1;transform:scale(1.08)}
+.aw-tag{cursor:pointer;font-size:.78rem;font-weight:900;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;gap:1px;line-height:1;opacity:.75;letter-spacing:-.2px;white-space:nowrap}
+.aw-tag:hover{opacity:1;transform:scale(1.12)}
 .tab-sep{width:1px;background:rgba(51,65,85,.9);margin:5px 4px;flex-shrink:0;align-self:stretch}
 #g-tooltip{display:none;position:fixed;background:#1e293b;border:1.5px solid #818cf8;border-radius:10px;padding:14px 16px;font-size:.8rem;color:#f1f5f9;z-index:9999;max-width:380px;line-height:1.9;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 </style>
@@ -633,11 +633,11 @@ function parseInsightsCSV(csv){
     var c=cols.map(function(v){return(v||'').trim();});
     switch(section){
       case'syn': d.synergy.push({p1:c[0],p2:c[1],together:toN(c[2]),wins:toN(c[3]),wr:toN(c[4])});break;
-      case'riv': d.rivals.push({p1:c[0],p2:c[1],count:toN(c[2])});break;
+      case'riv': d.rivals.push({p1:c[0],p2:c[1],count:toN(c[2]),w1:toN(c[3]),w2:toN(c[4])});break;
       case'ca':  d.champAwards.push({player:c[0],champ:c[1],mom:toN(c[2]),special:toN(c[3]),spirit:toN(c[4]),total:toN(c[5])});break;
       case'kda': d.topKDA.push({player:c[0],champ:c[1],k:toN(c[2]),d:toN(c[3]),a:toN(c[4]),kda:toN(c[5]),date:c[6],won:c[7],year:c[8]});break;
-      case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],rank:toN(c[4]),won:c[5],year:c[6]});break;
-      case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],rank:toN(c[4]),won:c[5],year:c[6]});break;
+      case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
+      case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
     }
   });
@@ -679,14 +679,18 @@ function renderRivalsPage(insights){
     return'<div class="spinner">💡 Apps Script에서 🔥 인사이트 데이터 추출을 실행해주세요.</div>';
   }
   var rivRows=insights.rivals.slice(0,15).map(function(r,i){
+    var w1col=r.w1>r.w2?'#4ade80':r.w1<r.w2?'#f87171':'#94a3b8';
+    var w2col=r.w2>r.w1?'#4ade80':r.w2<r.w1?'#f87171':'#94a3b8';
     return'<tr><td class="rk">'+(i+1)+'</td>'
-      +'<td class="nm">'+at(AN[r.p1]?AN[r.p1].t:'B')+' '+r.p1+'</td>'
-      +'<td style="color:#f87171;font-size:1rem;text-align:center">⚔️</td>'
-      +'<td class="nm">'+at(AN[r.p2]?AN[r.p2].t:'B')+' '+r.p2+'</td>'
+      +'<td class="nm">'+at(AN[r.p1]?AN[r.p1].t:'B')+' '+r.p1
+        +'<span style="color:'+w1col+';font-size:.75rem;font-weight:700;margin-left:5px">'+r.w1+'승</span></td>'
+      +'<td style="color:#475569;font-size:1rem;text-align:center">⚔️</td>'
+      +'<td class="nm">'+at(AN[r.p2]?AN[r.p2].t:'B')+' '+r.p2
+        +'<span style="color:'+w2col+';font-size:.75rem;font-weight:700;margin-left:5px">'+r.w2+'승</span></td>'
       +'<td style="color:#fbbf24;font-weight:900">'+r.count+'회</td></tr>';
   }).join('');
   return'<div style="padding-bottom:20px">'
-    +'<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #f87171;font-size:.82rem;color:#94a3b8">⚔️ 같은 경기에서 MOM(승리팀 에이스)과 투혼상(패배팀 에이스)으로 맞붙은 횟수 기준</div>'
+    +'<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #f87171;font-size:.82rem;color:#94a3b8">⚔️ 같은 경기에서 MOM(승리팀 에이스)과 투혼상(패배팀 에이스)으로 맞붙은 횟수 기준 · 초록=우세 · 빨강=열세</div>'
     +'<table class="t"><thead><tr><th>#</th><th>선수 A</th><th></th><th>선수 B</th><th>에이스 대결</th></tr></thead><tbody>'+rivRows+'</tbody></table>'
     +'</div>';
 }
@@ -824,11 +828,11 @@ function champAwardBadge(player,champ,insights){
   var a=insights.champAwards.find(function(x){return x.player===player&&x.champ===champ;});
   if(!a||a.total===0)return'';
   var parts=[];
-  if(a.mom>0)    parts.push('<span class="aw-tag" data-tip-id="award-mom"    style="color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)">👑'+a.mom+'</span>');
-  if(a.special>0)parts.push('<span class="aw-tag" data-tip-id="award-special" style="color:#818cf8;border-color:rgba(129,140,248,.4);background:rgba(129,140,248,.1)">⭐'+a.special+'</span>');
-  if(a.spirit>0) parts.push('<span class="aw-tag" data-tip-id="award-spirit"  style="color:#f472b6;border-color:rgba(244,114,182,.4);background:rgba(244,114,182,.1)">💪'+a.spirit+'</span>');
+  if(a.mom>0)    parts.push('<span class="aw-tag" data-tip-id="award-mom"    style="color:#fbbf24">👑<span style="font-size:.7rem">'+a.mom+'</span></span>');
+  if(a.special>0)parts.push('<span class="aw-tag" data-tip-id="award-special" style="color:#a78bfa">⭐<span style="font-size:.7rem">'+a.special+'</span></span>');
+  if(a.spirit>0) parts.push('<span class="aw-tag" data-tip-id="award-spirit"  style="color:#f472b6">💪<span style="font-size:.7rem">'+a.spirit+'</span></span>');
   if(!parts.length)return'';
-  return'<span style="margin-left:4px;display:inline-flex;gap:3px;vertical-align:middle;align-items:center">'+parts.join('')+'</span>';
+  return'<span style="margin-left:10px;display:inline-flex;gap:9px;vertical-align:middle;align-items:center;border-left:1px solid rgba(51,65,85,.6);padding-left:10px">'+parts.join('')+'</span>';
 }
 
 window.toggleSynRow=function(uid,p){
