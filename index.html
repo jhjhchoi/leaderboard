@@ -422,9 +422,9 @@ var tbs=document.querySelectorAll('.tb');for(var i=0;i<tbs.length;i++){tbs[i].ad
 var st=document.getElementById('status');
 function doFetch(){
   Promise.all([
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(e){return '__ERR__'+e.message;}),
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID25).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
-    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/export?format=csv&gid='+GID24).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2026%20KDA').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(e){return '__ERR__'+e.message;}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2025%20KDA').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
+    fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2024%20KDA').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2026%20LOG').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2025%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
     fetch('https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=2024%20LOG').then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}),
