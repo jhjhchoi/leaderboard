@@ -117,6 +117,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .aw-tag{cursor:pointer;font-size:.78rem;font-weight:900;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;gap:1px;line-height:1;opacity:.75;letter-spacing:-.2px;white-space:nowrap}
 .aw-tag:hover{opacity:1;transform:scale(1.12)}
 .tab-sep{width:1px;background:rgba(51,65,85,.9);margin:5px 4px;flex-shrink:0;align-self:stretch}
+.stat-tip:hover{background:rgba(129,140,248,.08)!important;color:#f1f5f9!important}
 #g-tooltip{display:none;position:fixed;background:#1e293b;border:1.5px solid #818cf8;border-radius:10px;padding:14px 16px;font-size:.8rem;color:#f1f5f9;z-index:9999;max-width:380px;line-height:1.9;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 </style>
 </head>
@@ -450,8 +451,132 @@ function calcAll(d26){return ALL.map(function(n){var p6=d26.find(function(p){ret
 function aRows(dA,d6){return dA.map(function(p,i){var p6=d6.find(function(x){return x.name===p.name;}),p5=d25.find(function(x){return x.name===p.name;}),p4=d24.find(function(x){return x.name===p.name;});return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(p.at)+' '+p.name+'</td><td style="color:'+kC(p.kda)+';font-weight:700">'+p.kda.toFixed(2)+'</td><td>'+wr(p.winRate,p.totalWins,p.totalLosses)+'</td><td>'+p.totalScore.toLocaleString()+'</td><td>'+p.totalGames+'</td><td style="color:'+(p6?kC(p6.kda):'#555')+'">'+(p6?p6.kda.toFixed(2):'-')+'</td><td style="color:'+(p5?kC(p5.kda):'#555')+'">'+(p5?p5.kda.toFixed(2):'-')+'</td><td style="color:'+(p4?kC(p4.kda):'#555')+'">'+(p4?p4.kda.toFixed(2):'-')+'</td></tr>';}).join('');}
 function r6(d6){return [...d6].sort(function(a,b){return b.kda-a.kda;}).map(function(p,i){return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td><td>'+tb(p.tier)+'</td><td style="color:'+kC(p.kda)+';font-weight:700">'+p.kda.toFixed(2)+'</td><td>'+wr(p.winRate,p.wins,p.losses)+'</td><td>'+p.score.toLocaleString()+'</td><td>'+p.games+'</td><td>'+p.dpm+'</td><td>'+p.gpm+'</td><td class="cs">'+p.compScore.toFixed(1)+'</td></tr>';}).join('');}
 function yR(data,scMap){return [...data].sort(function(a,b){return b.kda-a.kda;}).map(function(p,i){var sc=scMap&&scMap[p.name]!==undefined?scMap[p.name]:null;return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td>'+(sc!==null?'<td>'+tbFromScore(sc)+'</td>':'')+'<td style="color:'+kC(p.kda)+';font-weight:700">'+p.kda.toFixed(2)+'</td><td>'+wr(p.winRate,p.wins,p.losses)+'</td><td>'+p.score.toLocaleString()+'</td><td>'+p.games+'</td>'+(sc!==null?'<td class="cs">'+sc.toFixed(1)+'</td>':'')+'</tr>';}).join('');}
-function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;}),p5=d25.find(function(p){return p.name===nm;}),p4=d24.find(function(p){return p.name===nm;});var a=AN[nm]||{t:'B',ch:'',r:'',p:''};var tg=(p6?p6.games:0)+(p5?p5.games:0)+(p4?p4.games:0),tw=(p6?p6.wins:0)+(p5?p5.wins:0)+(p4?p4.wins:0),tl=(p6?p6.losses:0)+(p5?p5.losses:0)+(p4?p4.losses:0);var wK=tg>0?((p6?p6.kda*p6.games:0)+(p5?p5.kda*p5.games:0)+(p4?p4.kda*p4.games:0))/tg:0,wR=(tw+tl)>0?tw/(tw+tl)*100:0;var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[a.t]||'#94a3b8';function bar(p,bc,sc){var bh=p?'<div class="yb" style="height:'+Math.max(Math.min(p.kda/5*80,80),8)+'px;background:'+bc+'"><span>'+p.kda.toFixed(2)+'</span></div>':'<div class="ye">-</div>';var th=sc!=null?'<div style="font-size:.6rem;font-weight:700;color:'+tierColor(sc)+';text-align:center;margin-top:2px">'+getTierName(sc)+'</div><div style="font-size:.58rem;color:#64748b;text-align:center">('+sc.toFixed(1)+')</div>':'';return bh+th;}return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+a.ch+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div></div>';}).join('');}
+function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;}),p5=d25.find(function(p){return p.name===nm;}),p4=d24.find(function(p){return p.name===nm;});var a=AN[nm]||{t:'B',ch:'',r:'',p:''};var tg=(p6?p6.games:0)+(p5?p5.games:0)+(p4?p4.games:0),tw=(p6?p6.wins:0)+(p5?p5.wins:0)+(p4?p4.wins:0),tl=(p6?p6.losses:0)+(p5?p5.losses:0)+(p4?p4.losses:0);var wK=tg>0?((p6?p6.kda*p6.games:0)+(p5?p5.kda*p5.games:0)+(p4?p4.kda*p4.games:0))/tg:0,wR=(tw+tl)>0?tw/(tw+tl)*100:0;var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[a.t]||'#94a3b8';function bar(p,bc,sc){var bh=p?'<div class="yb" style="height:'+Math.max(Math.min(p.kda/5*80,80),8)+'px;background:'+bc+'"><span>'+p.kda.toFixed(2)+'</span></div>':'<div class="ye">-</div>';var th=sc!=null?'<div style="font-size:.6rem;font-weight:700;color:'+tierColor(sc)+';text-align:center;margin-top:2px">'+getTierName(sc)+'</div><div style="font-size:.58rem;color:#64748b;text-align:center">('+sc.toFixed(1)+')</div>':'';return bh+th;}    // 레이더 차트 섹션
+    var radarSection='';
+    var rs=window._radarStats&&window._radarStats[nm];
+    if(rs){
+      var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
+      radarSection='<div style="border-top:1px solid rgba(51,65,85,.5);padding:10px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:4px">'
+        +'<div style="font-size:.68rem;color:#475569;letter-spacing:.5px">STAT SCORE <span style="color:'+tc+';font-weight:900;font-size:.78rem">'+total+'</span><span style="color:#334155"> / 600</span></div>'
+        +radarSVG(rs,tc)
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:100%;font-size:.66rem;text-align:center">'
+          +'<div class="stat-tip" data-tip-id="stat-atk"    style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px" title="">공격력 <b style="color:'+tc+'">'+rs.atk+'</b></div>'
+          +'<div class="stat-tip" data-tip-id="stat-survive" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">생존력 <b style="color:'+tc+'">'+rs.survive+'</b></div>'
+          +'<div class="stat-tip" data-tip-id="stat-teamwork" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">팀워크 <b style="color:'+tc+'">'+rs.teamwork+'</b></div>'
+          +'<div class="stat-tip" data-tip-id="stat-compete"  style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">승부력 <b style="color:'+tc+'">'+rs.compete+'</b></div>'
+          +'<div class="stat-tip" data-tip-id="stat-stability" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">안정성 <b style="color:'+tc+'">'+rs.stability+'</b></div>'
+          +'<div class="stat-tip" data-tip-id="stat-champpool" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">챔피언폭 <b style="color:'+tc+'">'+rs.champPool+'</b></div>'
+        +'</div></div>';
+    }
+    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+a.ch+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
 function hC(i,l,n,v,cls){return '<div class="hc '+cls+'"><div class="hi">'+i+'</div><div class="hl2">'+l+'</div><div class="hn">'+n+'</div><div class="hv">'+v+'</div></div>';}
+
+// ── 육각형 레이더 차트 ─────────────────────────────────────────────
+function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights, champData) {
+  var raw = {};
+  ALL.forEach(function(nm) {
+    var pa = dA.find(function(x){return x.name===nm;})||{kda:0,winRate:0,totalGames:0};
+    var p6 = d6.find(function(x){return x.name===nm;})||{games:0};
+    var p5 = d25all.find(function(x){return x.name===nm;})||{games:0};
+    var p4 = d24all.find(function(x){return x.name===nm;})||{games:0};
+    var tg = (p6.games||0)+(p5.games||0)+(p4.games||0)||1;
+
+    // 공격력: 경기당 평균 킬
+    var totK=(dKA26[nm]?dKA26[nm].k:0)+(dKA25[nm]?dKA25[nm].k:0)+(dKA24[nm]?dKA24[nm].k:0);
+    var atk = totK / tg;
+
+    // 생존력: 3년 가중평균 KDA
+    var survive = pa.kda || 0;
+
+    // 팀워크: 경기당 평균 어시스트
+    var totA=(dKA26[nm]?dKA26[nm].a:0)+(dKA25[nm]?dKA25[nm].a:0)+(dKA24[nm]?dKA24[nm].a:0);
+    var teamwork = totA / tg;
+
+    // 승부력: 3년 통합 승률
+    var compete = pa.winRate || 0;
+
+    // 안정성: MOM 수상율 (MOM수 / 총경기 × 100)
+    var momCnt = 0;
+    if(insights && insights.champAwards){
+      insights.champAwards.forEach(function(a){if(a.player===nm)momCnt+=(a.mom||0);});
+    }
+    var stability = momCnt / tg * 100;
+
+    // 챔피언폭: sqrt(픽 챔피언 수) × 평균 챔피언 승률
+    var champs = (champData && champData[nm]) || [];
+    var avgWR = champs.length>0 ? champs.reduce(function(s,c){return s+c.wr;},0)/champs.length : 0;
+    var champPool = Math.sqrt(Math.max(champs.length,0)) * (avgWR/100);
+
+    raw[nm] = {atk:atk, survive:survive, teamwork:teamwork, compete:compete, stability:stability, champPool:champPool};
+  });
+
+  // 각 항목 0~100 정규화 (팀 내 min-max)
+  var keys=['atk','survive','teamwork','compete','stability','champPool'];
+  var norm = {};
+  ALL.forEach(function(nm){norm[nm]={};});
+  keys.forEach(function(k){
+    var vals = ALL.map(function(nm){return raw[nm][k];});
+    var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+    var rng = mx-mn || 1;
+    ALL.forEach(function(nm){
+      norm[nm][k] = Math.round((raw[nm][k]-mn)/rng*100);
+    });
+  });
+  return norm;
+}
+
+function radarSVG(stats, color) {
+  var W=200, H=200, cx=100, cy=105, R=62;
+  var keys  =['atk','survive','teamwork','compete','stability','champPool'];
+  var labels=['공격력','생존력','팀워크','승부력','안정성','챔피언폭'];
+  var n=6;
+  // 축 각도: 상단(-90°)부터 시계방향 60° 간격
+  var angles=keys.map(function(_,i){return (i*Math.PI*2/n)-Math.PI/2;});
+
+  function pt(ang,r){return [cx+r*Math.cos(ang), cy+r*Math.sin(ang)];}
+
+  // 배경 그리드 (20%~100% 5단계)
+  var grids='';
+  [20,40,60,80,100].forEach(function(pct){
+    var r=R*pct/100;
+    var pts=angles.map(function(a){var p=pt(a,r);return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+    grids+='<polygon points="'+pts+'" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>';
+  });
+
+  // 축선
+  var axes=angles.map(function(a){
+    var p=pt(a,R);
+    return '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="rgba(148,163,184,.18)" stroke-width="1"/>';
+  }).join('');
+
+  // 선수 폴리곤
+  var polyPts=keys.map(function(k,i){
+    var v=(stats[k]||0)/100;
+    var p=pt(angles[i],R*v);
+    return p[0].toFixed(1)+','+p[1].toFixed(1);
+  }).join(' ');
+  var poly='<polygon points="'+polyPts+'" fill="'+color+'" fill-opacity="0.22" stroke="'+color+'" stroke-width="2"/>';
+
+  // 꼭짓점 점
+  var dots=keys.map(function(k,i){
+    var v=(stats[k]||0)/100;
+    var p=pt(angles[i],R*v);
+    return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="'+color+'"/>';
+  }).join('');
+
+  // 라벨 + 수치
+  var lblEls=labels.map(function(lbl,i){
+    var a=angles[i];
+    var lx=cx+(R+20)*Math.cos(a), ly=cy+(R+20)*Math.sin(a);
+    var anc=Math.cos(a)>0.3?'start':Math.cos(a)<-0.3?'end':'middle';
+    var sc=stats[keys[i]]||0;
+    return '<text x="'+lx.toFixed(1)+'" y="'+(ly-4).toFixed(1)+'" fill="#64748b" font-size="8.5" text-anchor="'+anc+'" font-family="inherit">'+lbl+'</text>'
+          +'<text x="'+lx.toFixed(1)+'" y="'+(ly+7).toFixed(1)+'" fill="'+color+'" font-size="9.5" font-weight="700" text-anchor="'+anc+'" font-family="inherit">'+sc+'</text>';
+  }).join('');
+
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'
+    +grids+axes+poly+dots+lblEls+'</svg>';
+}
 function parseKA(csv,nameRow,kdaRow){var rows=pCSV(csv),rN=rows[nameRow],rK=rows[kdaRow],res={};for(var i=0;i<rN.length;i++){var n=(rN[i]||'').trim();if(n&&ALL.includes(n)&&!res[n]){var kv=parseInt(rK[i],10),av=parseInt(rK[i+2],10);if(!isNaN(kv)){res[n]={k:kv>0?kv:0,a:(!isNaN(av)&&av>0)?av:0};}}}return res;}
 function kBar(v,max){var pct=max>0?Math.min(v/max*100,100):0;var col=pct>=70?'#a78bfa':pct>=40?'#60a5fa':'#94a3b8';return '<div class="kbar-wrap"><div class="kbar-bg"><div class="kbar-fill" style="width:'+pct.toFixed(1)+'%;background:'+col+'"></div></div><span class="kbar-val">'+v.toLocaleString()+'</span></div>';}
 function bKillLB(d26ka,d25ka,d24ka,yr){var isAll=!yr||yr==='all';var subLbl=isAll?'2024-2026 합산':yr==='26'?'2026 합산':yr==='25'?'2025 합산':'2024 합산';var data=ALL.map(function(n){var k26=d26ka[n]?d26ka[n].k:0,k25=d25ka[n]?d25ka[n].k:0,k24=d24ka[n]?d24ka[n].k:0;var total=isAll?k26+k25+k24:yr==='26'?k26:yr==='25'?k25:k24;return{name:n,total:total,k26:k26,k25:k25,k24:k24};}).sort(function(a,b){return b.total-a.total;});var maxK=data[0]?data[0].total:1;var podHtml='<div class="podium"><div class="pod p2"><div class="pn2">2nd</div><div class="pm">'+data[1].name+'</div><div class="pv">'+data[1].total.toLocaleString()+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div><div class="pm">'+data[0].name+'</div><div class="pv">'+data[0].total.toLocaleString()+'</div></div><div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+data[2].name+'</div><div class="pv">'+data[2].total.toLocaleString()+'</div></div></div>';var thCols=isAll?'<th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th>':'';var rows=data.map(function(p,i){var extraCols=isAll?'<td style="color:#818cf8">'+p.k26.toLocaleString()+'</td><td style="color:#34d399">'+p.k25.toLocaleString()+'</td><td style="color:#fb923c">'+p.k24.toLocaleString()+'</td>':'';return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td><td>'+kBar(p.total,maxK)+extraCols+'</td></tr>';}).join('');return '<div class="ka-lb"><div class="ka-title">⚔️ 누적 Kill 리더보드 <span class="ka-sub">'+subLbl+'</span></div>'+podHtml+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>누적 Kill</th>'+thCols+'</tr></thead><tbody>'+rows+'</tbody></table></div>';}
@@ -479,7 +604,13 @@ function doFetch(){
     var _dummy=csv26,csvLog=results[3]||'',csvLog25=results[4]||'',csvLog24=results[5]||'',csvInsights=results[6]||'';
     var d6new=p26(csv26);
     var ka26=parseKA(csv26,7,8),ka25=parseKA(csv25,5,6),ka24=parseKA(csv24,5,6);
-    var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;computeWeightedTiers(d6new,d25,d24);sortAllByTier();render(d6new,ka26,ka25,ka24);document.getElementById('ptier-inner').innerHTML=renderTierPage(d6new);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);try{var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));document.getElementById('synergy-inner').innerHTML=renderSynergyPage(insightsData);document.getElementById('rivals-inner').innerHTML=renderRivalsPage(insightsData);document.getElementById('perf-tab-inner').innerHTML=renderPerfPage(insightsData);setTimeout(initPerfTabs,100);var fw=document.getElementById('form-widget');if(fw)fw.innerHTML=renderFormWidget(insightsData);}catch(logErr){console.warn('LOG render error:',logErr);}
+    var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;computeWeightedTiers(d6new,d25,d24);sortAllByTier();render(d6new,ka26,ka25,ka24);document.getElementById('ptier-inner').innerHTML=renderTierPage(d6new);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);try{var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));document.getElementById('synergy-inner').innerHTML=renderSynergyPage(insightsData);document.getElementById('rivals-inner').innerHTML=renderRivalsPage(insightsData);document.getElementById('perf-tab-inner').innerHTML=renderPerfPage(insightsData);setTimeout(initPerfTabs,100);var fw=document.getElementById('form-widget');if(fw)fw.innerHTML=renderFormWidget(insightsData);
+// 레이더 스탯 계산 (insights + champData 모두 사용 가능한 시점)
+var allLogAgg=aggregateLogs(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));
+var sc25r=calcCompScores(d25);var sc24r=calcCompScores(d24);
+window._radarStats=computeRadarStats(calcAll(d6new),window._dKA26||{},window._dKA25||{},window._dKA24||{},d6new,d25,d24,insightsData,allLogAgg.champData);
+document.getElementById('cards-inner').innerHTML=bCards(d6new,sc25r,sc24r);
+}catch(logErr){console.warn('LOG render error:',logErr);}
     var ts=new Date().toLocaleString('ko-KR');
     st.innerHTML='<span class="sok">✅ 2026 최신화 완료 · '+ts+'</span>';
   }).catch(function(e){
@@ -898,13 +1029,19 @@ var TIPS={
   cs2425:'📊 종합점수 산정식 (2024·2025)<br><br>60 + 5 × (3.0×z_KDA + 0.6×z_승률)',
   'award-mom':'👑 MOM\n승리팀에서 경기를 가장 잘 이끈 선수에게 수여되는 최고 영예',
   'award-special':'⭐ 스페셜\n승리팀에서 돋보인 활약을 펼친 숨겨진 조력자',
-  'award-spirit':'💪 투혼상\n패배팀에서 끝까지 분전한 비운의 에이스에게 수여'
+  'award-spirit':'💪 투혼상\n패배팀에서 끝까지 분전한 비운의 에이스에게 수여',
+  'stat-atk':'⚔️ 공격력\n\n경기당 평균 킬 수 (3년 합산 기준)\n\n킬 수가 많을수록 높은 점수. 팀 내 최고 선수가 100점, 최저 선수가 0점이 되도록 상대 정규화.',
+  'stat-survive':'🛡️ 생존력\n\n3년 가중평균 KDA (킬+어시) ÷ 데스\n\nKDA가 높을수록 죽지 않고 활약한다는 의미. 팀 내 상대 비교로 0~100 정규화.',
+  'stat-teamwork':'🤝 팀워크\n\n경기당 평균 어시스트 수 (3년 합산 기준)\n\n어시스트는 팀 킬에 함께한 횟수. 지원형·서포터 선수일수록 높은 경향.',
+  'stat-compete':'🏆 승부력\n\n3년 통합 승률\n\n실제로 얼마나 이겼는지를 직접 반영. 실력과 판단력이 승패에 미치는 영향을 종합적으로 측정.',
+  'stat-stability':'📊 안정성\n\n전체 경기 대비 MOM 수상 비율\n\n경기당 얼마나 자주 최고 선수로 인정받았는지. 꾸준히 잘하는 선수일수록 수상률이 높음.',
+  'stat-champpool':'🎮 챔피언폭\n\n사용 챔피언 수 × 챔피언별 평균 승률\n\n다양한 챔피언을 실제로 잘 다루는 능력. 단순히 많이 쓰는 것보다 승률이 높아야 높은 점수.'
 };
 document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
 document.addEventListener('click',function(e){
   var tip=document.getElementById('g-tooltip');
-  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')||e.target.classList.contains('aw-tag')){
+  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')||e.target.classList.contains('aw-tag')||e.target.classList.contains('stat-tip')){
     var id=e.target.getAttribute('data-tip-id');
     if(_tipOpen===id){tip.style.display='none';_tipOpen=null;}
     else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=e.target.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
