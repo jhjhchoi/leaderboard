@@ -622,29 +622,33 @@ function renderAnalysisPage(insights){
     +'<button class="yb2" data-atab="riv">⚔️ 숙명의 라이벌</button>'
     +'</div>';
 
-  // ── 팀 궁합 초기 화면: 선수별 베스트 파트너 카드 그리드 ──
-  var synOverview='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 각 선수의 베스트 파트너 · 선수명 클릭하면 전체 궁합 목록이 펼쳐져요 (최소 5경기 기준)</div>';
-  synOverview+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px">';
+  // ── 팀궁합: 심플 테이블 + 클릭 시 상세 펼치기 ──
+  var synInfo='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 선수별 베스트 파트너 요약 · 선수 행 클릭 시 전체 목록 펼쳐져요 (최소 5경기 기준)</div>';
+  var synRows='';
   ALL.forEach(function(p){
     var pairs=insights.synergy.filter(function(s){return(s.p1===p||s.p2===p)&&s.together>=5;})
-      .map(function(s){var partner=s.p1===p?s.p2:s.p1;return{partner:partner,together:s.together,wr:s.wr};})
+      .map(function(s){var partner=s.p1===p?s.p2:s.p1;return{partner:partner,together:s.together,wins:s.wins,wr:s.wr};})
       .sort(function(a,b){return b.wr-a.wr;});
-    var best=pairs[0],worst=pairs[pairs.length>1?pairs.length-1:0];
-    var bCol=best&&best.wr>=60?'#4ade80':best&&best.wr>=50?'#60a5fa':'#94a3b8';
-    var wCol=worst&&worst!==best&&worst.wr<45?'#f87171':'#64748b';
-    synOverview+='<div style="background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;cursor:pointer" onclick="showSynDetail(\''+p+'\')">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'+at(AN[p]?AN[p].t:'B')+'<span style="font-weight:800">'+p+'</span></div>'
-      +(best?'<div style="font-size:.78rem;color:#94a3b8;margin-bottom:4px">💚 베스트 파트너</div>'
-             +'<div style="display:flex;justify-content:space-between;align-items:center">'
-             +'<span style="color:#f1f5f9;font-weight:700">'+best.partner+'</span>'
-             +'<span style="color:'+bCol+';font-weight:900">'+best.wr+'% <span style="color:#64748b;font-size:.72rem">'+best.together+'판</span></span></div>':'<div style="color:#475569;font-size:.8rem">데이터 부족</div>')
-      +(worst&&worst!==best&&worst.wr<45?'<div style="font-size:.72rem;color:'+wCol+';margin-top:4px">🔴 어려운 조합: '+worst.partner+' '+worst.wr+'%</div>':'')
-      +'</div>';
+    var best=pairs[0];
+    var wrCol=best?(best.wr>=60?'#4ade80':best.wr>=50?'#60a5fa':'#f87171'):'#475569';
+    var uid='syn-'+p.replace(/\s/g,'_');
+    synRows+='<tr style="cursor:pointer" onclick="toggleSynRow(\''+uid+'\',\''+p+'\')">'
+      +'<td>'+at(AN[p]?AN[p].t:'B')+'</td>'
+      +'<td class="nm" style="font-weight:800">'+p+'</td>'
+      +'<td class="nm" style="color:#f1f5f9">'+(best?best.partner:'—')+'</td>'
+      +'<td style="color:'+wrCol+';font-weight:700">'+(best?best.wr+'%':'—')+'</td>'
+      +'<td style="color:#64748b">'+(best?best.together+'판':'—')+'</td>'
+      +'<td style="color:#818cf8;font-size:.8rem">▼ 상세</td>'
+      +'</tr>'
+      +'<tr id="'+uid+'" style="display:none"><td colspan="6" style="padding:0">'
+      +'<div style="padding:10px;background:rgba(129,140,248,.05);border-top:1px solid #334155" id="'+uid+'-detail"></div>'
+      +'</td></tr>';
   });
-  synOverview+='</div>';
-  synOverview+='<div id="syn-detail" style="display:none"><div id="syn-result"></div></div>';
+  var synHtml=synInfo
+    +'<table class="t"><thead><tr><th>등급</th><th>선수</th><th>베스트 파트너</th><th>함께 승률</th><th>동행</th><th></th></tr></thead>'
+    +'<tbody>'+synRows+'</tbody></table>';
 
-  // ── 숙명의 라이벌 ──
+  // ── 라이벌 ──
   var rivRows=insights.rivals.slice(0,15).map(function(r,i){
     return'<tr><td class="rk">'+(i+1)+'</td>'
       +'<td class="nm">'+at(AN[r.p1]?AN[r.p1].t:'B')+' '+r.p1+'</td>'
@@ -652,15 +656,17 @@ function renderAnalysisPage(insights){
       +'<td class="nm">'+at(AN[r.p2]?AN[r.p2].t:'B')+' '+r.p2+'</td>'
       +'<td style="color:#fbbf24;font-weight:900">'+r.count+'회</td></tr>';
   }).join('');
-  var rivHtml='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #f87171;font-size:.82rem;color:#94a3b8">⚔️ 같은 경기에서 각각 승리팀 에이스(MOM)와 패배팀 에이스(투혼상)로 맞붙은 횟수 기준</div>'
+  var rivHtml='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #f87171;font-size:.82rem;color:#94a3b8">⚔️ 같은 경기에서 MOM(승리팀 에이스)과 투혼상(패배팀 에이스)으로 맞붙은 횟수 기준</div>'
     +'<table class="t"><thead><tr><th>#</th><th>선수 A</th><th></th><th>선수 B</th><th>에이스 대결</th></tr></thead><tbody>'+rivRows+'</tbody></table>';
 
   return'<div style="padding-bottom:20px">'
     +tabs
-    +'<div id="atab-syn">'+synOverview+'</div>'
+    +'<div id="atab-syn">'+synHtml+'</div>'
     +'<div id="atab-riv" style="display:none">'+rivHtml+'</div>'
     +'</div>';
 }
+
+
 
 
 function renderFormWidget(insights){
@@ -679,7 +685,7 @@ function renderFormWidget(insights){
       +at(AN[p]?AN[p].t:'B')+'<span style="font-weight:700">'+p+'</span>'
       +'<span style="color:'+col+';font-size:.7rem;font-weight:900">'+cnt+'</span></span>';
   }
-  return'<div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 16px;background:#1e293b;border-bottom:1px solid #334155;font-size:.8rem">'
+  return'<div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 16px 12px;background:#1e293b;border-bottom:2px solid #334155;margin-bottom:8px;font-size:.8rem">'
     +'<div style="display:flex;align-items:center;gap:6px"><span style="color:#fbbf24;font-weight:700">🔥 상승세</span>'
     +rising.map(function(p){return pill(p,'#fbbf24',momCnt[p]);}).join('')+'</div>'
     +'<div style="display:flex;align-items:center;gap:6px"><span style="color:#a78bfa;font-weight:700">💜 투혼</span>'
