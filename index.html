@@ -114,7 +114,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .cha{background:rgba(250,204,21,.2);color:#facc15;border:1px solid #facc15}
 .tip-icon{cursor:pointer;font-size:.65rem;font-weight:700;margin-left:4px;opacity:.55;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1.5px solid #94a3b8;border-radius:50%;line-height:1}
 .tip-icon:hover{opacity:1;color:#818cf8;border-color:#818cf8}
-.aw-tag{cursor:pointer;font-size:.72rem;font-weight:800;padding:1px 5px;border-radius:5px;vertical-align:middle;user-select:none;border:1px solid;display:inline-block;line-height:1.5;opacity:.8;letter-spacing:-.3px}
+.aw-tag{cursor:pointer;font-size:.72rem;font-weight:800;padding:1px 0;border-radius:5px;vertical-align:middle;user-select:none;border:1px solid;display:inline-flex;align-items:center;justify-content:center;line-height:1.5;opacity:.8;letter-spacing:-.3px;width:2.2em;text-align:center}
 .aw-tag:hover{opacity:1;transform:scale(1.08)}
 .tab-sep{width:1px;background:rgba(51,65,85,.9);margin:5px 4px;flex-shrink:0;align-self:stretch}
 #g-tooltip{display:none;position:fixed;background:#1e293b;border:1.5px solid #818cf8;border-radius:10px;padding:14px 16px;font-size:.8rem;color:#f1f5f9;z-index:9999;max-width:380px;line-height:1.9;box-shadow:0 8px 24px rgba(0,0,0,.6)}
@@ -128,7 +128,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
   <button class="tb" data-tab="champ">🏹 챔피언</button>
   <button class="tb" data-tab="perf-tab">💥 퍼포먼스</button>
   <div class="tab-sep"></div>
-  <button class="tb" data-tab="synergy">🤝 팀 궁합</button>
+  <button class="tb" data-tab="synergy">🤝 베스트 파트너</button>
   <button class="tb" data-tab="rivals">⚔️ 숙명의 라이벌</button>
   <div class="tab-sep"></div>
   <button class="tb" data-tab="records">📜 기록관</button>
@@ -523,8 +523,8 @@ function computeWeightedTiers(d6,d25data,d24data){
   var tg24=Object.keys(g24).reduce(function(s,k){return s+(g24[k]||0);},0)||1;
   var tierScores={};
   ALL.forEach(function(p){
-    // 2026 가중치 2배: 최근 시즌 실력이 현재 등급에 더 잘 반영되도록
-    var w26=(g26[p]||0)/tg26*2,w25=(g25[p]||0)/tg25,w24=(g24[p]||0)/tg24;
+    // 2026 가중치 3배: 최근 시즌 실력이 현재 등급에 더 강하게 반영되도록
+    var w26=(g26[p]||0)/tg26*3,w25=(g25[p]||0)/tg25,w24=(g24[p]||0)/tg24;
     var tw=w26+w25+w24;if(tw===0){tierScores[p]=0;return;}
     var avgRank=((r26[p]||n)*w26+(r25[p]||n)*w25+(r24[p]||n)*w24)/tw;
     tierScores[p]=Math.round((n-avgRank)/(n-1)*100);
@@ -549,7 +549,7 @@ function renderTierPage(d6){
     +'각 연도별 수집 지표가 달라 점수를 직접 비교하는 것은 공정하지 않습니다. 대신 <b style="color:#f1f5f9">연도별 상대 순위</b>를 경기 참여 비율로 가중 평균하여 최종 등급을 산출했습니다.<br>'
     +'이 방식은 특정 시즌의 데이터 차이에 의한 불공정함을 최소화하며, 3년간의 <b style="color:#f1f5f9">일관된 경쟁력</b>을 반영합니다.<br>'
     +'<span style="color:#60a5fa">순위 점수 = (전체 선수 수 − 가중평균 순위) ÷ (전체 선수 수 − 1) × 100</span><br>'
-    +'<span style="color:#94a3b8;font-size:.75rem">* 2026 시즌 가중치 2배 적용 — 최근 성적이 현재 등급에 더 강하게 반영</span>'
+    +'<span style="color:#94a3b8;font-size:.75rem">* 2026 시즌 가중치 3배 적용 — 최근 성적이 현재 등급에 더 강하게 반영</span>'
     +'</div></div>'
     +'<div style="background:#1e293b;border-radius:12px;padding:18px;border:1px solid #334155">'
     +'<div style="font-size:.82rem;font-weight:800;color:#818cf8;margin-bottom:10px">🏆 등급 기준</div>'
@@ -648,7 +648,7 @@ function renderSynergyPage(insights){
   if(!insights||!insights.synergy.length){
     return'<div class="spinner">💡 Apps Script에서 🔥 인사이트 데이터 추출을 실행해주세요.</div>';
   }
-  var synInfo='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 선수별 베스트 파트너 요약 · 선수 행 클릭 시 전체 목록 펼쳐져요 (최소 5경기 기준)</div>';
+  var synInfo='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 선수별 베스트 파트너 요약 · 선수 행 클릭 시 전체 목록 펼쳐져요 (최소 5경기 이상 기준)</div>';
   var synRows='';
   ALL.forEach(function(p){
     var pairs=insights.synergy.filter(function(s){return(s.p1===p||s.p2===p)&&s.together>=5;})
@@ -754,15 +754,15 @@ function renderFormWidget(insights){
     +'<div style="font-size:.65rem;color:#475569;letter-spacing:.3px;margin-bottom:8px">'+periodLabel+'</div>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
       +'<div style="flex:1;min-width:150px">'
-        +'<div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">🔥 최근 승리 견인중</div>'
+        +'<div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">🔥 최근 승리 견인중 <span style="font-weight:400;opacity:.45;font-size:.66rem">(MOM)</span></div>'
         +'<div style="display:flex;flex-direction:column;gap:4px">'+momHtml+'</div>'
       +'</div>'
       +'<div style="flex:1;min-width:150px">'
-        +'<div style="font-size:.72rem;font-weight:700;color:#60a5fa;margin-bottom:6px">⭐ 최근 묵묵 활약중</div>'
+        +'<div style="font-size:.72rem;font-weight:700;color:#60a5fa;margin-bottom:6px">⭐ 최근 묵묵 활약중 <span style="font-weight:400;opacity:.45;font-size:.66rem">(스페셜)</span></div>'
         +'<div style="display:flex;flex-direction:column;gap:4px">'+spcHtml+'</div>'
       +'</div>'
       +'<div style="flex:1;min-width:150px">'
-        +'<div style="font-size:.72rem;font-weight:700;color:#f472b6;margin-bottom:6px">💜 최근 고통 감내중</div>'
+        +'<div style="font-size:.72rem;font-weight:700;color:#f472b6;margin-bottom:6px">💜 최근 고통 감내중 <span style="font-weight:400;opacity:.45;font-size:.66rem">(투혼상)</span></div>'
         +'<div style="display:flex;flex-direction:column;gap:4px">'+spiHtml+'</div>'
       +'</div>'
     +'</div></div>';
