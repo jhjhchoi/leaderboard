@@ -678,56 +678,94 @@ function renderAnalysisPage(insights){
 
 function renderFormWidget(insights){
   if(!insights)return'';
+
+  // ── 섹션1·3: 최근 N경기 MOM / 투혼상 집계 ──────────────────────
+  var RECENT_SLICE = 30; // 경기당 3개 수상 → ~10경기 분량
   var momCnt={},spiCnt={};
   ALL.forEach(function(p){momCnt[p]=0;spiCnt[p]=0;});
+  var usingRecent=false;
 
-  // ① 1차: recentAwards에서 타입별 카운트
   if(insights.recentAwards&&insights.recentAwards.length){
-    insights.recentAwards.forEach(function(a){
+    insights.recentAwards.slice(0,RECENT_SLICE).forEach(function(a){
       var t=(a.type||'').trim();
-      if(momCnt[a.player]!==undefined&&t==='MOM')momCnt[a.player]++;
+      if(momCnt[a.player]!==undefined&&t==='MOM')  momCnt[a.player]++;
       if(spiCnt[a.player]!==undefined&&t==='투혼상')spiCnt[a.player]++;
     });
+    usingRecent=ALL.some(function(p){return momCnt[p]>0||spiCnt[p]>0;});
   }
-  var maxMom=Math.max.apply(null,ALL.map(function(p){return momCnt[p];}));
-  var maxSpi=Math.max.apply(null,ALL.map(function(p){return spiCnt[p];}));
-
-  // ② 2차 fallback: recentAwards 타입이 비어있으면 champAwards 합산으로 대체
-  var usingFallback=false;
-  if(maxMom===0&&maxSpi===0&&insights.champAwards&&insights.champAwards.length){
-    ALL.forEach(function(p){momCnt[p]=0;spiCnt[p]=0;});
+  // fallback: recentAwards 타입 비어있으면 champAwards 누적으로 대체
+  if(!usingRecent&&insights.champAwards&&insights.champAwards.length){
     insights.champAwards.forEach(function(a){
-      if(momCnt[a.player]!==undefined){
-        momCnt[a.player]+=(a.mom||0);
-        spiCnt[a.player]+=(a.spirit||0);
-      }
+      if(momCnt[a.player]!==undefined){momCnt[a.player]+=(a.mom||0);spiCnt[a.player]+=(a.spirit||0);}
     });
-    maxMom=Math.max.apply(null,ALL.map(function(p){return momCnt[p];}));
-    maxSpi=Math.max.apply(null,ALL.map(function(p){return spiCnt[p];}));
-    usingFallback=true;
   }
 
-  if(maxMom===0&&maxSpi===0)return'<div style="padding:10px 16px 12px;border-bottom:1px solid #1e293b;margin-bottom:4px;font-size:.78rem;color:#475569">🔥 상승세 · 💜 투혼 — 인사이트 데이터 추출 후 표시됩니다</div>';
+  var topMOM=ALL.slice().sort(function(a,b){return momCnt[b]-momCnt[a];}).filter(function(p){return momCnt[p]>0;}).slice(0,3);
+  var topSpi=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).filter(function(p){return spiCnt[p]>0;}).slice(0,3);
 
-  var rising=ALL.slice().sort(function(a,b){return momCnt[b]-momCnt[a];}).slice(0,3);
-  var falling=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).slice(0,3);
-  function card(p,cnt,col){
-    if(cnt===0)return'';
-    return'<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:8px">'
+  // ── 섹션2: 에이스 챔피언 TOP3 (MOM+스페셜 합산 기준) ────────────
+  var topChamps=[];
+  if(insights.champAwards&&insights.champAwards.length){
+    topChamps=insights.champAwards
+      .filter(function(a){return(a.mom||0)+(a.special||0)>0;})
+      .sort(function(a,b){return((b.mom||0)+(b.special||0))-((a.mom||0)+(a.special||0));})
+      .slice(0,3);
+  }
+
+  // 3개 섹션 모두 데이터 없으면 플레이스홀더
+  if(!topMOM.length&&!topSpi.length&&!topChamps.length){
+    return'<div style="padding:10px 16px 12px;border-bottom:1px solid #1e293b;margin-bottom:4px;font-size:.78rem;color:#475569">🔥 핫 선수 · 💎 에이스 챔피언 — 인사이트 데이터 추출 후 표시됩니다</div>';
+  }
+
+  var periodLabel=usingRecent?'최근 10경기 기준':'누적 기준';
+  var momLabel=usingRecent?'🔥 최근 MOM 랭킹':'🔥 역대 MOM TOP';
+  var spiLabel=usingRecent?'💜 최근 투혼의 아이콘':'💜 역대 투혼상 TOP';
+
+  // ── 렌더 헬퍼 ────────────────────────────────────────────────────
+  function pCard(p,cnt,col){
+    return'<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,.04);border-radius:8px">'
       +at(AN[p]?AN[p].t:'B')
-      +'<span style="font-weight:700;font-size:.82rem">'+p+'</span>'
-      +'<span style="color:'+col+';font-weight:900;font-size:.8rem;margin-left:auto">'+cnt+'회</span>'
+      +'<span style="font-weight:700;font-size:.82rem;flex:1">'+p+'</span>'
+      +'<span style="color:'+col+';font-weight:900;font-size:.82rem">'+cnt+'회</span>'
       +'</div>';
   }
-  var risingCards=rising.filter(function(p){return momCnt[p]>0;}).map(function(p){return card(p,momCnt[p],'#fbbf24');}).join('');
-  var fallingCards=falling.filter(function(p){return spiCnt[p]>0;}).map(function(p){return card(p,spiCnt[p],'#a78bfa');}).join('');
-  if(!risingCards&&!fallingCards)return'';
-  var risingLabel=usingFallback?'🔥 역대 MOM TOP':'🔥 최근 가장 핫한 선수';
-  var fallingLabel=usingFallback?'💜 역대 투혼상 TOP':'💜 최근 투혼의 아이콘';
-  return'<div style="display:flex;gap:16px;padding:10px 16px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px;flex-wrap:wrap">'
-    +(risingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">'+risingLabel+'</div><div style="display:flex;flex-direction:column;gap:4px">'+risingCards+'</div></div>':'')
-    +(fallingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px">'+fallingLabel+'</div><div style="display:flex;flex-direction:column;gap:4px">'+fallingCards+'</div></div>':'')
-    +'</div>';
+  var rk=['👑','⭐','🥉'];
+  function cCard(a,i){
+    var cnt=(a.mom||0)+(a.special||0);
+    return'<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,.04);border-radius:8px">'
+      +'<span style="font-size:.88rem;flex-shrink:0;line-height:1">'+rk[i]+'</span>'
+      +champIcon(a.champ,22)
+      +'<span style="flex:1;min-width:0;overflow:hidden">'
+        +'<span style="font-weight:700;font-size:.8rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.champ+'</span>'
+        +'<span style="font-size:.68rem;color:#94a3b8;white-space:nowrap">'+a.player+'</span>'
+      +'</span>'
+      +'<span style="color:#818cf8;font-weight:900;font-size:.8rem;flex-shrink:0">'+cnt+'회</span>'
+      +'</div>';
+  }
+
+  // 각 섹션 항상 3행으로 고정 — 부족하면 투명 placeholder로 채워 그리드 높이 통일
+  var ROW_H='<div style="height:32px;border-radius:8px"></div>';
+  function fixedRows(items,renderFn){
+    var rows=items.map(renderFn);
+    while(rows.length<3)rows.push(ROW_H);
+    return rows.join('');
+  }
+  var momHtml=fixedRows(topMOM,function(p){return pCard(p,momCnt[p],'#fbbf24');});
+  var spiHtml=fixedRows(topSpi,function(p){return pCard(p,spiCnt[p],'#a78bfa');});
+  var champHtml=topChamps.length
+    ?fixedRows(topChamps,function(a,i){return cCard(a,i);})
+    :'<div style="color:#475569;font-size:.76rem;padding:4px 0">인사이트 추출 필요</div>';
+
+  return'<div style="padding:10px 16px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px">'
+    +'<div style="font-size:.65rem;color:#475569;letter-spacing:.3px;margin-bottom:8px">'+periodLabel+'</div>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:155px"><div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">'+momLabel+'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:4px">'+momHtml+'</div></div>'
+      +'<div style="flex:1.4;min-width:195px"><div style="font-size:.72rem;font-weight:700;color:#818cf8;margin-bottom:6px">💎 에이스 챔피언 TOP3</div>'
+        +'<div style="display:flex;flex-direction:column;gap:4px">'+champHtml+'</div></div>'
+      +'<div style="flex:1;min-width:155px"><div style="font-size:.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px">'+spiLabel+'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:4px">'+spiHtml+'</div></div>'
+    +'</div></div>';
 }
 
 function initAnalysisTabs(insights){
