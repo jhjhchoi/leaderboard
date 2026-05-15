@@ -114,6 +114,8 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .cha{background:rgba(250,204,21,.2);color:#facc15;border:1px solid #facc15}
 .tip-icon{cursor:pointer;font-size:.65rem;font-weight:700;margin-left:4px;opacity:.55;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1.5px solid #94a3b8;border-radius:50%;line-height:1}
 .tip-icon:hover{opacity:1;color:#818cf8;border-color:#818cf8}
+.aw-tag{cursor:pointer;font-size:.72rem;font-weight:800;padding:1px 5px;border-radius:5px;vertical-align:middle;user-select:none;border:1px solid;display:inline-block;line-height:1.5;opacity:.8;letter-spacing:-.3px}
+.aw-tag:hover{opacity:1;transform:scale(1.08)}
 #g-tooltip{display:none;position:fixed;background:#1e293b;border:1.5px solid #818cf8;border-radius:10px;padding:14px 16px;font-size:.8rem;color:#f1f5f9;z-index:9999;max-width:380px;line-height:1.9;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 </style>
 </head>
@@ -584,12 +586,15 @@ function renderTierPage(d6){
 
 function parseInsightsCSV(csv){
   if(!csv)return{synergy:[],rivals:[],champAwards:[],topKDA:[],topDmgDealt:[],topDmgTaken:[],recentAwards:[]};
-  var lines=csv.split('\n');var section=null;
+  // pCSV를 사용해 quoted comma("105,271" 같은 천 단위 구분자)를 올바르게 파싱
+  var rows=pCSV(csv);
+  var section=null;
   var d={synergy:[],rivals:[],champAwards:[],topKDA:[],topDmgDealt:[],topDmgTaken:[],recentAwards:[]};
-  lines.forEach(function(line){
-    line=line.trim();if(!line)return;
-    var cols=line.split(',').map(function(v){return v.replace(/^"|"$/g,'').trim();});
-    var f=cols[0];
+  function toN(v){var n=+String(v||0).replace(/,/g,'');return isNaN(n)?0:n;}
+  rows.forEach(function(cols){
+    if(!cols||cols.length===0)return;
+    var f=(cols[0]||'').trim();
+    if(!f)return;
     if(f.indexOf('## SYNERGY')===0){section='syn';return;}
     if(f.indexOf('## RIVALS')===0){section='riv';return;}
     if(f.indexOf('## CHAMP_AWARDS')===0){section='ca';return;}
@@ -599,14 +604,15 @@ function parseInsightsCSV(csv){
     if(f.indexOf('## RECENT_AWARDS')===0){section='rec';return;}
     if(f.indexOf('## ')===0){section=null;return;}
     if(f==='선수1'||f==='선수'||f==='날짜')return;
+    var c=cols.map(function(v){return(v||'').trim();});
     switch(section){
-      case'syn': d.synergy.push({p1:cols[0],p2:cols[1],together:+cols[2],wins:+cols[3],wr:+cols[4]});break;
-      case'riv': d.rivals.push({p1:cols[0],p2:cols[1],count:+cols[2]});break;
-      case'ca':  d.champAwards.push({player:cols[0],champ:cols[1],mom:+cols[2],special:+cols[3],spirit:+cols[4],total:+cols[5]});break;
-      case'kda': d.topKDA.push({player:cols[0],champ:cols[1],k:+cols[2],d:+cols[3],a:+cols[4],kda:+cols[5],date:cols[6],won:cols[7],year:cols[8]});break;
-      case'dld': d.topDmgDealt.push({player:cols[0],champ:cols[1],val:+cols[2],date:cols[3],rank:+cols[4],won:cols[5],year:cols[6]});break;
-      case'dlt': d.topDmgTaken.push({player:cols[0],champ:cols[1],val:+cols[2],date:cols[3],rank:+cols[4],won:cols[5],year:cols[6]});break;
-      case'rec': d.recentAwards.push({date:cols[0],player:cols[1],type:cols[2]});break;
+      case'syn': d.synergy.push({p1:c[0],p2:c[1],together:toN(c[2]),wins:toN(c[3]),wr:toN(c[4])});break;
+      case'riv': d.rivals.push({p1:c[0],p2:c[1],count:toN(c[2])});break;
+      case'ca':  d.champAwards.push({player:c[0],champ:c[1],mom:toN(c[2]),special:toN(c[3]),spirit:toN(c[4]),total:toN(c[5])});break;
+      case'kda': d.topKDA.push({player:c[0],champ:c[1],k:toN(c[2]),d:toN(c[3]),a:toN(c[4]),kda:toN(c[5]),date:c[6],won:c[7],year:c[8]});break;
+      case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],rank:toN(c[4]),won:c[5],year:c[6]});break;
+      case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],rank:toN(c[4]),won:c[5],year:c[6]});break;
+      case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
     }
   });
   return d;
@@ -669,16 +675,38 @@ function renderAnalysisPage(insights){
 
 
 function renderFormWidget(insights){
-  if(!insights||!insights.recentAwards||!insights.recentAwards.length)return'';
+  if(!insights)return'';
   var momCnt={},spiCnt={};
   ALL.forEach(function(p){momCnt[p]=0;spiCnt[p]=0;});
-  insights.recentAwards.forEach(function(a){
-    if(momCnt[a.player]!==undefined&&a.type==='MOM')momCnt[a.player]++;
-    if(spiCnt[a.player]!==undefined&&a.type==='투혼상')spiCnt[a.player]++;
-  });
+
+  // ① 1차: recentAwards에서 타입별 카운트
+  if(insights.recentAwards&&insights.recentAwards.length){
+    insights.recentAwards.forEach(function(a){
+      var t=(a.type||'').trim();
+      if(momCnt[a.player]!==undefined&&t==='MOM')momCnt[a.player]++;
+      if(spiCnt[a.player]!==undefined&&t==='투혼상')spiCnt[a.player]++;
+    });
+  }
   var maxMom=Math.max.apply(null,ALL.map(function(p){return momCnt[p];}));
   var maxSpi=Math.max.apply(null,ALL.map(function(p){return spiCnt[p];}));
+
+  // ② 2차 fallback: recentAwards 타입이 비어있으면 champAwards 합산으로 대체
+  var usingFallback=false;
+  if(maxMom===0&&maxSpi===0&&insights.champAwards&&insights.champAwards.length){
+    ALL.forEach(function(p){momCnt[p]=0;spiCnt[p]=0;});
+    insights.champAwards.forEach(function(a){
+      if(momCnt[a.player]!==undefined){
+        momCnt[a.player]+=(a.mom||0);
+        spiCnt[a.player]+=(a.spirit||0);
+      }
+    });
+    maxMom=Math.max.apply(null,ALL.map(function(p){return momCnt[p];}));
+    maxSpi=Math.max.apply(null,ALL.map(function(p){return spiCnt[p];}));
+    usingFallback=true;
+  }
+
   if(maxMom===0&&maxSpi===0)return'<div style="padding:10px 16px 12px;border-bottom:1px solid #1e293b;margin-bottom:4px;font-size:.78rem;color:#475569">🔥 상승세 · 💜 투혼 — 인사이트 데이터 추출 후 표시됩니다</div>';
+
   var rising=ALL.slice().sort(function(a,b){return momCnt[b]-momCnt[a];}).slice(0,3);
   var falling=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).slice(0,3);
   function card(p,cnt,col){
@@ -692,9 +720,11 @@ function renderFormWidget(insights){
   var risingCards=rising.filter(function(p){return momCnt[p]>0;}).map(function(p){return card(p,momCnt[p],'#fbbf24');}).join('');
   var fallingCards=falling.filter(function(p){return spiCnt[p]>0;}).map(function(p){return card(p,spiCnt[p],'#a78bfa');}).join('');
   if(!risingCards&&!fallingCards)return'';
+  var risingLabel=usingFallback?'🔥 역대 MOM TOP':'🔥 최근 가장 핫한 선수';
+  var fallingLabel=usingFallback?'💜 역대 투혼상 TOP':'💜 최근 투혼의 아이콘';
   return'<div style="display:flex;gap:16px;padding:10px 16px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px;flex-wrap:wrap">'
-    +(risingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">🔥 최근 가장 핫한 선수</div><div style="display:flex;flex-direction:column;gap:4px">'+risingCards+'</div></div>':'')
-    +(fallingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px">💜 최근 투혼의 아이콘</div><div style="display:flex;flex-direction:column;gap:4px">'+fallingCards+'</div></div>':'')
+    +(risingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:6px">'+risingLabel+'</div><div style="display:flex;flex-direction:column;gap:4px">'+risingCards+'</div></div>':'')
+    +(fallingCards?'<div style="flex:1;min-width:200px"><div style="font-size:.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px">'+fallingLabel+'</div><div style="display:flex;flex-direction:column;gap:4px">'+fallingCards+'</div></div>':'')
     +'</div>';
 }
 
@@ -764,11 +794,11 @@ function champAwardBadge(player,champ,insights){
   var a=insights.champAwards.find(function(x){return x.player===player&&x.champ===champ;});
   if(!a||a.total===0)return'';
   var parts=[];
-  if(a.mom>0)parts.push('<span class="tip-icon" data-tip-id="award-mom" style="color:#fbbf24;font-size:.68rem;cursor:pointer">👑'+a.mom+'</span>');
-  if(a.special>0)parts.push('<span class="tip-icon" data-tip-id="award-special" style="color:#818cf8;font-size:.68rem;cursor:pointer">⭐'+a.special+'</span>');
-  if(a.spirit>0)parts.push('<span class="tip-icon" data-tip-id="award-spirit" style="color:#f472b6;font-size:.68rem;cursor:pointer">💪'+a.spirit+'</span>');
+  if(a.mom>0)    parts.push('<span class="aw-tag" data-tip-id="award-mom"    style="color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)">👑'+a.mom+'</span>');
+  if(a.special>0)parts.push('<span class="aw-tag" data-tip-id="award-special" style="color:#818cf8;border-color:rgba(129,140,248,.4);background:rgba(129,140,248,.1)">⭐'+a.special+'</span>');
+  if(a.spirit>0) parts.push('<span class="aw-tag" data-tip-id="award-spirit"  style="color:#f472b6;border-color:rgba(244,114,182,.4);background:rgba(244,114,182,.1)">💪'+a.spirit+'</span>');
   if(!parts.length)return'';
-  return'<span style="margin-left:5px;display:inline-flex;gap:3px;vertical-align:middle">'+parts.join('')+'</span>';
+  return'<span style="margin-left:4px;display:inline-flex;gap:3px;vertical-align:middle;align-items:center">'+parts.join('')+'</span>';
 }
 
 window.toggleSynRow=function(uid,p){
@@ -822,7 +852,7 @@ document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
 document.addEventListener('click',function(e){
   var tip=document.getElementById('g-tooltip');
-  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')){
+  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')||e.target.classList.contains('aw-tag')){
     var id=e.target.getAttribute('data-tip-id');
     if(_tipOpen===id){tip.style.display='none';_tipOpen=null;}
     else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=e.target.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
