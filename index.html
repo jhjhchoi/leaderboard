@@ -702,6 +702,7 @@ function renderFormWidget(insights){
   var momCnt={},spcCnt={},spiCnt={};
   ALL.forEach(function(p){momCnt[p]=0;spcCnt[p]=0;spiCnt[p]=0;});
   var hasData=false;
+  var usingFallback=false; // fallback 여부를 별도 추적
 
   if(insights.recentAwards&&insights.recentAwards.length){
     insights.recentAwards.slice(0,RECENT_SLICE).forEach(function(a){
@@ -715,7 +716,9 @@ function renderFormWidget(insights){
   }
 
   // fallback: recentAwards 타입 값 없으면 champAwards 누적치 사용
+  // hasData는 덮어쓰지 않고 usingFallback으로만 추적
   if(!hasData&&insights.champAwards&&insights.champAwards.length){
+    usingFallback=true;
     insights.champAwards.forEach(function(a){
       if(momCnt[a.player]!==undefined){
         momCnt[a.player]+=(a.mom||0);
@@ -734,7 +737,8 @@ function renderFormWidget(insights){
   var topSpc=ALL.slice().sort(function(a,b){return spcCnt[b]-spcCnt[a];}).slice(0,3);
   var topSpi=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).slice(0,3);
 
-  var periodLabel=hasData?'최근 10경기 기준':'누적 기준';
+  // usingFallback일 때만 "누적 기준" 표시 — hasData만으론 구분 불가
+  var periodLabel=usingFallback?'누적 기준 (인사이트 재추출 시 최근 기준으로 전환)':'최근 10경기 기준';
 
   // 카드 렌더 — cnt=0이면 이름 흐리게, 횟수 '–' 표시
   function pCard(p,cnt,col,bg){
