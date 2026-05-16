@@ -989,7 +989,7 @@ function parseInsightsCSV(csv){
       case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
-      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],momKda:c[8],spcKda:c[9],spiKda:c[10],dmgTop:c[11],playerKda:c[12]});break;
+      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],playerKda:c[8]});break;
     }
   });
   return d;
@@ -1017,31 +1017,22 @@ function buildMatchPopupHtml(match){
   var yearCol={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[match.year]||'#94a3b8';
   var mom=parseAward(match.mom), spc=parseAward(match.special), spi=parseAward(match.spirit);
 
-  // 1순위: playerKda (전 선수 K/D/A, GAS에서 KDA 시트 직접 추출)
-  var kdaMap={}, dmgMap={};
-  function parseKdaStr(s,player){if(!s||!player)return;var m=s.match(/^(\d+)\/(\d+)\/(\d+)$/);if(m)kdaMap[player]={k:+m[1],d:+m[2],a:+m[3],kda:+m[2]>0?Math.round((+m[1]+(+m[3]))/(+m[2])*100)/100:+m[1]+(+m[3])};}
-  // 전 선수 KDA 파싱 (컬럼13: "pName:k/d/a|pName:k/d/a|...")
+  // 전 선수 K/D/A 파싱 ("pName:k/d/a|pName:k/d/a|...")
+  var kdaMap={};
   if(match.playerKda){
     match.playerKda.split('|').forEach(function(e){
       var idx=e.indexOf(':');if(idx<0)return;
       var name=e.substring(0,idx).trim();
-      parseKdaStr(e.substring(idx+1).trim(),name);
+      var s=e.substring(idx+1).trim();
+      var m=s.match(/^(\d+)\/(\d+)\/(\d+)$/);
+      if(m)kdaMap[name]={k:+m[1],d:+m[2],a:+m[3],kda:+m[2]>0?Math.round((+m[1]+(+m[3]))/(+m[2])*100)/100:+m[1]+(+m[3])};
     });
   }
-  // 2순위 보완: 수상자 KDA (메모 파싱 기반)
-  var momP=parseAward(match.mom),spcP=parseAward(match.special),spiP=parseAward(match.spirit);
-  if(momP)parseKdaStr(match.momKda,momP.player);
-  if(spcP)parseKdaStr(match.spcKda,spcP.player);
-  if(spiP)parseKdaStr(match.spiKda,spiP.player);
-  // 3순위 보완: insights topKDA
+  // 보완: insights topKDA에서 누락 선수 채우기
   var ins=window._insights||{};
   (ins.topKDA||[]).filter(function(r){return r.date===match.date;})
     .forEach(function(r){if(!kdaMap[r.player])kdaMap[r.player]={kda:r.kda,k:r.k,d:r.d,a:r.a};});
-  // 딜량 TOP 데이터
-  if(match.dmgTop){match.dmgTop.split('|').forEach(function(e){var s=e.split(':');if(s.length===2)dmgMap[s[0].trim()]=+s[1];});}
-  (ins.topDmgDealt||[]).filter(function(r){return r.date===match.date;})
-    .forEach(function(r){if(!dmgMap[r.player])dmgMap[r.player]=r.val;});
-  var maxDmg=Math.max.apply(null,Object.values(dmgMap).length?Object.values(dmgMap):[1]);
+  var dmgMap={}; // 딜량은 현재 팝업에서 미표시 (향후 추가 예정)
 
   // KDA 색상 코딩: 무데스→보라 / 4+→초록 / 2.5+→파랑 / 1.5+→노랑 / 미만→빨강
   function kdaColor(kda){
