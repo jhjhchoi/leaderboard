@@ -118,7 +118,8 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .aw-tag{cursor:pointer;font-size:.78rem;font-weight:900;vertical-align:middle;user-select:none;display:inline-flex;align-items:center;gap:1px;line-height:1;opacity:.75;letter-spacing:-.2px;white-space:nowrap}
 .aw-tag:hover{opacity:1;transform:scale(1.12)}
 .tab-sep{width:1px;background:rgba(51,65,85,.9);margin:5px 4px;flex-shrink:0;align-self:stretch}
-.stat-tip:hover{background:rgba(129,140,248,.08)!important;color:#f1f5f9!important}
+.stat-tip{border-bottom:1px dashed rgba(100,116,139,.5)}
+.stat-tip:hover{background:rgba(129,140,248,.08)!important;color:#818cf8!important;border-bottom-color:#818cf8}
 #g-tooltip{display:none;position:fixed;background:#1e293b;border:1.5px solid #818cf8;border-radius:10px;padding:14px 16px;font-size:.8rem;color:#f1f5f9;z-index:9999;max-width:380px;line-height:1.9;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 </style>
 </head>
@@ -154,7 +155,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
 <script>(function(){
 var d24=[{"name":"jhgogo","games":98,"kda":3.2,"wins":58,"losses":40,"winRate":59.18,"score":1540},{"name":"푱푱이형","games":91,"kda":3.02,"wins":51,"losses":40,"winRate":56.04,"score":1330},{"name":"머터리1","games":97,"kda":1.27,"wins":46,"losses":51,"winRate":47.42,"score":850},{"name":"찰스킹","games":27,"kda":2.13,"wins":11,"losses":16,"winRate":40.74,"score":850},{"name":"kulkyuni","games":87,"kda":1.96,"wins":34,"losses":53,"winRate":39.08,"score":430},{"name":"xoxo","games":69,"kda":3.03,"wins":30,"losses":39,"winRate":43.48,"score":730},{"name":"정봉이22","games":79,"kda":2.59,"wins":36,"losses":43,"winRate":45.57,"score":790},{"name":"Red레몬","games":91,"kda":2.31,"wins":47,"losses":44,"winRate":51.65,"score":1090},{"name":"voskresni","games":64,"kda":2.49,"wins":36,"losses":28,"winRate":56.25,"score":1240},{"name":"우주최강승원","games":82,"kda":3.53,"wins":46,"losses":36,"winRate":56.1,"score":1300},{"name":"아몰랑 해줘","games":96,"kda":4.05,"wins":49,"losses":47,"winRate":51.04,"score":1060},{"name":"땡큐맨","games":94,"kda":1.04,"wins":39,"losses":55,"winRate":41.49,"score":520}];
 var d25=[{"name":"jhgogo","games":96,"kda":3.78,"wins":65,"losses":31,"winRate":67.71,"score":2020},{"name":"푱푱이형","games":84,"kda":2.89,"wins":41,"losses":43,"winRate":48.81,"score":940},{"name":"머터리1","games":92,"kda":1.37,"wins":39,"losses":53,"winRate":42.39,"score":580},{"name":"찰스킹","games":15,"kda":2.52,"wins":8,"losses":7,"winRate":53.33,"score":1030},{"name":"kulkyuni","games":92,"kda":2.58,"wins":47,"losses":45,"winRate":51.09,"score":1060},{"name":"xoxo","games":86,"kda":2.28,"wins":37,"losses":49,"winRate":43.02,"score":760},{"name":"정봉이22","games":86,"kda":2.49,"wins":41,"losses":45,"winRate":47.67,"score":880},{"name":"Red레몬","games":86,"kda":2.24,"wins":42,"losses":44,"winRate":48.84,"score":940},{"name":"voskresni","games":52,"kda":2.55,"wins":24,"losses":28,"winRate":46.15,"score":880},{"name":"우주최강승원","games":81,"kda":3.54,"wins":44,"losses":37,"winRate":54.32,"score":1210},{"name":"아몰랑 해줘","games":92,"kda":3.54,"wins":46,"losses":46,"winRate":50,"score":1000},{"name":"땡큐맨","games":85,"kda":1.73,"wins":40,"losses":45,"winRate":47.06,"score":850}];
-var AN={"우주최강승원":{"t":"S","ch":"트페, 사일러스, 럼블","r":"절대 무력","p":"TOP/MID/JG/AD/SUP"},"jhgogo":{"t":"S","ch":"스웨인, 오른, 쉔","r":"총사령관","p":"TOP/MID/JG/AD/SUP"},"xoxo":{"t":"S","ch":"요네, 이렐리아, 벨베스","r":"공포의 창","p":"TOP/MID/JG/AD/SUP"},"voskresni":{"t":"A","ch":"애쉬, 럭스, 트리스타나","r":"화력의 정석","p":"AD"},"아몰랑 해줘":{"t":"A","ch":"질리언, 소라카, 타릭","r":"전술 사령관","p":"SUP"},"찰스킹":{"t":"S","ch":"티모, 피오라, 마스터이","r":"철벽 상체","p":"TOP/JG"},"푱푱이형":{"t":"A","ch":"럭스, 세나, 제라스","r":"장거리 포킹","p":"MID/SUP"},"정봉이22":{"t":"B","ch":"미스 포춘, 잭스, 트리스타나","r":"안정적 딜러","p":"TOP/AD"},"Red레몬":{"t":"B","ch":"가렌, 세주아니, 문도박사","r":"돌격 대장","p":"TOP/MID/JG"},"kulkyuni":{"t":"A","ch":"하이머딩거, 아칼리, 멜","r":"변칙 기술자","p":"MID"},"머터리1":{"t":"B","ch":"요릭, 말자하, 자이라","r":"전략적 변수","p":"TOP/SUP"},"땡큐맨":{"t":"B","ch":"워윅, 세트, 브라이어","r":"강철 근성","p":"JG"}};
+var AN={"우주최강승원":{"t":"S","ch":"트페, 사일러스, 럼블","r":"절대 무력","p":"TOP/MID/JG/AD/SUP"},"jhgogo":{"t":"S","ch":"스웨인, 오른, 쉔","r":"총사령관","p":"TOP/MID/JG/AD/SUP"},"xoxo":{"t":"S","ch":"요네, 이렐리아, 벨베스","r":"공포의 창","p":"TOP/MID/JG/AD/SUP"},"voskresni":{"t":"A","ch":"애쉬, 럭스, 트리스타나","r":"화력의 정석","p":"AD"},"아몰랑 해줘":{"t":"A","ch":"질리언, 소라카, 타릭","r":"헌신의 서포터","p":"SUP"},"찰스킹":{"t":"S","ch":"티모, 피오라, 마스터이","r":"무자비한 딜러","p":"TOP/JG"},"푱푱이형":{"t":"A","ch":"럭스, 세나, 제라스","r":"장거리 포킹","p":"MID/SUP"},"정봉이22":{"t":"B","ch":"미스 포춘, 잭스, 트리스타나","r":"안정적 딜러","p":"TOP/AD"},"Red레몬":{"t":"B","ch":"가렌, 세주아니, 문도박사","r":"돌격 대장","p":"TOP/MID/JG"},"kulkyuni":{"t":"A","ch":"하이머딩거, 아칼리, 멜","r":"변칙 기술자","p":"MID"},"머터리1":{"t":"B","ch":"요릭, 말자하, 자이라","r":"전략적 변수","p":"TOP/SUP"},"땡큐맨":{"t":"B","ch":"워윅, 세트, 브라이어","r":"강철 근성","p":"JG"}};
 var SID='1PuB7iE8KEv-cqtn7BXfU4hmLh_YSj291XU_-0vPDsp4',GID='298748317',GID25='1664331952',GID24='399882087';
 var ALL=['jhgogo','푱푱이형','머터리1','찰스킹','kulkyuni','xoxo','정봉이22','Red레몬','voskresni','우주최강승원','아몰랑 해줘','땡큐맨'];
 var TM={'xoxo':'다이아','찰스킹':'다이아','jhgogo':'플래티넘','우주최강승원':'플래티넘','kulkyuni':'골드','voskresni':'실버','푱푱이형':'실버','땡큐맨':'실버','아몰랑 해줘':'브론즈','Red레몬':'브론즈','정봉이22':'아이언','머터리1':'아이언'};
@@ -252,7 +253,7 @@ function parseLogCSV(csv){
   return{champData:champData,awardsData:awardsData};
 }
 
-function renderChampPage(champData){
+function renderChampPage(champData,insightsOverride){
   var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
@@ -285,7 +286,8 @@ function renderChampPage(champData){
     html+='<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽수</th><th style="color:#4ade80">승</th><th style="color:#f87171">패</th><th>승률</th></tr></thead><tbody>';
     data.forEach(function(d,i){
       var col=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
-      var _ab=window._insights?champAwardBadge(p,d.ch,window._insights):'';html+='<tr><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%">'+champIcon(d.ch,22)+'<span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
+      var _ins=insightsOverride||window._insights;
+      var _ab=_ins?champAwardBadge(p,d.ch,_ins):'';html+='<tr><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%">'+champIcon(d.ch,22)+'<span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
         +'<td style="color:#4ade80;font-weight:700">'+d.wins+'</td>'
         +'<td style="color:#f87171;font-weight:700">'+d.losses+'</td>'
         +'<td><div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(d.wr,100)+'%;background:'+col+'"></div></div>'
@@ -347,9 +349,30 @@ function setupChampYearBtns(){
     });
   });
 }
+// matchLog 기반 연도별 챔피언 수상이력 계산
+function computeYearChampAwards(matchLog, yearStr){
+  var map={};
+  (matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return; // 연도 필터 (null이면 전체)
+    [['mom',m.mom],['special',m.special],['spirit',m.spirit]].forEach(function(pair){
+      var t=pair[0],s=pair[1];
+      if(!s)return;
+      var idx=s.lastIndexOf('(');if(idx<0)return;
+      var pl=s.substring(0,idx).trim(), ch=s.substring(idx+1).replace(')','').trim();
+      var key=pl+'|'+ch;
+      if(!map[key])map[key]={player:pl,champ:ch,mom:0,special:0,spirit:0,total:0};
+      map[key][t]++;map[key].total++;
+    });
+  });
+  return Object.values(map);
+}
 function setChampYear(yr){
   var log=_logs[yr]||{champData:{}};
-  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{});
+  // 연도 매핑: '6'→'2026', '5'→'2025', '4'→'2024', 'a'→null(전체)
+  var yearMap={'6':'2026','5':'2025','4':'2024','a':null};
+  var yearStr=yearMap[yr];
+  var yearInsights={champAwards:computeYearChampAwards(window._matchLog||[],yearStr)};
+  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{},yearInsights);
 }
 function setupAwardsYearBtns(){
   var inner=document.getElementById('awards-inner');if(!inner)return;
