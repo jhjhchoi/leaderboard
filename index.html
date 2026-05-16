@@ -629,7 +629,7 @@ function renderGradePage(d6,sc25r,sc24r){
      desc:'6가지 스탯 평균 47~66점. 안정적인 판단력과 실력으로 매 경기 1인분 이상을 꾸준히 해내는 팀 승리의 든든한 버팀목.'},
     {t:'B',col:'#4ade80',border:'rgba(74,222,128,.4)',bg:'rgba(74,222,128,.07)',
      title:'든든한 팀플레이어',range:'STAT SCORE 160~279',
-     desc:'6가지 스탯 평균 27~46점. 팀의 균형을 맞추며 묵묵히 자리를 지키는 선수. 흔들리지 않고 제 역할을 다하는 것만으로도 충분한 기여.'},
+     desc:'6가지 스탯 평균 27~46점. 팀의 균형을 맞추며 묵묵히 자리를 지키는 선수. 흔들리지 않고 제 역할을 다하는 것만으로도 듬직.'},
     {t:'C',col:'#64748b',border:'rgba(100,116,139,.4)',bg:'rgba(100,116,139,.07)',
      title:'가능성의 선수',range:'STAT SCORE 159 이하',
      desc:'현재 스탯보다 앞으로의 가능성이 더 빛나는 단계. 경험이 쌓일수록 데이터가 바뀌고 등급이 올라간다. 지금 이 순간도 성장 중.'},
@@ -1007,22 +1007,30 @@ function buildMatchPopupHtml(match){
   var yearCol={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[match.year]||'#94a3b8';
   var mom=parseAward(match.mom), spc=parseAward(match.special), spi=parseAward(match.spirit);
 
-  // 전 선수 K/D/A 파싱 ("pName:k/d/a|pName:k/d/a|...")
+  // 전 선수 스탯 파싱
+  // 2024/2025: "pName:k/d/a|..."  (3개 값)
+  // 2026: "pName:k/d/a/ddealt/dtaken/dpm/dtpm/gpm|..."  (8개 값)
   var kdaMap={};
+  var is2026=(match.year==='2026');
   if(match.playerKda){
     match.playerKda.split('|').forEach(function(e){
       var idx=e.indexOf(':');if(idx<0)return;
       var name=e.substring(0,idx).trim();
-      var s=e.substring(idx+1).trim();
-      var m=s.match(/^(\d+)\/(\d+)\/(\d+)$/);
-      if(m)kdaMap[name]={k:+m[1],d:+m[2],a:+m[3],kda:+m[2]>0?Math.round((+m[1]+(+m[3]))/(+m[2])*100)/100:+m[1]+(+m[3])};
+      var parts=e.substring(idx+1).trim().split('/');
+      if(parts.length<3)return;
+      var k=+parts[0],d=+parts[1],a=+parts[2];
+      var stat={k:k,d:d,a:a,kda:d>0?Math.round((k+a)/d*100)/100:k+a};
+      if(parts.length>=8){
+        stat.ddealt=+parts[3]; stat.dtaken=+parts[4];
+        stat.dpm=+parts[5];    stat.dtpm=+parts[6];    stat.gpm=+parts[7];
+      }
+      kdaMap[name]=stat;
     });
   }
   // 보완: insights topKDA에서 누락 선수 채우기
   var ins=window._insights||{};
   (ins.topKDA||[]).filter(function(r){return r.date===match.date;})
     .forEach(function(r){if(!kdaMap[r.player])kdaMap[r.player]={kda:r.kda,k:r.k,d:r.d,a:r.a};});
-  var dmgMap={}; // 딜량은 현재 팝업에서 미표시 (향후 추가 예정)
 
   // KDA 색상 코딩: 무데스→보라 / 4+→초록 / 2.5+→파랑 / 1.5+→노랑 / 미만→빨강
   function kdaColor(kda){
@@ -1034,12 +1042,17 @@ function buildMatchPopupHtml(match){
     return'#f87171';
   }
 
+  // 팀 전체 DPM/DTPM 최댓값 계산 (is2026 전용)
+  var allPlayers2026=t1.concat(t2);
+  var maxDPM=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.dpm?k.dpm:0;}).concat([1]));
+  var maxDTPM=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.dtpm?k.dtpm:0;}).concat([1]));
+
   function playerRow(p, isWinner, teamMaxKA){
     var inAN=AN[p.player];
     var kda=kdaMap[p.player];
     var ka=kda?(kda.k+kda.a):0;
     var barPct=teamMaxKA>0?Math.min(100,Math.round(ka/teamMaxKA*100)):0;
-    var kShare=ka>0?Math.round(kda.k/ka*100):0; // 킬이 K+A에서 차지하는 비율
+    var kShare=ka>0?Math.round(kda.k/ka*100):0;
     var kdaCol=kdaColor(kda);
 
     return'<div style="padding:8px 0;border-bottom:1px solid rgba(51,65,85,.22)">'
@@ -1064,7 +1077,7 @@ function buildMatchPopupHtml(match){
         :'<div style="font-size:.68rem;color:#334155;padding-left:30px;margin-bottom:5px">'+p.champ+' · 데이터 없음</div>'
       )
       // 3줄: K+A 기여도 바 (초록=킬, 파랑=어시스트)
-      +'<div style="display:flex;align-items:center;gap:6px;padding-left:30px">'
+      +'<div style="display:flex;align-items:center;gap:6px;padding-left:30px;margin-bottom:'+(is2026&&kda&&kda.dpm?'6px':'0')+'">'
         +'<div style="flex:1;height:6px;background:#1e293b;border-radius:3px;overflow:hidden">'
           +(barPct>0
             ?'<div style="height:100%;border-radius:3px;display:flex;width:'+barPct+'%">'
@@ -1075,6 +1088,26 @@ function buildMatchPopupHtml(match){
         +'</div>'
         +'<span style="font-size:.64rem;color:#475569;min-width:36px;text-align:right">K+A&nbsp;'+(kda?ka:'—')+'</span>'
       +'</div>'
+      // 2026 전용: DPM / DTPM / GPM 바
+      +(is2026&&kda&&kda.dpm
+        ?(function(){
+          function miniBar(label,val,max,col){
+            var pct=max>0?Math.min(100,Math.round(val/max*100)):0;
+            return'<div style="display:flex;align-items:center;gap:5px;padding-left:30px">'
+              +'<span style="font-size:.62rem;color:#475569;min-width:32px">'+label+'</span>'
+              +'<div style="flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">'
+                +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px"></div>'
+              +'</div>'
+              +'<span style="font-size:.64rem;color:'+col+';font-weight:700;min-width:38px;text-align:right">'+val.toLocaleString()+'</span>'
+            +'</div>';
+          }
+          return'<div style="display:flex;flex-direction:column;gap:2px">'
+            +miniBar('DPM', kda.dpm,  maxDPM,  '#f472b6')
+            +miniBar('DTPM',kda.dtpm, maxDTPM, '#fb923c')
+            +(kda.gpm?'<div style="padding-left:30px;font-size:.62rem;color:#64748b">GPM <span style="color:#fbbf24;font-weight:700">'+kda.gpm.toLocaleString()+'</span></div>':'')
+          +'</div>';
+        })()
+        :'')
     +'</div>';
   }
 
@@ -1109,7 +1142,10 @@ function buildMatchPopupHtml(match){
 
   var hasStats=Object.keys(kdaMap).length>0||Object.keys(dmgMap).length>0;
 
-  return'<div style="font-size:.72rem;color:'+yearCol+';font-weight:700;margin-bottom:4px">'+match.year+'시즌</div>'
+  return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+    +'<span style="font-size:.72rem;color:'+yearCol+';font-weight:700">'+match.year+'시즌</span>'
+    +(is2026?'<span style="font-size:.65rem;background:rgba(129,140,248,.15);color:#818cf8;border:1px solid rgba(129,140,248,.4);padding:1px 7px;border-radius:4px;font-weight:700">DPM · DTPM · GPM 포함</span>':'')
+    +'</div>'
     +'<div style="font-size:1.3rem;font-weight:900;color:#f1f5f9;margin-bottom:16px">'+match.date
       +' <span style="font-size:.85rem;font-weight:500;color:'+(win1?winCol:'#f87171')+'">'+match.result+'</span></div>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">'
