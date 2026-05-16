@@ -979,7 +979,7 @@ function parseInsightsCSV(csv){
       case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
-      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],playerKda:c[8]});break;
+      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],playerKda:c[8],duration:c[9]||''});break;
     }
   });
   return d;
@@ -1042,10 +1042,10 @@ function buildMatchPopupHtml(match){
     return'#f87171';
   }
 
-  // 팀 전체 DPM/DTPM 최댓값 계산 (is2026 전용)
+  // 2026 전용: 전체 딜량/받은피해량 최댓값 (바 정규화 기준)
   var allPlayers2026=t1.concat(t2);
-  var maxDPM=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.dpm?k.dpm:0;}).concat([1]));
-  var maxDTPM=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.dtpm?k.dtpm:0;}).concat([1]));
+  var maxDdealt=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.ddealt?k.ddealt:0;}).concat([1]));
+  var maxDtaken=Math.max.apply(null,allPlayers2026.map(function(p){var k=kdaMap[p.player];return k&&k.dtaken?k.dtaken:0;}).concat([1]));
 
   function playerRow(p, isWinner, teamMaxKA){
     var inAN=AN[p.player];
@@ -1088,23 +1088,22 @@ function buildMatchPopupHtml(match){
         +'</div>'
         +'<span style="font-size:.64rem;color:#475569;min-width:36px;text-align:right">K+A&nbsp;'+(kda?ka:'—')+'</span>'
       +'</div>'
-      // 2026 전용: DPM / DTPM / GPM 바
-      +(is2026&&kda&&kda.dpm
+      // 2026 전용: 가한 피해량 / 받은 피해량 바 (흐릿하게 — 정보 강약 조절)
+      +(is2026&&kda&&(kda.ddealt||kda.dtaken)
         ?(function(){
-          function miniBar(label,val,max,col){
+          function dmgBar(label,val,max){
             var pct=max>0?Math.min(100,Math.round(val/max*100)):0;
-            return'<div style="display:flex;align-items:center;gap:5px;padding-left:30px">'
-              +'<span style="font-size:.62rem;color:#475569;min-width:32px">'+label+'</span>'
-              +'<div style="flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">'
-                +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px"></div>'
+            return'<div style="display:flex;align-items:center;gap:5px;padding-left:30px;opacity:.42">'
+              +'<span style="font-size:.6rem;color:#64748b;min-width:42px">'+label+'</span>'
+              +'<div style="flex:1;height:3px;background:#1e293b;border-radius:2px;overflow:hidden">'
+                +'<div style="width:'+pct+'%;height:100%;background:#64748b;border-radius:2px"></div>'
               +'</div>'
-              +'<span style="font-size:.64rem;color:'+col+';font-weight:700;min-width:38px;text-align:right">'+val.toLocaleString()+'</span>'
+              +'<span style="font-size:.62rem;color:#64748b;min-width:48px;text-align:right">'+(val>0?val.toLocaleString():'—')+'</span>'
             +'</div>';
           }
-          return'<div style="display:flex;flex-direction:column;gap:2px">'
-            +miniBar('DPM', kda.dpm,  maxDPM,  '#f472b6')
-            +miniBar('DTPM',kda.dtpm, maxDTPM, '#fb923c')
-            +(kda.gpm?'<div style="padding-left:30px;font-size:.62rem;color:#64748b">GPM <span style="color:#fbbf24;font-weight:700">'+kda.gpm.toLocaleString()+'</span></div>':'')
+          return'<div style="display:flex;flex-direction:column;gap:2px;margin-top:3px">'
+            +(kda.ddealt?dmgBar('가한피해',kda.ddealt,maxDdealt):'')
+            +(kda.dtaken?dmgBar('받은피해',kda.dtaken,maxDtaken):'')
           +'</div>';
         })()
         :'')
@@ -1142,12 +1141,25 @@ function buildMatchPopupHtml(match){
 
   var hasStats=Object.keys(kdaMap).length>0||Object.keys(dmgMap).length>0;
 
+  // 경기 시간 포맷 변환 (mm:ss → mm분 ss초 / h:mm:ss → h시간 mm분 ss초)
+  function fmtDuration(s){
+    if(!s)return'';
+    var p=s.split(':');
+    if(p.length===2)return p[0]+'분 '+p[1]+'초';
+    if(p.length===3)return p[0]+'시간 '+p[1]+'분 '+p[2]+'초';
+    return s;
+  }
+  var durStr=fmtDuration(match.duration||'');
+
   return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
     +'<span style="font-size:.72rem;color:'+yearCol+';font-weight:700">'+match.year+'시즌</span>'
-    +(is2026?'<span style="font-size:.65rem;background:rgba(129,140,248,.15);color:#818cf8;border:1px solid rgba(129,140,248,.4);padding:1px 7px;border-radius:4px;font-weight:700">DPM · DTPM · GPM 포함</span>':'')
+    +(is2026?'<span style="font-size:.65rem;background:rgba(129,140,248,.15);color:#818cf8;border:1px solid rgba(129,140,248,.4);padding:1px 7px;border-radius:4px;font-weight:700">딜량 · 피해량 포함</span>':'')
     +'</div>'
-    +'<div style="font-size:1.3rem;font-weight:900;color:#f1f5f9;margin-bottom:16px">'+match.date
-      +' <span style="font-size:.85rem;font-weight:500;color:'+(win1?winCol:'#f87171')+'">'+match.result+'</span></div>'
+    +'<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px">'
+      +'<span style="font-size:1.3rem;font-weight:900;color:#f1f5f9">'+match.date+'</span>'
+      +'<span style="font-size:.85rem;font-weight:500;color:'+(win1?winCol:'#f87171')+'">'+match.result+'</span>'
+      +(durStr?'<span style="font-size:.75rem;color:#475569">⏱ '+durStr+'</span>':'')
+    +'</div>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">'
       +teamBlock(t1,win1,'1팀')
       +teamBlock(t2,!win1,'2팀')
