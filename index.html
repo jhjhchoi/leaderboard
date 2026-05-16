@@ -54,6 +54,7 @@ td.rk{color:#94a3b8;font-weight:700}td.nm{text-align:left;font-weight:600}td.cs{
 .tier-s{background:rgba(192,132,252,.2);color:#c084fc;border:1px solid #c084fc}
 .tier-a{background:rgba(96,165,250,.2);color:#60a5fa;border:1px solid #60a5fa}
 .tier-b{background:rgba(74,222,128,.2);color:#4ade80;border:1px solid #4ade80}
+.tier-c{background:rgba(100,116,139,.2);color:#64748b;border:1px solid #64748b}
 .cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:6px 0}
 .card{background:#1e293b;border-radius:12px;overflow:hidden;border:1.5px solid #334155;transition:.2s}
 .card:hover{border-color:#818cf8;transform:translateY(-2px)}
@@ -495,28 +496,33 @@ function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights
     var p4 = d24all.find(function(x){return x.name===nm;})||{games:0};
     var g6=p6.games||0, g5=p5.games||0, g4=p4.games||0;
     var tg = g6+g5+g4||1;
+    // 연도별 가중치: 2026×3, 2025×2, 2024×1 (최근 시즌일수록 더 강하게 반영)
+    var w6=g6*3, w5=g5*2, w4=g4*1;
+    var wt=w6+w5+w4||1;
 
-    // 공격력: 경기당 평균 킬 + 2026 DPM 보정 (딜량 퍼포먼스 반영)
-    var totK=(dKA26[nm]?dKA26[nm].k:0)+(dKA25[nm]?dKA25[nm].k:0)+(dKA24[nm]?dKA24[nm].k:0);
-    var killRate = totK / tg;
-    // DPM이 1000 이상이면 비례 보너스 (최대 +1.5), 2026 경기 비율로 가중
-    var dpm6 = p6.dpm || 0;
-    var dpmBonus = (g6 > 0 && dpm6 > 0) ? Math.min(1.5, (dpm6 - 600) / 600) * (g6/tg) : 0;
-    var atk = Math.max(0, killRate + dpmBonus);
+    // 공격력: 연도별 경기당 킬 × 연도가중 + 2026 DPM 보정
+    var kr6=g6>0?(dKA26[nm]?dKA26[nm].k:0)/g6:0;
+    var kr5=g5>0?(dKA25[nm]?dKA25[nm].k:0)/g5:0;
+    var kr4=g4>0?(dKA24[nm]?dKA24[nm].k:0)/g4:0;
+    var dpm6=p6.dpm||0;
+    var dpmBonus=(g6>0&&dpm6>0)?Math.min(1.5,(dpm6-600)/600)*(w6/wt):0;
+    var atk=Math.max(0,(kr6*w6+kr5*w5+kr4*w4)/wt+dpmBonus);
 
-    // 생존력: 3년 가중평균 KDA — "개인 생존 효율"
-    var survive = pa.kda || 0;
+    // 생존력: 연도별 KDA × 연도가중
+    var kda6=p6.kda||0, kda5=p5.kda||0, kda4=p4.kda||0;
+    var survive=(kda6*w6+kda5*w5+kda4*w4)/wt;
 
-    // 팀워크: 경기당 평균 어시스트
-    var totA=(dKA26[nm]?dKA26[nm].a:0)+(dKA25[nm]?dKA25[nm].a:0)+(dKA24[nm]?dKA24[nm].a:0);
-    var teamwork = totA / tg;
+    // 팀워크: 연도별 경기당 어시스트 × 연도가중
+    var ar6=g6>0?(dKA26[nm]?dKA26[nm].a:0)/g6:0;
+    var ar5=g5>0?(dKA25[nm]?dKA25[nm].a:0)/g5:0;
+    var ar4=g4>0?(dKA24[nm]?dKA24[nm].a:0)/g4:0;
+    var teamwork=(ar6*w6+ar5*w5+ar4*w4)/wt;
 
-    // 승부력: 3년 가중평균 종합점수(compScore) — "팀 승리 기여 종합 지표"
-    // 2026: KDA+승률+DPM+GPM+DTPM 통합 / 2024·2025: KDA+승률 기반
-    var cs6 = p6.compScore || 0;
-    var cs5 = sc25map[nm] || 0;
-    var cs4 = sc24map[nm] || 0;
-    var compete = (cs6*g6 + cs5*g5 + cs4*g4) / tg;
+    // 승부력: 연도별 종합점수(compScore) × 연도가중
+    var cs6=p6.compScore||0;
+    var cs5=sc25map[nm]||0;
+    var cs4=sc24map[nm]||0;
+    var compete=(cs6*w6+cs5*w5+cs4*w4)/wt;
 
     // 안정성: MOM·스페셜·투혼상 수상 가중합 / 총경기 × 100
     // 가중치: MOM=1.0 / 스페셜=0.7 / 투혼상=0.5 (비중 차등)
@@ -622,8 +628,11 @@ function renderGradePage(d6,sc25r,sc24r){
      title:'핵심 기여자',range:'STAT SCORE 280~399',
      desc:'6가지 스탯 평균 47~66점. 안정적인 판단력과 실력으로 매 경기 1인분 이상을 꾸준히 해내는 선수. 팀 승리의 든든한 버팀목.'},
     {t:'B',col:'#4ade80',border:'rgba(74,222,128,.4)',bg:'rgba(74,222,128,.07)',
-     title:'든든한 팀플레이어',range:'STAT SCORE 279 이하',
-     desc:'6가지 스탯 평균 46점 이하. 팀의 균형을 맞추며 묵묵히 제 역할을 다하는 선수. 성장 가능성이 열려있는 수련 단계.'},
+     title:'든든한 팀플레이어',range:'STAT SCORE 160~279',
+     desc:'6가지 스탯 평균 27~46점. 팀의 균형을 맞추며 묵묵히 제 역할을 다하는 선수. 흔들리지 않고 자리를 지키는 것만으로도 팀에 충분한 기여.'},
+    {t:'C',col:'#64748b',border:'rgba(100,116,139,.4)',bg:'rgba(100,116,139,.07)',
+     title:'가능성의 선수',range:'STAT SCORE 159 이하',
+     desc:'현재 스탯보다 앞으로의 가능성이 더 빛나는 단계. 경험이 쌓일수록 데이터가 바뀌고 등급이 오른다. 지금 이 순간도 성장의 과정 중에 있음.'},
   ];
   var gradeCards=gradeInfo.map(function(g){
     return'<div style="flex:1;min-width:220px;padding:16px 20px;background:'+g.bg+';border-radius:12px;border:1.5px solid '+g.border+'">'
@@ -772,7 +781,7 @@ ALL.forEach(function(nm){
   var rs=window._radarStats[nm];
   if(!rs)return;
   var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
-  AN[nm].t=total>=400?'S':total>=280?'A':'B';
+  AN[nm].t=total>=400?'S':total>=280?'A':total>=160?'B':'C';
   AN[nm]._statScore=total; // 등급 페이지에서 활용
 });
 sortAllByTier();
@@ -963,7 +972,7 @@ function parseInsightsCSV(csv){
       case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
-      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7]});break;
+      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],momKda:c[8],spcKda:c[9],spiKda:c[10],dmgTop:c[11]});break;
     }
   });
   return d;
@@ -991,14 +1000,22 @@ function buildMatchPopupHtml(match){
   var yearCol={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[match.year]||'#94a3b8';
   var mom=parseAward(match.mom), spc=parseAward(match.special), spi=parseAward(match.spirit);
 
-  // 해당 날짜 KDA / 피해량 레코드 수집
-  var ins=window._insights||{};
+  // MATCH_LOG에 저장된 수상자 KDA + 딜량 데이터 활용
   var kdaMap={}, dmgMap={};
+  function parseKdaStr(s,player){if(!s||!player)return;var m=s.match(/^(\d+)\/(\d+)\/(\d+)$/);if(m)kdaMap[player]={k:+m[1],d:+m[2],a:+m[3],kda:+m[2]>0?Math.round((+m[1]+(+m[3]))/(+m[2])*100)/100:+m[1]+(+m[3])};}
+  var momP=parseAward(match.mom),spcP=parseAward(match.special),spiP=parseAward(match.spirit);
+  parseKdaStr(match.momKda,momP&&momP.player);
+  parseKdaStr(match.spcKda,spcP&&spcP.player);
+  parseKdaStr(match.spiKda,spiP&&spiP.player);
+  // 딜량 TOP 데이터
+  if(match.dmgTop){match.dmgTop.split('|').forEach(function(e){var s=e.split(':');if(s.length===2)dmgMap[s[0].trim()]=+s[1];});}
+  // 추가: 해당 날짜 topKDA/topDmgDealt에 있으면 보완
+  var ins=window._insights||{};
   (ins.topKDA||[]).filter(function(r){return r.date===match.date;})
     .forEach(function(r){if(!kdaMap[r.player])kdaMap[r.player]={kda:r.kda,k:r.k,d:r.d,a:r.a};});
   (ins.topDmgDealt||[]).filter(function(r){return r.date===match.date;})
     .forEach(function(r){if(!dmgMap[r.player])dmgMap[r.player]=r.val;});
-  var maxDmg=Math.max.apply(null,Object.values(dmgMap).concat([1]));
+  var maxDmg=Math.max.apply(null,Object.values(dmgMap).length?Object.values(dmgMap):[1]);
 
   function playerRow(p, isWinner){
     var inAN=AN[p.player];
