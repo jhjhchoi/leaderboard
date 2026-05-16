@@ -620,38 +620,28 @@ function bAssistLB(d26ka,d25ka,d24ka,yr){var isAll=!yr||yr==='all';var subLbl=is
 function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{name:"-",kda:0,winRate:0,score:0,compScore:0,dpm:0,totalGames:0,totalScore:0};return[...arr].sort(function(a,b){return b[k]-a[k];})[0];}var aK=tp(dA,'kda'),aW=tp(dA,'winRate'),aS=tp(dA,'totalScore'),aG=tp(dA,'totalGames');var dKA26=window._dKA26||{},dKA25=window._dKA25||{},dKA24=window._dKA24||{};function tpKA(yr,field){return ALL.map(function(n){return{name:n,v:yr[n]?yr[n][field]:0};}).sort(function(a,b){return b.v-a.v;})[0];}function tpKAall(field){return ALL.map(function(n){return{name:n,v:(dKA26[n]?dKA26[n][field]:0)+(dKA25[n]?dKA25[n][field]:0)+(dKA24[n]?dKA24[n][field]:0)};}).sort(function(a,b){return b.v-a.v;})[0];}var allTopK=tpKAall('k'),allTopA=tpKAall('a');var sAll='<div class="rsc"><div class="rst">🏅 3년 종합 기록</div><div class="hg">'+hC('⚡','3년 평균 KDA 1위',aK.name,aK.kda.toFixed(2),'call')+hC('🎯','3년 최고 승률',aW.name,aW.winRate.toFixed(1)+'%','call')+hC('💰','3년 합산 승점 1위',aS.name,aS.totalScore.toLocaleString(),'call')+hC('🔥','3년 최다 경기',aG.name,aG.totalGames+'판','call')+hC('⚔️','3년 최다 KILL',allTopK.name,allTopK.v.toLocaleString(),'call')+hC('🤝','3년 최다 ASSIST',allTopA.name,allTopA.v.toLocaleString(),'call')+'</div></div>';var k6=tp(d6,'kda'),w6=tp(d6,'winRate'),s6=tp(d6,'score'),c6=tp(d6,'compScore'),dp6=tp(d6,'dpm');var k26top=tpKA(dKA26,'k'),a26top=tpKA(dKA26,'a');var s26='<div class="rsc"><div class="rst"><span style="color:#818cf8;font-size:1rem">●</span> 2026년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k6.name,k6.kda.toFixed(2),'cy26')+hC('📈','최고 승률',w6.name,w6.winRate.toFixed(1)+'%','cy26')+hC('💰','최고 승점',s6.name,s6.score.toLocaleString(),'cy26')+hC('🏆','종합점수 1위',c6.name,c6.compScore.toFixed(1),'cy26')+hC('🗡️','최다 KILL',k26top.name,k26top.v.toLocaleString(),'cy26')+hC('🤝','최다 ASSIST',a26top.name,a26top.v.toLocaleString(),'cy26')+'</div></div>';var k5=tp(d25,'kda'),w5=tp(d25,'winRate'),s5=tp(d25,'score');var k25top=tpKA(dKA25,'k'),a25top=tpKA(dKA25,'a');var s25='<div class="rsc"><div class="rst"><span style="color:#34d399;font-size:1rem">●</span> 2025년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k5.name,k5.kda.toFixed(2),'cy25')+hC('📈','최고 승률',w5.name,w5.winRate.toFixed(1)+'%','cy25')+hC('💰','최고 승점',s5.name,s5.score.toLocaleString(),'cy25')+hC('🗡️','최다 KILL',k25top.name,k25top.v.toLocaleString(),'cy25')+hC('🤝','최다 ASSIST',a25top.name,a25top.v.toLocaleString(),'cy25')+'</div></div>';var k4=tp(d24,'kda'),w4=tp(d24,'winRate'),s4=tp(d24,'score');var k24top=tpKA(dKA24,'k'),a24top=tpKA(dKA24,'a');var s24='<div class="rsc"><div class="rst"><span style="color:#fb923c;font-size:1rem">●</span> 2024년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k4.name,k4.kda.toFixed(2),'cy24')+hC('📈','최고 승률',w4.name,w4.winRate.toFixed(1)+'%','cy24')+hC('💰','최고 승점',s4.name,s4.score.toLocaleString(),'cy24')+hC('🗡️','최다 KILL',k24top.name,k24top.v.toLocaleString(),'cy24')+hC('🤝','최다 ASSIST',a24top.name,a24top.v.toLocaleString(),'cy24')+'</div></div>';var tr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;}),p5=d25.find(function(p){return p.name===nm;}),p4=d24.find(function(p){return p.name===nm;});var k6v=p6?p6.kda:0,k5v=p5?p5.kda:0,k4v=p4?p4.kda:0;var t='↔️';if(!k5v)t='🆕';else if(k6v>k5v&&k5v>k4v)t='📈📈';else if(k6v>k5v)t='📈';else if(k6v<k5v)t='📉';var pA=dA.find(function(p){return p.name===nm;});return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td><td style="color:#818cf8">'+(k6v?k6v.toFixed(2):'-')+'</td><td style="color:#34d399">'+(k5v?k5v.toFixed(2):'-')+'</td><td style="color:'+(k4v?kC(k4v):'#475569')+'">'+(k4v?k4v.toFixed(2):'-')+'</td><td>'+t+'</td><td style="color:#60a5fa">'+(pA?pA.kda.toFixed(2):'-')+'</td></tr>';}).join('');var tierTr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;});var sc6=p6?p6.compScore:null,sc5=sc25r?sc25r[nm]:null,sc4=sc24r?sc24r[nm]:null;function tc(s){if(s==null)return '<td style="color:#475569">-</td>';return '<td style="white-space:nowrap">'+tbFromScore(s)+'<br><small style="color:#64748b;font-size:.7rem">('+s.toFixed(1)+')</small></td>';}var trd='↔️';if(sc6!=null&&sc5!=null){if(sc6>sc5&&sc5!=null&&sc4!=null&&sc5>sc4)trd='📈📈';else if(sc6>sc5)trd='📈';else if(sc6<sc5)trd='📉';}return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>'+tc(sc6)+tc(sc5)+tc(sc4)+'<td>'+trd+'</td></tr>';}).join('');return sAll+s26+s25+s24+'<h3 class="st">📈 KDA 연도별 추이</h3><table class="t"><thead><tr><th>선수</th><th>2026</th><th>2025</th><th>2024</th><th>추세</th><th>3년 평균</th></tr></thead><tbody>'+tr+'</tbody></table>';}
 // ── 선수 등급 페이지 (STAT SCORE 기반 S/A/B 체계) ─────────────────
 function renderGradePage(d6,sc25r,sc24r){
-  // 각 등급 설명은 정확히 3줄 고정
   var gradeInfo=[
     {t:'S',col:'#c084fc',border:'rgba(192,132,252,.4)',bg:'rgba(192,132,252,.07)',
      title:'리그의 지배자',range:'STAT SCORE 400+',
-     lines:['6가지 스탯 평균 67점 이상의 압도적 퍼포먼스.',
-            '딜량·KDA·수상 인정도 전반에서 팀을 이끄는 캐리.',
-            '경기의 흐름을 단독으로 바꿀 수 있는 에이스.']},
+     desc:'6가지 스탯 평균 67점 이상. 딜량·KDA·수상 인정도 전반에서 팀을 압도하며 경기의 흐름을 단독으로 바꿀 수 있는 에이스.'},
     {t:'A',col:'#60a5fa',border:'rgba(96,165,250,.4)',bg:'rgba(96,165,250,.07)',
      title:'핵심 기여자',range:'STAT SCORE 280~399',
-     lines:['6가지 스탯 평균 47~66점의 안정적 활약.',
-            '판단력과 실력으로 매 경기 1인분 이상을 해내는 선수.',
-            '팀 승리의 든든한 버팀목이자 신뢰할 수 있는 멤버.']},
+     desc:'6가지 스탯 평균 47~66점. 안정적인 판단력과 실력으로 매 경기 1인분 이상을 꾸준히 해내는 팀 승리의 든든한 버팀목.'},
     {t:'B',col:'#4ade80',border:'rgba(74,222,128,.4)',bg:'rgba(74,222,128,.07)',
      title:'든든한 팀플레이어',range:'STAT SCORE 160~279',
-     lines:['6가지 스탯 평균 27~46점의 균형잡힌 플레이.',
-            '팀의 균형을 맞추며 묵묵히 제 역할을 다하는 선수.',
-            '흔들리지 않고 자리를 지키는 것만으로도 충분한 기여.']},
+     desc:'6가지 스탯 평균 27~46점. 팀의 균형을 맞추며 묵묵히 자리를 지키는 선수. 흔들리지 않고 제 역할을 다하는 것만으로도 충분한 기여.'},
     {t:'C',col:'#64748b',border:'rgba(100,116,139,.4)',bg:'rgba(100,116,139,.07)',
      title:'가능성의 선수',range:'STAT SCORE 159 이하',
-     lines:['현재 스탯보다 앞으로의 가능성이 더 빛나는 단계.',
-            '경험이 쌓일수록 데이터가 바뀌고 등급이 올라간다.',
-            '지금 이 순간도 성장의 여정 속에 있음.']},
+     desc:'현재 스탯보다 앞으로의 가능성이 더 빛나는 단계. 경험이 쌓일수록 데이터가 바뀌고 등급이 올라간다. 지금 이 순간도 성장 중.'},
   ];
   var gradeCards=gradeInfo.map(function(g){
-    var lineHtml=g.lines.map(function(l){return'<div>'+l+'</div>';}).join('');
     return'<div style="flex:1;min-width:220px;padding:16px 20px;background:'+g.bg+';border-radius:12px;border:1.5px solid '+g.border+'">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
         +'<span class="at tier-'+g.t.toLowerCase()+'" style="font-size:1rem;padding:4px 10px">'+g.t+'</span>'
         +'<div><div style="font-size:.9rem;font-weight:800;color:#f1f5f9">'+g.title+'</div>'
         +'<div style="font-size:.72rem;color:'+g.col+'">'+g.range+'</div></div>'
       +'</div>'
-      +'<div style="font-size:.78rem;color:#94a3b8;line-height:1.9">'+lineHtml+'</div>'
+      +'<div style="font-size:.78rem;color:#94a3b8;line-height:1.7">'+g.desc+'</div>'
     +'</div>';
   }).join('');
 
