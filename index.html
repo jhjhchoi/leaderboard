@@ -215,11 +215,10 @@ function champIcon(name,sz){
   var en=CHAMP_EN[name];
   if(!en){var nsp=name.replace(/\s/g,'');en=CHAMP_EN[nsp];}
   sz=sz||22;
-  var img=en
-    ?'<img src="https://ddragon.leagueoflegends.com/cdn/'+_ddver+'/img/champion/'+en+'.png"'
-      +' width="'+sz+'" height="'+sz+'" style="display:block"'
-      +' onerror="this.style.display=\'none\'">'
-    :'';
+  if(!en)return''; // 매핑 없는 챔피언은 회색박스 없이 빈 문자열 반환
+  var img='<img src="https://ddragon.leagueoflegends.com/cdn/'+_ddver+'/img/champion/'+en+'.png"'
+    +' width="'+sz+'" height="'+sz+'" style="display:block"'
+    +' onerror="this.style.display=\'none\'">';
   return'<span style="display:inline-flex;align-items:center;justify-content:center;'
     +'width:'+sz+'px;height:'+sz+'px;border-radius:4px;background:#2d3748;'
     +'flex-shrink:0;overflow:hidden;vertical-align:middle">'+img+'</span>';
@@ -653,11 +652,12 @@ function renderGradePage(d6,sc25r,sc24r){
     var total=rs?(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0):0;
     var t=AN[nm]?AN[nm].t:'B';
     var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[t]||'#94a3b8';
+    var STAT_TIP_IDS=['stat-atk','stat-survive','stat-teamwork','stat-compete','stat-stability','stat-champpool'];
     var bar=rs?['공격력','생존력','팀워크','승부력','안정성','챔피언폭'].map(function(lbl,j){
       var keys=['atk','survive','teamwork','compete','stability','champPool'];
       var v=rs[keys[j]]||0;
       return'<div style="display:flex;align-items:center;gap:4px;font-size:.68rem">'
-        +'<span style="color:#475569;min-width:3em">'+lbl+'</span>'
+        +'<span class="stat-tip" data-tip-id="'+STAT_TIP_IDS[j]+'" style="color:#64748b;min-width:3em;cursor:pointer">'+lbl+'</span>'
         +'<div style="flex:1;height:5px;background:#1e293b;border-radius:3px;overflow:hidden">'
           +'<div style="width:'+v+'%;height:100%;background:'+tc+';border-radius:3px"></div>'
         +'</div>'
@@ -707,7 +707,7 @@ function renderStierPage(d6,sc25r,sc24r){
         +'<span style="color:#34d399">2024·2025 기준: 60 + 5 × (3.0×z_KDA + 0.6×z_승률)</span>'
       +'</div>'
     +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">'+defHtml+'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+defHtml+'</div>'
     +'</div>';
   // 티어 연도별 추이 테이블
   var sc26map={};d6.forEach(function(p){sc26map[p.name]=p.compScore||0;});
@@ -1034,52 +1034,83 @@ function renderMatchLogPage(insights){
   if(!insights||!insights.matchLog||!insights.matchLog.length){
     return'<div class="spinner">💡 Apps Script에서 🚀 전체 데이터 추출을 실행해주세요.</div>';
   }
+  var YCOL={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'};
   var yearCounts={};
   insights.matchLog.forEach(function(m){yearCounts[m.year]=(yearCounts[m.year]||0)+1;});
-  var summary='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">'
+
+  // 상단 요약 뱃지
+  var summary='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">'
     +['2026','2025','2024'].map(function(y){
-      var col={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[y];
+      var col=YCOL[y]||'#94a3b8';
       return'<div style="padding:6px 14px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid '+col+';font-size:.78rem">'
         +'<span style="color:'+col+';font-weight:700">'+y+'</span>'
         +'<span style="color:#64748b"> · '+(yearCounts[y]||0)+'경기</span></div>';
     }).join('')
     +'<div style="padding:6px 14px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid #334155;font-size:.78rem;margin-left:auto">'
-      +'<span style="color:#94a3b8">총 <b style="color:#f1f5f9">'+insights.matchLog.length+'</b>경기</span></div>'
+      +'총 <b style="color:#f1f5f9">'+insights.matchLog.length+'</b>경기</div>'
     +'</div>';
 
-  var cards=insights.matchLog.map(function(m,idx){
-    var t1=parseTeam(m.team1), t2=parseTeam(m.team2);
-    var win1=m.result==='1팀 승';
-    var yearCol={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[m.year]||'#94a3b8';
-    var mom=parseAward(m.mom);
+  // 타임라인 — 시즌별 그룹핑, 최신순
+  var byYear={'2026':[],'2025':[],'2024':[]};
+  insights.matchLog.forEach(function(m,idx){
+    if(byYear[m.year])byYear[m.year].push({m:m,idx:idx});
+  });
 
-    // 미리보기: 양팀 챔피언 아이콘 최대 5개씩
-    var previewIcons=function(players){
-      return players.slice(0,5).map(function(p){return champIcon(p.champ,20);}).join('');
-    };
+  var timeline=['2026','2025','2024'].map(function(y){
+    var games=byYear[y];
+    if(!games||!games.length)return'';
+    var col=YCOL[y]||'#94a3b8';
+    var rows=games.map(function(g){
+      var m=g.m, idx=g.idx;
+      var t1=parseTeam(m.team1), t2=parseTeam(m.team2);
+      var win1=m.result==='1팀 승';
+      var resCol=win1?'#4ade80':'#f87171';
+      var mom=parseAward(m.mom), spc=parseAward(m.special), spi=parseAward(m.spirit);
 
-    return'<div onclick="showMatchPopup('+idx+')" style="background:#1e293b;border-radius:12px;border:1.5px solid #334155;padding:14px 16px;cursor:pointer;transition:.15s" '
-      +'onmouseover="this.style.borderColor=\'#818cf8\'" onmouseout="this.style.borderColor=\'#334155\'">'
-      // 상단: 날짜 + 시즌 + 결과
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
-        +'<span style="font-size:.72rem;color:'+yearCol+';font-weight:700;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:4px">'+m.year+'</span>'
-        +'<span style="font-size:.88rem;font-weight:800;color:#f1f5f9">'+m.date+'</span>'
-        +'<span style="margin-left:auto;font-size:.75rem;font-weight:700;color:'+(win1?'#4ade80':'#f87171')+'">'+m.result+'</span>'
+      var icons1=t1.slice(0,5).map(function(p){return champIcon(p.champ,22);}).join('');
+      var icons2=t2.slice(0,5).map(function(p){return champIcon(p.champ,22);}).join('');
+
+      // 수상 3명 한줄 표기
+      var awards='';
+      if(mom)awards+='<span style="font-size:.72rem;color:#64748b">👑<span style="color:#fbbf24;font-weight:700"> '+mom.player+'</span></span>';
+      if(spc)awards+='<span style="font-size:.72rem;color:#64748b;margin-left:8px">⭐<span style="color:#818cf8;font-weight:700"> '+spc.player+'</span></span>';
+      if(spi)awards+='<span style="font-size:.72rem;color:#64748b;margin-left:8px">💪<span style="color:#f472b6;font-weight:700"> '+spi.player+'</span></span>';
+
+      return'<div onclick="showMatchPopup('+idx+')" '
+        +'style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1e293b;border-radius:10px;'
+        +'border:1px solid #334155;cursor:pointer;transition:.15s;flex-wrap:wrap" '
+        +'onmouseover="this.style.borderColor=\''+col+'\'" onmouseout="this.style.borderColor=\'#334155\'">'
+        // 날짜
+        +'<div style="min-width:88px;flex-shrink:0">'
+          +'<div style="font-size:.82rem;font-weight:800;color:#f1f5f9">'+m.date.slice(5)+'</div>'
+          +'<div style="font-size:.68rem;color:#475569">'+m.date.slice(0,4)+'</div>'
+        +'</div>'
+        // 결과
+        +'<div style="min-width:44px;flex-shrink:0;text-align:center">'
+          +'<span style="font-size:.72rem;font-weight:800;color:'+resCol+';background:rgba(255,255,255,.05);padding:2px 8px;border-radius:4px">'+m.result+'</span>'
+        +'</div>'
+        // 팀 아이콘
+        +'<div style="display:flex;align-items:center;gap:6px;flex:1;min-width:200px">'
+          +'<div style="display:flex;gap:2px;border-right:1px solid #334155;padding-right:8px">'+icons1+'</div>'
+          +'<span style="font-size:.7rem;color:#475569;flex-shrink:0">vs</span>'
+          +'<div style="display:flex;gap:2px">'+icons2+'</div>'
+        +'</div>'
+        // 수상 3명
+        +(awards?'<div style="display:flex;gap:0;flex-shrink:0;flex-wrap:wrap">'+awards+'</div>':'')
+      +'</div>';
+    }).join('');
+
+    return'<div style="margin-bottom:24px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+        +'<div style="width:3px;height:20px;background:'+col+';border-radius:2px"></div>'
+        +'<span style="font-size:1rem;font-weight:900;color:'+col+'">'+y+'시즌</span>'
+        +'<span style="font-size:.75rem;color:#475569">'+games.length+'경기</span>'
       +'</div>'
-      // 팀 미리보기
-      +'<div style="display:flex;align-items:center;gap:8px">'
-        +'<div style="display:flex;gap:2px;flex:1">'+previewIcons(t1)+'</div>'
-        +'<span style="color:#475569;font-size:.8rem;flex-shrink:0">vs</span>'
-        +'<div style="display:flex;gap:2px;flex:1;justify-content:flex-end">'+previewIcons(t2)+'</div>'
-      +'</div>'
-      // MOM 미리보기
-      +(mom?'<div style="margin-top:8px;font-size:.72rem;color:#64748b">👑 '+mom.player+' <span style="color:#475569">('+mom.champ+')</span></div>':'')
+      +'<div style="display:flex;flex-direction:column;gap:6px">'+rows+'</div>'
     +'</div>';
   }).join('');
 
-  return summary
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'
-    +cards+'</div>';
+  return summary+timeline;
 }
 
 function renderSynergyPage(insights){
@@ -1365,6 +1396,10 @@ document.addEventListener('click',function(e){
   document.getElementById('champ-inner').innerHTML='<div class="spinner">⏳ 데이터 로딩 중...</div>';
   document.getElementById('awards-inner').innerHTML='<div class="spinner">⏳ 데이터 로딩 중...</div>';
   doFetch();
+// IIFE 내부 함수를 외부 onclick에서 사용할 수 있도록 window에 노출
+window._buildMatchPopupHtml=buildMatchPopupHtml;
+window._parseTeam=parseTeam;
+window._parseAward=parseAward;
 })();
 })();</script>
 <!-- 경기 상세 팝업 -->
@@ -1378,7 +1413,9 @@ document.addEventListener('click',function(e){
 window.showMatchPopup=function(idx){
   var m=(window._matchLog||[])[idx];
   if(!m)return;
-  document.getElementById('match-popup-body').innerHTML=buildMatchPopupHtml(m);
+  // buildMatchPopupHtml은 IIFE 안에 있으므로 window로 노출된 버전 사용
+  var html=window._buildMatchPopupHtml?window._buildMatchPopupHtml(m):'팝업 로딩 중...';
+  document.getElementById('match-popup-body').innerHTML=html;
   var pop=document.getElementById('match-popup');
   pop.style.display='flex';
   document.body.style.overflow='hidden';
