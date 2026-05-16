@@ -1086,24 +1086,24 @@ function buildMatchPopupHtml(match){
             +'</div>'
             :'')
         +'</div>'
-        +'<span style="font-size:.64rem;color:#475569;min-width:36px;text-align:right">K+A&nbsp;'+(kda?ka:'—')+'</span>'
+        +'<span style="font-size:.64rem;color:#475569;min-width:20px;text-align:right">'+(kda?ka:'')+'</span>'
       +'</div>'
       // 2026 전용: 가한 피해량 / 받은 피해량 바 (흐릿하게 — 정보 강약 조절)
       +(is2026&&kda&&(kda.ddealt||kda.dtaken)
         ?(function(){
-          function dmgBar(label,val,max){
+          function dmgBar(label,val,max,col){
             var pct=max>0?Math.min(100,Math.round(val/max*100)):0;
-            return'<div style="display:flex;align-items:center;gap:5px;padding-left:30px;opacity:.42">'
-              +'<span style="font-size:.6rem;color:#64748b;min-width:42px">'+label+'</span>'
+            return'<div style="display:flex;align-items:center;gap:5px;padding-left:30px;opacity:.45">'
+              +'<span style="font-size:.6rem;color:'+col+';min-width:42px">'+label+'</span>'
               +'<div style="flex:1;height:3px;background:#1e293b;border-radius:2px;overflow:hidden">'
-                +'<div style="width:'+pct+'%;height:100%;background:#64748b;border-radius:2px"></div>'
+                +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px"></div>'
               +'</div>'
-              +'<span style="font-size:.62rem;color:#64748b;min-width:48px;text-align:right">'+(val>0?val.toLocaleString():'—')+'</span>'
+              +'<span style="font-size:.62rem;color:'+col+';min-width:48px;text-align:right">'+(val>0?val.toLocaleString():'—')+'</span>'
             +'</div>';
           }
           return'<div style="display:flex;flex-direction:column;gap:2px;margin-top:3px">'
-            +(kda.ddealt?dmgBar('가한피해',kda.ddealt,maxDdealt):'')
-            +(kda.dtaken?dmgBar('받은피해',kda.dtaken,maxDtaken):'')
+            +(kda.ddealt?dmgBar('가한피해',kda.ddealt,maxDdealt,'#fb923c'):'')
+            +(kda.dtaken?dmgBar('받은피해',kda.dtaken,maxDtaken,'#818cf8'):'')
           +'</div>';
         })()
         :'')
@@ -1120,7 +1120,7 @@ function buildMatchPopupHtml(match){
       +borderCol+';padding:12px 14px">'
       +'<div style="font-size:.72rem;font-weight:800;color:'+borderCol+';margin-bottom:10px;display:flex;align-items:center;gap:6px">'
         +label+(isWinner?' <span style="background:'+winCol+';color:#0f172a;border-radius:4px;padding:1px 6px;font-size:.65rem">승</span>':'')
-        +'<span style="margin-left:auto;font-size:.62rem;color:#475569">K·A 기여도</span>'
+        +''
       +'</div>'
       +players.map(function(p){return playerRow(p,isWinner,teamMaxKA);}).join('')
     +'</div>';
@@ -1164,7 +1164,7 @@ function buildMatchPopupHtml(match){
       +teamBlock(t1,win1,'1팀')
       +teamBlock(t2,!win1,'2팀')
     +'</div>'
-    +(hasStats?'<div style="font-size:.68rem;color:#334155;margin-bottom:12px">* KDA·딜량은 해당 경기의 퍼포먼스 TOP 기록 기반</div>':'')
+    +''
     +'<div style="font-size:.78rem;font-weight:800;color:#94a3b8;margin-bottom:8px;letter-spacing:.5px">🏅 수상</div>'
     +'<div style="display:flex;flex-direction:column;gap:6px">'
       +awardRow(mom,'👑','#fbbf24','MOM — 승리의 인도자')
