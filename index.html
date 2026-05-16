@@ -1042,11 +1042,11 @@ function buildMatchPopupHtml(match){
     return'#f87171';
   }
 
-  // 수상자 아이콘 맵 (선수 이름 옆 표시용)
+  // 수상자 아이콘 맵 — MOM/스페셜/투혼상은 항상 3명 각각 유니크
   var awardIconMap={};
   if(mom) awardIconMap[mom.player]='👑';
-  if(spc) awardIconMap[spc.player]=(awardIconMap[spc.player]||'')+'⭐';
-  if(spi) awardIconMap[spi.player]=(awardIconMap[spi.player]||'')+'💪';
+  if(spc) awardIconMap[spc.player]='⭐';
+  if(spi) awardIconMap[spi.player]='💪';
 
   // 2026 전용: 전체 딜량/받은피해량 최댓값 (바 정규화 기준)
   var allPlayers2026=t1.concat(t2);
