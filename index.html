@@ -290,7 +290,9 @@ function renderChampPage(champData,insightsOverride){
     data.forEach(function(d,i){
       var col=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
       var _ins=insightsOverride||window._insights;
-      var _ab=_ins?champAwardBadge(p,d.ch,_ins):'';html+='<tr><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%">'+champIcon(d.ch,22)+'<span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
+      var _ab=_ins?champAwardBadge(p,d.ch,_ins):'';
+      var _pEnc=p.replace(/'/g,"\\'"), _cEnc=d.ch.replace(/'/g,"\\'");
+      html+='<tr onclick="showPlayerChampMatches(\''+_pEnc+'\',\''+_cEnc+'\')" style="cursor:pointer" title="'+d.ch+' 출전 경기 보기"><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%">'+champIcon(d.ch,22)+'<span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
         +'<td style="color:#4ade80;font-weight:700">'+d.wins+'</td>'
         +'<td style="color:#f87171;font-weight:700">'+d.losses+'</td>'
         +'<td><div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(d.wr,100)+'%;background:'+col+'"></div></div>'
@@ -436,7 +438,8 @@ function renderAwardsPage(awardsData){
   window._awardsData=awardsData;var _awSort={k:'total',d:1};var sorted=[...awardsData].sort(function(a,b){return(b.mom+b.special+b.spirit)-(a.mom+a.special+a.spirit);});
   var rows=sorted.map(function(p,i){
     var total=p.mom+p.special+p.spirit;
-    return'<tr><td class="rk">'+(i+1)+'</td>'
+    var _ne=p.name.replace(/'/g,"\\'");
+    return'<tr onclick="showPlayerAwardMatches(\''+_ne+'\')" style="cursor:pointer" title="'+p.name+' 수상 경기 보기"><td class="rk">'+(i+1)+'</td>'
       +'<td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td>'
       +'<td style="color:#fbbf24;font-weight:900">'+p.mom+'</td>'
       +'<td style="color:#818cf8;font-weight:900">'+p.special+'</td>'
@@ -505,7 +508,7 @@ function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(funct
         +'</div></div>';
     }
         var topCh=(window._topChamps&&window._topChamps[nm])||a.ch;
-    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topCh+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
+    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topCh+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2024\')" style="cursor:pointer" title="2024 경기 보기"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2025\')" style="cursor:pointer" title="2025 경기 보기"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2026\')" style="cursor:pointer" title="2026 경기 보기"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
 function hC(i,l,n,v,cls){return '<div class="hc '+cls+'"><div class="hi">'+i+'</div><div class="hl2">'+l+'</div><div class="hn">'+n+'</div><div class="hv">'+v+'</div></div>';}
 
 // ── 육각형 레이더 차트 ─────────────────────────────────────────────
@@ -643,7 +646,9 @@ function parseKA(csv,nameRow,kdaRow){var rows=pCSV(csv),rN=rows[nameRow],rK=rows
 function kBar(v,max){var pct=max>0?Math.min(v/max*100,100):0;var col=pct>=70?'#a78bfa':pct>=40?'#60a5fa':'#94a3b8';return '<div class="kbar-wrap"><div class="kbar-bg"><div class="kbar-fill" style="width:'+pct.toFixed(1)+'%;background:'+col+'"></div></div><span class="kbar-val">'+v.toLocaleString()+'</span></div>';}
 function bKillLB(d26ka,d25ka,d24ka,yr){var isAll=!yr||yr==='all';var subLbl=isAll?'2024-2026 합산':yr==='26'?'2026 합산':yr==='25'?'2025 합산':'2024 합산';var data=ALL.map(function(n){var k26=d26ka[n]?d26ka[n].k:0,k25=d25ka[n]?d25ka[n].k:0,k24=d24ka[n]?d24ka[n].k:0;var total=isAll?k26+k25+k24:yr==='26'?k26:yr==='25'?k25:k24;return{name:n,total:total,k26:k26,k25:k25,k24:k24};}).sort(function(a,b){return b.total-a.total;});var maxK=data[0]?data[0].total:1;var podHtml='<div class="podium"><div class="pod p2"><div class="pn2">2nd</div><div class="pm">'+data[1].name+'</div><div class="pv">'+data[1].total.toLocaleString()+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div><div class="pm">'+data[0].name+'</div><div class="pv">'+data[0].total.toLocaleString()+'</div></div><div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+data[2].name+'</div><div class="pv">'+data[2].total.toLocaleString()+'</div></div></div>';var thCols=isAll?'<th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th>':'';var rows=data.map(function(p,i){var extraCols=isAll?'<td style="color:#818cf8">'+p.k26.toLocaleString()+'</td><td style="color:#34d399">'+p.k25.toLocaleString()+'</td><td style="color:#fb923c">'+p.k24.toLocaleString()+'</td>':'';return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td><td>'+kBar(p.total,maxK)+extraCols+'</td></tr>';}).join('');return '<div class="ka-lb"><div class="ka-title">⚔️ 누적 Kill 리더보드 <span class="ka-sub">'+subLbl+'</span></div>'+podHtml+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>누적 Kill</th>'+thCols+'</tr></thead><tbody>'+rows+'</tbody></table></div>';}
 function bAssistLB(d26ka,d25ka,d24ka,yr){var isAll=!yr||yr==='all';var subLbl=isAll?'2024-2026 합산':yr==='26'?'2026 합산':yr==='25'?'2025 합산':'2024 합산';var data=ALL.map(function(n){var a26=d26ka[n]?d26ka[n].a:0,a25=d25ka[n]?d25ka[n].a:0,a24=d24ka[n]?d24ka[n].a:0;var total=isAll?a26+a25+a24:yr==='26'?a26:yr==='25'?a25:a24;return{name:n,total:total,a26:a26,a25:a25,a24:a24};}).sort(function(a,b){return b.total-a.total;});var maxA=data[0]?data[0].total:1;var podHtml='<div class="podium"><div class="pod p2"><div class="pn2">2nd</div><div class="pm">'+data[1].name+'</div><div class="pv">'+data[1].total.toLocaleString()+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div><div class="pm">'+data[0].name+'</div><div class="pv">'+data[0].total.toLocaleString()+'</div></div><div class="pod p3"><div class="pn2">3rd</div><div class="pm">'+data[2].name+'</div><div class="pv">'+data[2].total.toLocaleString()+'</div></div></div>';var thCols=isAll?'<th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th>':'';var rows=data.map(function(p,i){var extraCols=isAll?'<td style="color:#818cf8">'+p.a26.toLocaleString()+'</td><td style="color:#34d399">'+p.a25.toLocaleString()+'</td><td style="color:#fb923c">'+p.a24.toLocaleString()+'</td>':'';return '<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td><td>'+kBar(p.total,maxA)+extraCols+'</td></tr>';}).join('');return '<div class="ka-lb"><div class="ka-title">🤝 누적 Assist 리더보드 <span class="ka-sub">'+subLbl+'</span></div>'+podHtml+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>누적 Assist</th>'+thCols+'</tr></thead><tbody>'+rows+'</tbody></table></div>';}
-function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{name:"-",kda:0,winRate:0,score:0,compScore:0,dpm:0,totalGames:0,totalScore:0};return[...arr].sort(function(a,b){return b[k]-a[k];})[0];}var aK=tp(dA,'kda'),aW=tp(dA,'winRate'),aS=tp(dA,'totalScore'),aG=tp(dA,'totalGames');var dKA26=window._dKA26||{},dKA25=window._dKA25||{},dKA24=window._dKA24||{};function tpKA(yr,field){return ALL.map(function(n){return{name:n,v:yr[n]?yr[n][field]:0};}).sort(function(a,b){return b.v-a.v;})[0];}function tpKAall(field){return ALL.map(function(n){return{name:n,v:(dKA26[n]?dKA26[n][field]:0)+(dKA25[n]?dKA25[n][field]:0)+(dKA24[n]?dKA24[n][field]:0)};}).sort(function(a,b){return b.v-a.v;})[0];}var allTopK=tpKAall('k'),allTopA=tpKAall('a');var sAll='<div class="rsc"><div class="rst">🏅 3년 종합 기록</div><div class="hg">'+hC('⚡','3년 평균 KDA 1위',aK.name,aK.kda.toFixed(2),'call')+hC('🎯','3년 최고 승률',aW.name,aW.winRate.toFixed(1)+'%','call')+hC('💰','3년 합산 승점 1위',aS.name,aS.totalScore.toLocaleString(),'call')+hC('🔥','3년 최다 경기',aG.name,aG.totalGames+'판','call')+hC('⚔️','3년 최다 KILL',allTopK.name,allTopK.v.toLocaleString(),'call')+hC('🤝','3년 최다 ASSIST',allTopA.name,allTopA.v.toLocaleString(),'call')+'</div></div>';var k6=tp(d6,'kda'),w6=tp(d6,'winRate'),s6=tp(d6,'score'),c6=tp(d6,'compScore'),dp6=tp(d6,'dpm');var k26top=tpKA(dKA26,'k'),a26top=tpKA(dKA26,'a');var s26='<div class="rsc"><div class="rst"><span style="color:#818cf8;font-size:1rem">●</span> 2026년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k6.name,k6.kda.toFixed(2),'cy26')+hC('📈','최고 승률',w6.name,w6.winRate.toFixed(1)+'%','cy26')+hC('💰','최고 승점',s6.name,s6.score.toLocaleString(),'cy26')+hC('🏆','종합점수 1위',c6.name,c6.compScore.toFixed(1),'cy26')+hC('🗡️','최다 KILL',k26top.name,k26top.v.toLocaleString(),'cy26')+hC('🤝','최다 ASSIST',a26top.name,a26top.v.toLocaleString(),'cy26')+'</div></div>';var k5=tp(d25,'kda'),w5=tp(d25,'winRate'),s5=tp(d25,'score');var k25top=tpKA(dKA25,'k'),a25top=tpKA(dKA25,'a');var s25='<div class="rsc"><div class="rst"><span style="color:#34d399;font-size:1rem">●</span> 2025년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k5.name,k5.kda.toFixed(2),'cy25')+hC('📈','최고 승률',w5.name,w5.winRate.toFixed(1)+'%','cy25')+hC('💰','최고 승점',s5.name,s5.score.toLocaleString(),'cy25')+hC('🗡️','최다 KILL',k25top.name,k25top.v.toLocaleString(),'cy25')+hC('🤝','최다 ASSIST',a25top.name,a25top.v.toLocaleString(),'cy25')+'</div></div>';var k4=tp(d24,'kda'),w4=tp(d24,'winRate'),s4=tp(d24,'score');var k24top=tpKA(dKA24,'k'),a24top=tpKA(dKA24,'a');var s24='<div class="rsc"><div class="rst"><span style="color:#fb923c;font-size:1rem">●</span> 2024년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k4.name,k4.kda.toFixed(2),'cy24')+hC('📈','최고 승률',w4.name,w4.winRate.toFixed(1)+'%','cy24')+hC('💰','최고 승점',s4.name,s4.score.toLocaleString(),'cy24')+hC('🗡️','최다 KILL',k24top.name,k24top.v.toLocaleString(),'cy24')+hC('🤝','최다 ASSIST',a24top.name,a24top.v.toLocaleString(),'cy24')+'</div></div>';var tr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;}),p5=d25.find(function(p){return p.name===nm;}),p4=d24.find(function(p){return p.name===nm;});var k6v=p6?p6.kda:0,k5v=p5?p5.kda:0,k4v=p4?p4.kda:0;var t='↔️';if(!k5v)t='🆕';else if(k6v>k5v&&k5v>k4v)t='📈📈';else if(k6v>k5v)t='📈';else if(k6v<k5v)t='📉';var pA=dA.find(function(p){return p.name===nm;});return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td><td style="color:#818cf8">'+(k6v?k6v.toFixed(2):'-')+'</td><td style="color:#34d399">'+(k5v?k5v.toFixed(2):'-')+'</td><td style="color:'+(k4v?kC(k4v):'#475569')+'">'+(k4v?k4v.toFixed(2):'-')+'</td><td>'+t+'</td><td style="color:#60a5fa">'+(pA?pA.kda.toFixed(2):'-')+'</td></tr>';}).join('');var tierTr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;});var sc6=p6?p6.compScore:null,sc5=sc25r?sc25r[nm]:null,sc4=sc24r?sc24r[nm]:null;function tc(s){if(s==null)return '<td style="color:#475569">-</td>';return '<td style="white-space:nowrap">'+tbFromScore(s)+'<br><small style="color:#64748b;font-size:.7rem">('+s.toFixed(1)+')</small></td>';}var trd='↔️';if(sc6!=null&&sc5!=null){if(sc6>sc5&&sc5!=null&&sc4!=null&&sc5>sc4)trd='📈📈';else if(sc6>sc5)trd='📈';else if(sc6<sc5)trd='📉';}return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>'+tc(sc6)+tc(sc5)+tc(sc4)+'<td>'+trd+'</td></tr>';}).join('');  // ── 누적 승리수 랭킹 ──────────────────────────────────────────────
+function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{name:"-",kda:0,winRate:0,score:0,compScore:0,dpm:0,totalGames:0,totalScore:0};return[...arr].sort(function(a,b){return b[k]-a[k];})[0];}var aK=tp(dA,'kda'),aW=tp(dA,'winRate'),aS=tp(dA,'totalScore'),aG=tp(dA,'totalGames');var dKA26=window._dKA26||{},dKA25=window._dKA25||{},dKA24=window._dKA24||{};function tpKA(yr,field){return ALL.map(function(n){return{name:n,v:yr[n]?yr[n][field]:0};}).sort(function(a,b){return b.v-a.v;})[0];}function tpKAall(field){return ALL.map(function(n){return{name:n,v:(dKA26[n]?dKA26[n][field]:0)+(dKA25[n]?dKA25[n][field]:0)+(dKA24[n]?dKA24[n][field]:0)};}).sort(function(a,b){return b.v-a.v;})[0];}var allTopK=tpKAall('k'),allTopA=tpKAall('a');var sAll='<div class="rsc"><div class="rst">🏅 3년 종합 기록</div><div class="hg">'+hC('⚡','3년 평균 KDA 1위',aK.name,aK.kda.toFixed(2),'call')+hC('🎯','3년 최고 승률',aW.name,aW.winRate.toFixed(1)+'%','call')+hC('💰','3년 합산 승점 1위 <span class="tip-icon" data-tip-id="score">i</span>',aS.name,aS.totalScore.toLocaleString(),'call')+hC('🔥','3년 최다 경기',aG.name,aG.totalGames+'판','call')+hC('⚔️','3년 최다 KILL',allTopK.name,allTopK.v.toLocaleString(),'call')+hC('🤝','3년 최다 ASSIST',allTopA.name,allTopA.v.toLocaleString(),'call')+'</div></div>';var k6=tp(d6,'kda'),w6=tp(d6,'winRate'),s6=tp(d6,'score'),c6=tp(d6,'compScore'),dp6=tp(d6,'dpm');var k26top=tpKA(dKA26,'k'),a26top=tpKA(dKA26,'a');var s26='<div class="rsc"><div class="rst"><span style="color:#818cf8;font-size:1rem">●</span> 2026년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k6.name,k6.kda.toFixed(2),'cy26')+hC('📈','최고 승률',w6.name,w6.winRate.toFixed(1)+'%','cy26')+hC('💰','최고 승점 <span class="tip-icon" data-tip-id="score">i</span>',s6.name,s6.score.toLocaleString(),'cy26')+hC('🏆','종합점수 1위',c6.name,c6.compScore.toFixed(1),'cy26')+hC('🗡️','최다 KILL',k26top.name,k26top.v.toLocaleString(),'cy26')+hC('🤝','최다 ASSIST',a26top.name,a26top.v.toLocaleString(),'cy26')+'</div></div>';var k5=tp(d25,'kda'),w5=tp(d25,'winRate'),s5=tp(d25,'score');var k25top=tpKA(dKA25,'k'),a25top=tpKA(dKA25,'a');var s25='<div class="rsc"><div class="rst"><span style="color:#34d399;font-size:1rem">●</span> 2025년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k5.name,k5.kda.toFixed(2),'cy25')+hC('📈','최고 승률',w5.name,w5.winRate.toFixed(1)+'%','cy25')+hC('💰','최고 승점 <span class="tip-icon" data-tip-id="score">i</span>',s5.name,s5.score.toLocaleString(),'cy25')+hC('🗡️','최다 KILL',k25top.name,k25top.v.toLocaleString(),'cy25')+hC('🤝','최다 ASSIST',a25top.name,a25top.v.toLocaleString(),'cy25')+'</div></div>';var k4=tp(d24,'kda'),w4=tp(d24,'winRate'),s4=tp(d24,'score');var k24top=tpKA(dKA24,'k'),a24top=tpKA(dKA24,'a');var s24='<div class="rsc"><div class="rst"><span style="color:#fb923c;font-size:1rem">●</span> 2024년 기록</div><div class="hg">'+hC('🎯','KDA 1위',k4.name,k4.kda.toFixed(2),'cy24')+hC('📈','최고 승률',w4.name,w4.winRate.toFixed(1)+'%','cy24')+hC('💰','최고 승점 <span class="tip-icon" data-tip-id="score">i</span>',s4.name,s4.score.toLocaleString(),'cy24')+hC('🗡️','최다 KILL',k24top.name,k24top.v.toLocaleString(),'cy24')+hC('🤝','최다 ASSIST',a24top.name,a24top.v.toLocaleString(),'cy24')+'</div></div>';var tr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;}),p5=d25.find(function(p){return p.name===nm;}),p4=d24.find(function(p){return p.name===nm;});var k6v=p6?p6.kda:0,k5v=p5?p5.kda:0,k4v=p4?p4.kda:0;var t='↔️';if(!k5v)t='🆕';else if(k6v>k5v&&k5v>k4v)t='📈📈';else if(k6v>k5v)t='📈';else if(k6v<k5v)t='📉';var pA=dA.find(function(p){return p.name===nm;});return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td><td style="color:#818cf8">'+(k6v?k6v.toFixed(2):'-')+'</td><td style="color:#34d399">'+(k5v?k5v.toFixed(2):'-')+'</td><td style="color:'+(k4v?kC(k4v):'#475569')+'">'+(k4v?k4v.toFixed(2):'-')+'</td><td>'+t+'</td><td style="color:#60a5fa">'+(pA?pA.kda.toFixed(2):'-')+'</td></tr>';}).join('');var tierTr=ALL.map(function(nm){var p6=d6.find(function(p){return p.name===nm;});var sc6=p6?p6.compScore:null,sc5=sc25r?sc25r[nm]:null,sc4=sc24r?sc24r[nm]:null;function tc(s){if(s==null)return '<td style="color:#475569">-</td>';return '<td style="white-space:nowrap">'+tbFromScore(s)+'<br><small style="color:#64748b;font-size:.7rem">('+s.toFixed(1)+')</small></td>';}var trd='↔️';if(sc6!=null&&sc5!=null){if(sc6>sc5&&sc5!=null&&sc4!=null&&sc5>sc4)trd='📈📈';else if(sc6>sc5)trd='📈';else if(sc6<sc5)trd='📉';}return '<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>'+tc(sc6)+tc(sc5)+tc(sc4)+'<td>'+trd+'</td></tr>';}).join('');  // 기록관 선수명 클릭 헬퍼
+  var nmCell=function(nm){var e=nm.replace(/'/g,"\\'");return'<td class="nm" onclick="showPlayerMatches(\''+e+'\')" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px" title="'+nm+' 출전 경기 보기">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>';};
+  // ── 누적 승리수 랭킹 ──────────────────────────────────────────────
   var winData=ALL.slice().map(function(nm){
     var p6=d6.find(function(p){return p.name===nm;})||{wins:0,losses:0};
     var p5=d25.find(function(p){return p.name===nm;})||{wins:0,losses:0};
@@ -696,13 +701,13 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
   d24.forEach(function(p){g4map[p.name]=p.games||1;});
   var tblKill=ALL.map(function(nm){
     var k6=dKA26[nm]?dKA26[nm].k:0, k5=dKA25[nm]?dKA25[nm].k:0, k4=dKA24[nm]?dKA24[nm].k:0;
-    return'<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>'
+    return'<tr>'+nmCell(nm)
       +'<td style="color:#818cf8">'+k6+'</td><td style="color:#34d399">'+k5+'</td><td style="color:#fb923c">'+k4+'</td>'
       +'<td>'+trendIcon(k6,k5,k4)+'</td></tr>';
   }).join('');
   var tblAssist=ALL.map(function(nm){
     var a6=dKA26[nm]?dKA26[nm].a:0, a5=dKA25[nm]?dKA25[nm].a:0, a4=dKA24[nm]?dKA24[nm].a:0;
-    return'<tr><td class="nm">'+at(AN[nm]?AN[nm].t:'B')+' '+nm+'</td>'
+    return'<tr>'+nmCell(nm)
       +'<td style="color:#818cf8">'+a6+'</td><td style="color:#34d399">'+a5+'</td><td style="color:#fb923c">'+a4+'</td>'
       +'<td>'+trendIcon(a6,a5,a4)+'</td></tr>';
   }).join('');
@@ -724,7 +729,7 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
     +'<h3 class="st">📈 KDA 연도별 추이</h3><table class="t"><thead><tr><th>선수</th><th>2026</th><th>2025</th><th>2024</th><th>추세</th><th>3년 평균</th></tr></thead><tbody>'+tr+'</tbody></table>'
     +winSection
     +mkTrendTbl('🏆 승리수 연도별 추이',tblWins)
-    +mkTrendTbl('💰 승점 연도별 추이',tblScore)
+    +mkTrendTbl('💰 승점 <span class="tip-icon" data-tip-id="score">i</span> 연도별 추이',tblScore)
     +mkTrendTbl('⚔️ 킬 연도별 추이',tblKill)
     +mkTrendTbl('🤝 어시스트 연도별 추이',tblAssist)
     +mkTrendTbl('📈 승률 연도별 추이',tblWR);
@@ -819,12 +824,12 @@ function renderGradePage(d6,sc25r,sc24r){
 function renderStierPage(d6,sc25r,sc24r){
   // 티어 기준 설명
   var tierDefs=[
-    {cls:'dia',ico:'💎',name:'다이아몬드',range:'80점 이상',desc:'팀 최정상. 매 시즌 압도적인 퍼포먼스를 유지하는 에이스.'},
+    {cls:'dia',ico:'💎',name:'다이아몬드',range:'80점 이상',desc:'팀 최정상. 압도적 퍼포먼스로 에이스 자리를 굳힌 선수.'},
     {cls:'pla',ico:'🔷',name:'플래티넘',range:'70~79점',desc:'안정적인 상위권. 피지컬과 판단력이 모두 검증된 선수.'},
     {cls:'gol',ico:'🥇',name:'골드',range:'60~69점',desc:'1인분 이상. 팀 승리에 꾸준히 기여하는 허리 역할.'},
     {cls:'sil',ico:'🥈',name:'실버',range:'50~59점',desc:'평균 수준. 무난하지만 기복이 있는 유형.'},
-    {cls:'bro',ico:'🥉',name:'브론즈',range:'40~49점',desc:'딜량·관여율이 아쉬운 시즌. 성장 여지가 있음.'},
-    {cls:'iro',ico:'⚙️',name:'아이언',range:'40점 미만',desc:'수련이 필요한 시즌. 바닥을 치고 올라가는 일만 남았다.'},
+    {cls:'bro',ico:'🥉',name:'브론즈',range:'40~49점',desc:'딜량·관여율이 아쉬운 단계. 성장 여지가 있음.'},
+    {cls:'iro',ico:'⚙️',name:'아이언',range:'40점 미만',desc:'수련이 필요한 단계. 바닥을 치고 올라가는 일만 남았다.'},
   ];
   var defHtml=tierDefs.map(function(t){
     return'<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:#1e293b;border-radius:10px;border-left:3px solid var(--tc)">'
@@ -941,7 +946,8 @@ function initAwardsSort(){
       if(!tbody)return;
       tbody.innerHTML=sd.map(function(p,i){
         var total=p.mom+p.special+p.spirit;
-        return'<tr><td class="rk">'+(i+1)+'</td>'
+        var _ne=p.name.replace(/'/g,"\\'");
+        return'<tr onclick="showPlayerAwardMatches(\''+_ne+'\')" style="cursor:pointer"><td class="rk">'+(i+1)+'</td>'
           +'<td class="nm">'+at(AN[p.name]?AN[p.name].t:'B')+' '+p.name+'</td>'
           +'<td style="color:#fbbf24;font-weight:900">'+p.mom+'</td>'
           +'<td style="color:#818cf8;font-weight:900">'+p.special+'</td>'
@@ -1632,7 +1638,7 @@ var TIPS={
   tier:'🏆 티어 산정 기준<br><br>👑 챌린저 (90+) : 생태계 파괴자<br>💎 다이아몬드 (80+) : 최상위권 에이스<br>🔷 플래티넘 (70+) : 피지컬·뇌지컬 상체<br>🥇 골드 (60+) : 1인분 확실한 팀의 허리<br>🥈 실버 (50+) : 무난하지만 기복 있는 유저<br>🥉 브론즈 (40+) : 딜량·관여율 아쉬운 유저<br>⚙️ 아이언 (40 미만) : 수련이 필요한 유저',
   cs26:'📊 종합점수 산정식 (2026)<br><br>60 + 5 × (1.5×z_KDA + 0.3×z_승률<br>+ 1.0×z_DPM + 1.0×z_GPM + 0.5×z_DTPM)',
   cs2425:'📊 종합점수 산정식 (2024·2025)<br><br>60 + 5 × (3.0×z_KDA + 0.6×z_승률)',
-  score:'🏆 승점<br><br>매 경기 결과에 따라 스프레드시트에 기록·적립되는 시즌 포인트입니다.<br><br>승리 경기에 기여도가 반영되어 부여되며, 시즌 내 꾸준한 활약을 유지할수록 누적 승점이 높아집니다.<br><br>합산승점은 2024·2025·2026 시즌 승점의 합계이며, 장기적인 팀 기여도를 나타냅니다.',
+  score:'💰 승점이란?<br><br>경기에 참여하고 <b>승리</b>할 때마다 누적되는 포인트입니다.<br><br>단순 승리수와 다르게, 경기의 질과 기여도를 반영해 스프레드시트에서 산정됩니다. 꾸준히 출전하고 승리에 기여할수록 승점이 높아지며, 장기적인 활약도를 보여주는 지표입니다.<br><br>· <b>시즌 승점</b>: 해당 연도에 쌓은 승점<br>· <b>합산 승점</b>: 2024+2025+2026 시즌 승점의 합계',
   stierScore:'📊 시즌 티어 종합점수 (compScore)<br><br>해당 시즌의 KDA·승률·딜량(DPM)·골드수급(GPM)·피해감수(DTPM)를 팀 내 상대 비교(z-score)로 환산해 산출합니다.<br><br><b>2026</b>: 60 + 5 × (1.5×z_KDA + 0.3×z_승률 + 1.0×z_DPM + 1.0×z_GPM + 0.5×z_DTPM)<br><b>2024·2025</b>: 60 + 5 × (3.0×z_KDA + 0.6×z_승률)<br><br>이 점수가 높을수록 높은 시즌 티어(다이아·플래 등)가 배정됩니다.',
   'award-mom':'👑 MOM\n승리팀에서 경기를 가장 잘 이끈 선수에게 수여되는 최고 영예',
   'award-special':'⭐ 스페셜\n승리팀에서 돋보인 활약을 펼친 숨겨진 조력자',
@@ -1663,10 +1669,20 @@ document.addEventListener('click',function(e){
   doFetch();
 // IIFE 내부 함수를 외부 onclick에서 사용할 수 있도록 window에 노출
 window._buildMatchPopupHtml=buildMatchPopupHtml;
+window._champIcon=champIcon;
+window._parseTeam=parseTeam;
+window._parseAward=parseAward;
 window._parseTeam=parseTeam;
 window._parseAward=parseAward;
 })();
 })();</script>
+<!-- 경기 목록 팝업 (레이어 1) -->
+<div id="match-list-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9985;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeMatchListPopup()">
+  <div style="background:#1e293b;border-radius:16px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:24px 24px 20px;position:relative;border:1px solid #334155;box-shadow:0 24px 64px rgba(0,0,0,.7)">
+    <button onclick="closeMatchListPopup()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,.08);border:none;color:#94a3b8;font-size:1rem;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    <div id="match-list-body"></div>
+  </div>
+</div>
 <!-- 경기 상세 팝업 -->
 <div id="match-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9990;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeMatchPopup()">
   <div style="background:#1e293b;border-radius:16px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;padding:28px 28px 24px;position:relative;border:1px solid #334155;box-shadow:0 24px 64px rgba(0,0,0,.7)">
@@ -1687,7 +1703,9 @@ window.showMatchPopup=function(idx){
 };
 window.closeMatchPopup=function(){
   document.getElementById('match-popup').style.display='none';
-  document.body.style.overflow='';
+  // 목록 팝업이 열려있으면 overflow 유지
+  var listPop=document.getElementById('match-list-popup');
+  if(!listPop||listPop.style.display==='none') document.body.style.overflow='';
 };
 window.showMatchByDate=function(date){
   var log=window._matchLog||[];
@@ -1706,7 +1724,130 @@ window.showMatchByDate=function(date){
     document.body.style.overflow='hidden';
   }
 };
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMatchPopup();});
+// ── 경기 목록 팝업 공통 함수 ─────────────────────────────────────
+// 선수명으로 KDA 파싱
+window._parsePlayerKDA=function(kdaStr,playerName){
+  if(!kdaStr||!playerName)return null;
+  var result=null;
+  kdaStr.split('|').forEach(function(e){
+    var idx=e.indexOf(':');if(idx<0)return;
+    if(e.substring(0,idx).trim()!==playerName)return;
+    var parts=e.substring(idx+1).trim().split('/');
+    if(parts.length<3)return;
+    var k=+parts[0],d=+parts[1],a=+parts[2];
+    result={k:k,d:d,a:a,kda:d>0?Math.round((k+a)/d*100)/100:k+a};
+  });
+  return result;
+};
+
+// matchLog 필터링 → 목록 아이템 배열 생성
+window.buildMatchListItems=function(playerName,champName,yearFilter){
+  var log=window._matchLog||[];
+  var items=[];
+  var pA=window._parseAward||function(){return null;};
+  var pT=window._parseTeam||function(){return[];};
+  log.forEach(function(m,idx){
+    if(yearFilter&&m.year!==yearFilter)return;
+    var teams=pT(m.team1).concat(pT(m.team2));
+    var found=null;
+    teams.forEach(function(p){
+      if(found)return;
+      if(playerName&&p.player!==playerName)return;
+      if(champName&&p.champ!==champName)return;
+      found=p;
+    });
+    if(!found)return;
+    var kda=playerName?window._parsePlayerKDA(m.playerKda,playerName):null;
+    var award='';
+    if(playerName){
+      var pn=function(s){if(!s)return'';var i=s.lastIndexOf('(');return i>=0?s.substring(0,i).trim():s;};
+      if(pn(m.mom)===playerName)award='👑';
+      else if(pn(m.special)===playerName)award='⭐';
+      else if(pn(m.spirit)===playerName)award='💪';
+    }
+    items.push({idx:idx,date:m.date,year:m.year,result:m.result,champ:found.champ,kda:kda,award:award});
+  });
+  return items;
+};
+
+// 목록 팝업 렌더 + 열기
+window.showMatchListPopup=function(title,items){
+  var YCOL={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'};
+  var ci=window._champIcon||function(){return'';};
+  var html='<div style="font-size:1.05rem;font-weight:800;color:#f1f5f9;margin-bottom:14px">'+title+'</div>';
+  if(!items.length){
+    html+='<div style="color:#64748b;padding:30px;text-align:center">해당 조건의 경기 기록이 없습니다.</div>';
+  } else {
+    html+='<div style="font-size:.7rem;color:#475569;margin-bottom:10px">'+items.length+'경기 · 항목을 누르면 상세 로그를 볼 수 있어요</div>';
+    html+=items.map(function(item){
+      var yearCol=YCOL[item.year]||'#94a3b8';
+      var resCol=item.result==='1팀 승'?'#4ade80':'#f87171';
+      var kda=item.kda;
+      var kdaCol=kda?(kda.d===0&&kda.k+kda.a>=5?'#a78bfa':kda.kda>=4?'#4ade80':kda.kda>=2.5?'#60a5fa':'#94a3b8'):'#94a3b8';
+      return'<div onclick="showMatchPopup('+item.idx+')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid #334155;cursor:pointer;margin-bottom:6px;transition:.15s" onmouseover="this.style.borderColor=\'#818cf8\'" onmouseout="this.style.borderColor=\'#334155\'">'
+        +'<span style="font-size:.68rem;color:'+yearCol+';font-weight:700;min-width:28px;flex-shrink:0">'+item.year+'</span>'
+        +(item.champ?ci(item.champ,24):'<span style="width:24px;flex-shrink:0;display:inline-block"></span>')
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:.82rem;font-weight:700;color:#f1f5f9">'+item.date+'</div>'
+          +(item.champ?'<div style="font-size:.7rem;color:#64748b">'+item.champ+'</div>':'')
+        +'</div>'
+        +(kda?'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-size:.75rem;font-weight:900;color:'+kdaCol+'">'+kda.kda+(kda.d===0?' PD':'')+'</div>'
+          +'<div style="font-size:.67rem;color:#475569">'+kda.k+'/'+kda.d+'/'+kda.a+'</div>'
+        +'</div>':'')
+        +'<div style="text-align:right;flex-shrink:0;min-width:32px">'
+          +'<div style="font-size:.72rem;font-weight:700;color:'+resCol+'">'+item.result.replace('팀 ','팀')+'</div>'
+          +(item.award?'<div style="font-size:.9rem">'+item.award+'</div>':'')
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }
+  document.getElementById('match-list-body').innerHTML=html;
+  document.getElementById('match-list-popup').style.display='flex';
+  document.body.style.overflow='hidden';
+};
+
+window.closeMatchListPopup=function(){
+  document.getElementById('match-list-popup').style.display='none';
+  if(document.getElementById('match-popup').style.display==='none') document.body.style.overflow='';
+};
+
+// 연결 포인트별 진입 함수
+window.showPlayerChampMatches=function(player,champ){
+  showMatchListPopup(player+' · '+champ+' 출전 경기',window.buildMatchListItems(player,champ,null));
+};
+window.showPlayerAwardMatches=function(player){
+  var log=window._matchLog||[];
+  var pA=window._parseAward||function(){return null;};
+  var pT=window._parseTeam||function(){return[];};
+  var pn=function(s){if(!s)return'';var i=s.lastIndexOf('(');return i>=0?s.substring(0,i).trim():s;};
+  var items=[];
+  log.forEach(function(m,idx){
+    var award='';
+    if(pn(m.mom)===player)award='👑';
+    else if(pn(m.special)===player)award='⭐';
+    else if(pn(m.spirit)===player)award='💪';
+    if(!award)return;
+    var kda=window._parsePlayerKDA(m.playerKda,player);
+    var teams=pT(m.team1).concat(pT(m.team2));
+    var fc=null;teams.forEach(function(p){if(p.player===player)fc=p.champ;});
+    items.push({idx:idx,date:m.date,year:m.year,result:m.result,champ:fc,kda:kda,award:award});
+  });
+  showMatchListPopup(player+' 수상 경기',items);
+};
+window.showPlayerMatches=function(player,year){
+  var items=window.buildMatchListItems(player,null,year||null);
+  showMatchListPopup(player+' 출전 경기'+(year?' ('+year+'시즌)':''),items);
+};
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    var mp=document.getElementById('match-popup');
+    var lp=document.getElementById('match-list-popup');
+    if(mp&&mp.style.display!=='none')closeMatchPopup();
+    else if(lp&&lp.style.display!=='none')closeMatchListPopup();
+  }
+});
 </script>
 <footer style="margin-top:60px;padding:36px 20px 40px;border-top:1px solid #1e293b;text-align:center;background:#0a111e">
   <p style="font-size:clamp(.72rem,3.2vw,1rem);font-weight:700;color:#f1f5f9;letter-spacing:.5px;margin-bottom:8px;font-style:italic;white-space:nowrap">
