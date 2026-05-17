@@ -515,8 +515,17 @@ function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(funct
           +'<div class="stat-tip" data-tip-id="stat-champpool" style="color:#64748b;cursor:pointer;padding:2px;border-radius:4px">챔피언폭 <b style="color:'+tc+'">'+rs.champPool+'</b></div>'
         +'</div></div>';
     }
-        var topCh=(window._topChamps&&window._topChamps[nm])||a.ch;
-    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topCh+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2024\')" style="cursor:pointer" title="2024 경기 보기"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2025\')" style="cursor:pointer" title="2025 경기 보기"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+nm.replace(/'/g,"\\'")+'\',\'2026\')" style="cursor:pointer" title="2026 경기 보기"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
+        // 챔피언 클릭 가능한 HTML 생성
+    var _nme=nm.replace(/'/g,"\\'");
+    var topChData=window._topChamps&&window._topChamps[nm];
+    var topChHtml;
+    if(topChData&&Array.isArray(topChData)&&topChData.length){
+      topChHtml=topChData.map(function(c){
+        var _ce=c.orig.replace(/'/g,"\\'");
+        return'<span onclick="showPlayerChampMatches(\''+_nme+'\',\''+_ce+'\')" style="cursor:pointer">'+c.disp+'</span>';
+      }).join(' · ');
+    }else{topChHtml=a.ch;}
+    return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn" onclick="showPlayerMatches(\''+_nme+'\',null)" style="cursor:pointer">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topChHtml+'</div><div class="ci">📍 '+a.p+'</div><div class="cb"><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2026\')" style="cursor:pointer" title="2026 경기 보기"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2025\')" style="cursor:pointer" title="2025 경기 보기"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2024\')" style="cursor:pointer" title="2024 경기 보기"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+'</div>';}).join('');}
 function hC(i,l,n,v,cls){return '<div class="hc '+cls+'"><div class="hi">'+i+'</div><div class="hl2">'+l+'</div><div class="hn">'+n+'</div><div class="hv">'+v+'</div></div>';}
 
 // ── 육각형 레이더 차트 ─────────────────────────────────────────────
@@ -638,13 +647,16 @@ function radarSVG(stats, color) {
 
   // 라벨 + 수치 (더 크게)
   var GAP=26;
+  var TIP_IDS=['stat-atk','stat-survive','stat-teamwork','stat-compete','stat-stability','stat-champpool'];
   var lblEls=labels.map(function(lbl,i){
     var a=angles[i];
     var lx=cx+(R+GAP)*Math.cos(a), ly=cy+(R+GAP)*Math.sin(a);
     var anc=Math.cos(a)>0.25?'start':Math.cos(a)<-0.25?'end':'middle';
     var sc=stats[keys[i]]||0;
-    return '<text x="'+lx.toFixed(1)+'" y="'+(ly-5).toFixed(1)+'" fill="#94a3b8" font-size="11" text-anchor="'+anc+'" font-family="inherit">'+lbl+'</text>'
-          +'<text x="'+lx.toFixed(1)+'" y="'+(ly+9).toFixed(1)+'" fill="'+color+'" font-size="13" font-weight="800" text-anchor="'+anc+'" font-family="inherit">'+sc+'</text>';
+    var tid=TIP_IDS[i];
+    // SVG text에 class=stat-tip + data-tip-id 부여 → 기존 툴팁 시스템과 연결
+    return '<text x="'+lx.toFixed(1)+'" y="'+(ly-5).toFixed(1)+'" fill="#94a3b8" font-size="11" text-anchor="'+anc+'" font-family="inherit" class="stat-tip" data-tip-id="'+tid+'" style="cursor:pointer">'+lbl+'</text>'
+          +'<text x="'+lx.toFixed(1)+'" y="'+(ly+9).toFixed(1)+'" fill="'+color+'" font-size="13" font-weight="800" text-anchor="'+anc+'" font-family="inherit" class="stat-tip" data-tip-id="'+tid+'" style="cursor:pointer">'+sc+'</text>';
   }).join('');
 
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'
@@ -750,10 +762,10 @@ function renderGradePage(d6,sc25r,sc24r){
      title:'리그의 지배자',range:'STAT SCORE 400+',
      desc:'6가지 스탯 평균 67점 이상. 딜량·KDA·수상 인정도 전반에서 팀을 압도하며 경기의 흐름을 단독으로 바꿀 수 있는 에이스.'},
     {t:'A',col:'#60a5fa',border:'rgba(96,165,250,.4)',bg:'rgba(96,165,250,.07)',
-     title:'핵심 기여자',range:'STAT SCORE 280~399',
+     title:'핵심 기여자',range:'STAT SCORE 399~280',
      desc:'6가지 스탯 평균 47~66점. 안정적인 판단력과 실력으로 매 경기 1인분 이상을 꾸준히 해내는 팀 승리의 든든한 버팀목.'},
     {t:'B',col:'#4ade80',border:'rgba(74,222,128,.4)',bg:'rgba(74,222,128,.07)',
-     title:'든든한 팀플레이어',range:'STAT SCORE 160~279',
+     title:'든든한 팀플레이어',range:'STAT SCORE 279~160',
      desc:'6가지 스탯 평균 27~46점. 팀의 균형을 맞추며 묵묵히 자리를 지키는 선수. 흔들리지 않고 제 역할을 다하는 것만으로도 듬직.'},
     {t:'C',col:'#64748b',border:'rgba(100,116,139,.4)',bg:'rgba(100,116,139,.07)',
      title:'가능성의 선수',range:'STAT SCORE 159 이하',
@@ -833,10 +845,10 @@ function renderStierPage(d6,sc25r,sc24r){
   // 티어 기준 설명
   var tierDefs=[
     {cls:'dia',ico:'💎',name:'다이아몬드',range:'80점 이상',desc:'팀 최정상. 압도적 퍼포먼스로 에이스 자리를 굳힌 선수.'},
-    {cls:'pla',ico:'🔷',name:'플래티넘',range:'70~79점',desc:'안정적인 상위권. 피지컬과 판단력이 모두 검증된 선수.'},
-    {cls:'gol',ico:'🥇',name:'골드',range:'60~69점',desc:'1인분 이상. 팀 승리에 꾸준히 기여하는 허리 역할.'},
-    {cls:'sil',ico:'🥈',name:'실버',range:'50~59점',desc:'평균 수준. 무난하지만 기복이 있는 유형.'},
-    {cls:'bro',ico:'🥉',name:'브론즈',range:'40~49점',desc:'딜량·관여율이 아쉬운 단계. 성장 여지가 있음.'},
+    {cls:'pla',ico:'🔷',name:'플래티넘',range:'79~70점',desc:'안정적인 상위권. 피지컬과 판단력이 모두 검증된 선수.'},
+    {cls:'gol',ico:'🥇',name:'골드',range:'69~60점',desc:'1인분 이상. 팀 승리에 꾸준히 기여하는 허리 역할.'},
+    {cls:'sil',ico:'🥈',name:'실버',range:'59~50점',desc:'평균 수준. 무난하지만 기복이 있는 유형.'},
+    {cls:'bro',ico:'🥉',name:'브론즈',range:'49~40점',desc:'딜량·관여율이 아쉬운 단계. 성장 여지가 있음.'},
     {cls:'iro',ico:'⚙️',name:'아이언',range:'40점 미만',desc:'수련이 필요한 단계. 바닥을 치고 올라가는 일만 남았다.'},
   ];
   var defHtml=tierDefs.map(function(t){
@@ -923,7 +935,8 @@ document.getElementById('ptier-inner').innerHTML=renderGradePage(d6new,sc25r,sc2
 window._topChamps={};
 ALL.forEach(function(nm){
   var champs=allLogAgg.champData[nm]||[];
-  window._topChamps[nm]=champs.slice(0,3).map(function(c){return abbrevChamp(c.ch);}).join(', ');
+  // {orig: 원본 챔프명, disp: 약어} 배열로 저장 → 클릭 시 원본명으로 필터
+  window._topChamps[nm]=champs.slice(0,3).map(function(c){return{orig:c.ch,disp:abbrevChamp(c.ch)};});
 });
 document.getElementById('cards-inner').innerHTML=bCards(d6new,sc25r,sc24r);
 }catch(logErr){console.warn('LOG render error:',logErr);}
@@ -1643,7 +1656,7 @@ var TIPS={
   'grade-s':'<b>S급 : 리그의 지배자.</b><br>팀의 에이스이자 슈퍼 캐리.<br>경기의 흐름을 단독으로 바꿀 수 있는 플레이어.',
   'grade-a':'<b>A급 : 핵심 기여자.</b><br>안정적인 판단력과 실력으로<br>매 경기 1인분 이상을 꾸준히 해내는 플레이어.',
   'grade-b':'<b>B급 : 든든한 팀플레이어.</b><br>팀의 균형을 맞추는 버팀목.<br>묵묵히 제 역할을 다하는 플레이어.',
-  tier:'🏆 시즌 티어<br><br>해당 시즌의 <b>종합점수(0~100점)</b>로 결정됩니다.<br>종합점수는 KDA·승률을 팀 내 상대 비교(z-score)로 환산해 산출하며, 2026 시즌은 딜량·골드수급·피해감수까지 포함합니다.<br><br>👑 챌린저 (90+) : 생태계 파괴자<br>💎 다이아몬드 (80+) : 최상위권 에이스<br>🔷 플래티넘 (70+) : 피지컬·뇌지컬 상체<br>🥇 골드 (60+) : 1인분 확실한 팀의 허리<br>🥈 실버 (50+) : 무난하지만 기복 있는 유저<br>🥉 브론즈 (40+) : 딜량·관여율 아쉬운 단계<br>⚙️ 아이언 (40 미만) : 수련이 필요한 단계',
+  tier:'🏆 시즌 티어<br><br>해당 시즌의 <b>종합점수(0~100점)</b>로 결정됩니다.<br>종합점수는 KDA·승률을 팀 내 상대 비교(z-score)로 환산해 산출하며, 2026 시즌은 딜량·골드수급·피해감수까지 포함합니다.<br><br>👑 챌린저 (90~100) : 생태계 파괴자<br>💎 다이아몬드 (89~80) : 최상위권 에이스<br>🔷 플래티넘 (79~70) : 피지컬·뇌지컬 상체<br>🥇 골드 (69~60) : 1인분 확실한 팀의 허리<br>🥈 실버 (59~50) : 무난하지만 기복 있는 유저<br>🥉 브론즈 (49~40) : 딜량·관여율 아쉬운 단계<br>⚙️ 아이언 (39~0) : 수련이 필요한 단계',
   'grade-c':'<b>C급 : 가능성의 선수.</b><br>현재 스탯보다 앞으로의 가능성이 더 빛나는 단계.<br>경험이 쌓일수록 데이터가 바뀌고 등급이 올라간다.<br>지금 이 순간도 성장의 여정 속에 있음.',
   cs26:'📊 종합점수 산정식 (2026)<br><br>60 + 5 × (1.5×z_KDA + 0.3×z_승률<br>+ 1.0×z_DPM + 1.0×z_GPM + 0.5×z_DTPM)',
   cs2425:'📊 종합점수 산정식 (2024·2025)<br><br>60 + 5 × (3.0×z_KDA + 0.6×z_승률)',
