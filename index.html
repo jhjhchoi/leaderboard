@@ -240,7 +240,7 @@ fetch('https://ddragon.leagueoflegends.com/api/versions.json')
   .then(function(v){if(v&&v[0])_ddver=v[0];})
   .catch(function(){});
 function getTierName(s){return s>=90?'챌린저':s>=80?'다이아몬드':s>=70?'플래티넘':s>=60?'골드':s>=50?'실버':s>=40?'브론즈':'아이언';}function tierColor(s){return s>=90?'#facc15':s>=80?'#818cf8':s>=70?'#60a5fa':s>=60?'#fbbf24':s>=50?'#94a3b8':s>=40?'#cd7f32':'#475569';}
-function tbFromScore(s){var t=getTierName(s);var m={'챌린저':'👑 챌린저','다이아몬드':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'챌린저':'cha','다이아몬드':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return'<span class="b '+c[t]+'">'+m[t]+'</span>';}
+function tbFromScore(s){var t=getTierName(s);var m={'챌린저':'👑 챌린저','다이아몬드':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'챌린저':'cha','다이아몬드':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return'<span class="b '+c[t]+'" data-tip-id="tier" style="cursor:pointer">'+m[t]+'</span>';}
 
 function parseLogCSV(csv){
   var lines=csv.split('\n');var section=null;var champData={};var awardsData=[];
@@ -489,9 +489,9 @@ function pCSV(t){var ls=t.split('\n'),res=[];for(var i=0;i<ls.length;i++){var r=
 function p26(csv){if(!csv||csv.length<10)return[];var rows=pCSV(csv),PC=[4,14,24,34,44,54,64,74,84,94,104,114],EX=['탑내커','또벅초','쪼비'];var r7=rows[7]||[],r8=rows[8]||[],r9=rows[9]||[],r10=rows[10]||[],r11=rows[11]||[],r12=rows[12]||[],r14=rows[14]||[],r34=rows[34]||[],r35=rows[35]||[],r26=rows[26]||[],r37=rows[37]||[];return PC.map(function(c){var n=r7[c]||'';if(!n||EX.includes(n))return null;return{name:n,games:+r9[c]||0,kda:+r10[c]||0,wins:+r11[c]||0,losses:+r11[c+2]||0,winRate:+(r12[c]||'0').replace('%','')||0,score:+r14[c]||0,dpm:+r34[c]||0,gpm:+r35[c]||0,dtpm:+r26[c]||0,compScore:+r37[c]||0,tier:TM[n]||'',k:+r8[c]||0,a:+r8[c+2]||0};}).filter(Boolean);}
 function kC(k){return k>=3.5?'#a78bfa':k>=2.5?'#4ade80':k>=2?'#60a5fa':'#94a3b8';}
 function at(t){return '<span class="at tier-'+t.toLowerCase()+'" data-tip-id="grade-'+t.toLowerCase()+'" style="cursor:pointer">'+t+'</span>';}
-function tb(tier){var m={'다이아':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'다이아':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return '<span class="b '+c[tier]+'">'+m[tier]+'</span>';}
+function tb(tier){var m={'다이아':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'다이아':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return '<span class="b '+c[tier]+'" data-tip-id="tier" style="cursor:pointer">'+m[tier]+'</span>';}
 function wr(p,w,l){var col=p>=55?'#4ade80':p>=50?'#60a5fa':'#f87171';return '<div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(p,100)+'%;background:'+col+'"></div></div><span>'+p.toFixed(1)+'%</span><small>'+w+'W/'+l+'L</small></div>';}
-function pod(arr,k,fmt){if(!arr||arr.length<3)return '';var s=[...arr].sort(function(a,b){return b[k]-a[k];});function pm(nm){var e=nm.replace(/'/g,"\\'");return '<div class="pm" onclick="showPlayerMatches(\''+e+'\',null)" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px">'+nm+'</div>';}return '<div class="podium"><div class="pod p2"><div class="pn2">2nd</div>'+pm(s[1].name)+'<div class="pv">'+fmt(s[1][k])+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div>'+pm(s[0].name)+'<div class="pv">'+fmt(s[0][k])+'</div></div><div class="pod p3"><div class="pn2">3rd</div>'+pm(s[2].name)+'<div class="pv">'+fmt(s[2][k])+'</div></div></div>';}
+function pod(arr,k,fmt){if(!arr||arr.length<3)return '';var s=[...arr].sort(function(a,b){return b[k]-a[k];});function pm(nm){var e=nm.replace(/'/g,"\\'");return '<div class="pm" onclick="showPlayerMatches(\''+e+'\',null)" style="cursor:pointer">'+nm+'</div>';}return '<div class="podium"><div class="pod p2"><div class="pn2">2nd</div>'+pm(s[1].name)+'<div class="pv">'+fmt(s[1][k])+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div>'+pm(s[0].name)+'<div class="pv">'+fmt(s[0][k])+'</div></div><div class="pod p3"><div class="pn2">3rd</div>'+pm(s[2].name)+'<div class="pv">'+fmt(s[2][k])+'</div></div></div>';}
 function calcAll(d26){return ALL.map(function(n){var p6=d26.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0},p5=d25.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0},p4=d24.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0};var tg=p6.games+p5.games+p4.games,tw=p6.wins+p5.wins+p4.wins,tl=p6.losses+p5.losses+p4.losses,wK=tg>0?(p6.kda*p6.games+p5.kda*p5.games+p4.kda*p4.games)/tg:0,wr2=(tw+tl)>0?tw/(tw+tl)*100:0,a=AN[n]||{t:'B'};return{name:n,totalGames:tg,totalWins:tw,totalLosses:tl,totalScore:p6.score+p5.score+p4.score,kda:Math.round(wK*100)/100,winRate:Math.round(wr2*100)/100,at:a.t,s26:p6.kda,s25:p5.kda,s24:p4.kda};}).sort(function(a,b){var k=curSort.k,v=curSort.d,av=Number(a[k])||0,bv=Number(b[k])||0;return(bv-av)*v;});}
 // 선수명 클릭 → 출전 경기 목록 팝업 공통 헬퍼
 function pnc(nm,grade){var e=nm.replace(/'/g,"\\'");return '<td class="nm" onclick="showPlayerMatches(\''+e+'\',null)" style="cursor:pointer" title="'+nm+' 출전 경기 보기">'+at(grade||'B')+' '+nm+'</td>';}
@@ -816,7 +816,6 @@ function renderGradePage(d6,sc25r,sc24r){
       +'</div>';
     }).join(''):'';
     return'<tr><td class="rk">'+(i+1)+'</td>'
-      +'<td><span class="at tier-'+t.toLowerCase()+'">'+t+'</span></td>'
       +pnc(nm,t)
       +'<td style="color:'+tc+';font-weight:900;font-size:1rem;text-align:center">'+total+'</td>'
       +'<td style="min-width:180px;padding:6px 8px"><div style="display:flex;flex-direction:column;gap:2px">'+bar+'</div></td>'
@@ -824,7 +823,7 @@ function renderGradePage(d6,sc25r,sc24r){
   }).join('');
   var tbl='<div class="kda-section-wrap">'
     +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · 3년 합산</span></div>'
-    +'<table class="t"><thead><tr><th>#</th><th>등급</th><th>선수</th><th>STAT SCORE</th><th>스탯 상세</th></tr></thead>'
+    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th><th>스탯 상세</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>';
 
   return info+tbl;
@@ -1644,7 +1643,8 @@ var TIPS={
   'grade-s':'<b>S급 : 리그의 지배자.</b><br>팀의 에이스이자 슈퍼 캐리.<br>경기의 흐름을 단독으로 바꿀 수 있는 플레이어.',
   'grade-a':'<b>A급 : 핵심 기여자.</b><br>안정적인 판단력과 실력으로<br>매 경기 1인분 이상을 꾸준히 해내는 플레이어.',
   'grade-b':'<b>B급 : 든든한 팀플레이어.</b><br>팀의 균형을 맞추는 버팀목.<br>묵묵히 제 역할을 다하는 플레이어.',
-  tier:'🏆 티어 산정 기준<br><br>👑 챌린저 (90+) : 생태계 파괴자<br>💎 다이아몬드 (80+) : 최상위권 에이스<br>🔷 플래티넘 (70+) : 피지컬·뇌지컬 상체<br>🥇 골드 (60+) : 1인분 확실한 팀의 허리<br>🥈 실버 (50+) : 무난하지만 기복 있는 유저<br>🥉 브론즈 (40+) : 딜량·관여율 아쉬운 유저<br>⚙️ 아이언 (40 미만) : 수련이 필요한 유저',
+  tier:'🏆 시즌 티어<br><br>해당 시즌의 <b>종합점수(0~100점)</b>로 결정됩니다.<br>종합점수는 KDA·승률을 팀 내 상대 비교(z-score)로 환산해 산출하며, 2026 시즌은 딜량·골드수급·피해감수까지 포함합니다.<br><br>👑 챌린저 (90+) : 생태계 파괴자<br>💎 다이아몬드 (80+) : 최상위권 에이스<br>🔷 플래티넘 (70+) : 피지컬·뇌지컬 상체<br>🥇 골드 (60+) : 1인분 확실한 팀의 허리<br>🥈 실버 (50+) : 무난하지만 기복 있는 유저<br>🥉 브론즈 (40+) : 딜량·관여율 아쉬운 단계<br>⚙️ 아이언 (40 미만) : 수련이 필요한 단계',
+  'grade-c':'<b>C급 : 가능성의 선수.</b><br>현재 스탯보다 앞으로의 가능성이 더 빛나는 단계.<br>경험이 쌓일수록 데이터가 바뀌고 등급이 올라간다.<br>지금 이 순간도 성장의 여정 속에 있음.',
   cs26:'📊 종합점수 산정식 (2026)<br><br>60 + 5 × (1.5×z_KDA + 0.3×z_승률<br>+ 1.0×z_DPM + 1.0×z_GPM + 0.5×z_DTPM)',
   cs2425:'📊 종합점수 산정식 (2024·2025)<br><br>60 + 5 × (3.0×z_KDA + 0.6×z_승률)',
   score:'💰 승점이란?<br><br>경기에 참여하고 <b>승리</b>할 때마다 누적되는 포인트입니다.<br><br>단순 승리수와 다르게, 경기의 질과 기여도를 반영해 스프레드시트에서 산정됩니다. 꾸준히 출전하고 승리에 기여할수록 승점이 높아지며, 장기적인 활약도를 보여주는 지표입니다.<br><br>· <b>시즌 승점</b>: 해당 연도에 쌓은 승점<br>· <b>합산 승점</b>: 2024+2025+2026 시즌 승점의 합계',
