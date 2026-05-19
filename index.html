@@ -904,8 +904,8 @@ function buildPosData(matchLog){
 function posTag(pos){
   if(!pos)return'';
   var col=POS_COL[pos]||'#94a3b8';
-  return'<span style="font-size:.6rem;font-weight:900;color:'+col
-    +';opacity:.9;flex-shrink:0;vertical-align:middle;letter-spacing:-.5px">·'+pos+'</span>';
+  return'<span style="font-size:.68rem;font-weight:900;color:'+col
+    +';opacity:.9;flex-shrink:0;vertical-align:middle">'+pos+'</span>';
 }
 // 포지션 라벨 박스 — 선수 카드 바 차트 전용
 function posTagBox(pos){
@@ -2046,8 +2046,7 @@ window._buildMatchPopupHtml=buildMatchPopupHtml;
 window._champIcon=champIcon;
 window._parseTeam=parseTeam;
 window._parseAward=parseAward;
-window._parseTeam=parseTeam;
-window._parseAward=parseAward;
+window._posTag=posTag;
 })();
 })();</script>
 <!-- 경기 목록 팝업 (레이어 1) -->
@@ -2145,7 +2144,9 @@ window.buildMatchListItems=function(playerName,champName,yearFilter){
       else if(pn(m.special)===playerName)award='⭐';
       else if(pn(m.spirit)===playerName)award='💪';
     }
-    items.push({idx:idx,date:m.date,year:m.year,result:m.result,won:playerWon,champ:found.champ,kda:kda,award:award});
+    var _pd=window._posData;
+    var _pos=(_pd&&_pd.matchPos)?_pd.matchPos[found.player+'|'+m.date+'|'+found.champ]||'':'';
+    items.push({idx:idx,date:m.date,year:m.year,result:m.result,won:playerWon,champ:found.champ,kda:kda,award:award,pos:_pos});
   });
   return items;
 };
@@ -2165,9 +2166,11 @@ window.showMatchListPopup=function(title,items){
       var resLabel=item.won!==undefined?(item.won?'승':'패'):item.result;
       var kda=item.kda;
       var kdaCol=kda?(kda.d===0&&kda.k+kda.a>=5?'#a78bfa':kda.kda>=4?'#4ade80':kda.kda>=2.5?'#60a5fa':'#94a3b8'):'#94a3b8';
+      var pT=window._posTag||function(){return'';};
       return'<div onclick="showMatchPopup('+item.idx+')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid #334155;cursor:pointer;margin-bottom:6px;transition:.15s" onmouseover="this.style.borderColor=\'#818cf8\'" onmouseout="this.style.borderColor=\'#334155\'">'
         +'<span style="font-size:.68rem;color:'+yearCol+';font-weight:700;min-width:28px;flex-shrink:0">'+item.year+'</span>'
         +(item.champ?ci(item.champ,24):'<span style="width:24px;flex-shrink:0;display:inline-block"></span>')
+        +(item.pos?pT(item.pos):'')
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:.82rem;font-weight:700;color:#f1f5f9">'+item.date+'</div>'
           +(item.champ?'<div style="font-size:.7rem;color:#64748b">'+item.champ+'</div>':'')
