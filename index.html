@@ -541,7 +541,7 @@ function bCards(d6,sc25r,sc24r){return ALL.map(function(nm){var p6=d6.find(funct
         return'<span onclick="showPlayerChampMatches(\''+_nme+'\',\''+_ce+'\')" style="cursor:pointer">'+c.disp+'</span>';
       }).join(' · ');
     }else{topChHtml=a.ch;}
-    var posBarHtml=(function(){var pd=window._posData;if(!pd||!pd.stats[nm])return'<div class="ci">📍 '+a.p+'</div>';var st=pd.stats[nm];var total=(st.T||0)+(st.J||0)+(st.M||0)+(st.B||0)+(st.S||0);if(!total)return'<div class="ci">📍 '+a.p+'</div>';var bars=['T','J','M','B','S'].map(function(pos){var n=st[pos]||0;if(!n)return'';var pct=Math.round(n/total*100);var col=POS_COL[pos]||'#94a3b8';return'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">'+posTag(pos)+'<div style="flex:1;height:5px;background:#0f172a;border-radius:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px"></div></div><span style="font-size:.58rem;color:#475569;min-width:34px;text-align:right">'+n+'회 '+pct+'%</span></div>';}).filter(Boolean).join('');return'<div style="border-top:1px solid rgba(51,65,85,.5);padding:8px 8px 4px"><div style="font-size:.6rem;color:#64748b;letter-spacing:.4px;margin-bottom:5px">포지션 출전 현황</div>'+bars+'</div>';}());
+    var posBarHtml=(function(){var pd=window._posData;if(!pd||!pd.stats[nm])return'<div class="ci">📍 '+a.p+'</div>';var st=pd.stats[nm];var total=(st.T||0)+(st.J||0)+(st.M||0)+(st.B||0)+(st.S||0);if(!total)return'<div class="ci">📍 '+a.p+'</div>';var bars=['T','J','M','B','S'].map(function(pos){var n=st[pos]||0;if(!n)return'';var pct=Math.round(n/total*100);var col=POS_COL[pos]||'#94a3b8';return'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">'+posTagBox(pos)+'<div style="flex:1;height:5px;background:#0f172a;border-radius:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px"></div></div><span style="font-size:.58rem;color:#475569;min-width:34px;text-align:right">'+n+'회 '+pct+'%</span></div>';}).filter(Boolean).join('');return'<div style="border-top:1px solid rgba(51,65,85,.5);padding:8px 8px 4px"><div style="font-size:.6rem;color:#64748b;letter-spacing:.4px;margin-bottom:5px">포지션 출전 현황</div>'+bars+'</div>';}());
 return '<div class="card"><div class="ch" style="border-color:'+tc+'">'+at(a.t)+' <span class="cn" onclick="showPlayerMatches(\''+_nme+'\',null)" style="cursor:pointer">'+nm+'</span><div class="cr">'+a.r+'</div></div><div class="ci">🏆 '+topChHtml+'</div><div class="cb"><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2026\')" style="cursor:pointer" title="2026 경기 보기"><div class="bl">2026</div>'+bar(p6,'#818cf8',p6&&p6.compScore?p6.compScore:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2025\')" style="cursor:pointer" title="2025 경기 보기"><div class="bl">2025</div>'+bar(p5,'#34d399',sc25r?sc25r[nm]:null)+'</div><div class="bg2" onclick="showPlayerMatches(\''+_nme+'\',\'2024\')" style="cursor:pointer" title="2024 경기 보기"><div class="bl">2024</div>'+bar(p4,'#fb923c',sc24r?sc24r[nm]:null)+'</div></div><div class="cs2"><div class="csi"><span>3년평균KDA</span><b style="color:'+kC(wK)+'">'+wK.toFixed(2)+'</b></div><div class="csi"><span>총경기</span><b>'+tg+'</b></div><div class="csi"><span>3년승률</span><b>'+wR.toFixed(1)+'%</b></div></div>'+radarSection+posBarHtml+'</div>';}).join('');}
 function hC(i,l,n,v,cls){return '<div class="hc '+cls+'"><div class="hi">'+i+'</div><div class="hl2">'+l+'</div><div class="hn">'+n+'</div><div class="hv">'+v+'</div></div>';}
 
@@ -900,8 +900,15 @@ function buildPosData(matchLog){
   return{stats:stats,champPos:champPos,matchPos:matchPos};
 }
 
-// 포지션 이니셜 뱃지 HTML
+// 포지션 이니셜 — 박스 없이 컬러 텍스트만 (등급 배지와 시각적 구분)
 function posTag(pos){
+  if(!pos)return'';
+  var col=POS_COL[pos]||'#94a3b8';
+  return'<span style="font-size:.6rem;font-weight:900;color:'+col
+    +';opacity:.9;flex-shrink:0;vertical-align:middle;letter-spacing:-.5px">·'+pos+'</span>';
+}
+// 포지션 라벨 박스 — 선수 카드 바 차트 전용
+function posTagBox(pos){
   if(!pos)return'';
   var col=POS_COL[pos]||'#94a3b8';
   return'<span style="font-size:.55rem;font-weight:900;color:'+col
