@@ -119,7 +119,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
 .aw-tag:hover{opacity:1;transform:scale(1.12)}
 .tab-sep{width:1px;background:rgba(51,65,85,.9);margin:5px 4px;flex-shrink:0;align-self:stretch}
 /* 대진표 페이지 */
-.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:20px}
+.roster-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
 .roster-chk{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#1e293b;border-radius:10px;border:1.5px solid #334155;cursor:pointer;transition:.15s;user-select:none}
 .roster-chk:hover{border-color:#818cf8}.roster-chk.selected{border-color:#818cf8;background:rgba(129,140,248,.1)}
 .roster-chk input{display:none}
@@ -890,7 +890,7 @@ function renderRosterPage(){
         +at(a.t)
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:.82rem;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
-          +'<div style="font-size:.66rem;color:#475569">'+a.p+'</div>'
+          +'<div style="font-size:.66rem;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.p+'</div>'
         +'</div>'
         +(ss?'<span style="font-size:.68rem;color:#64748b">'+ss+'</span>':'')
       +'</div>';
@@ -946,6 +946,43 @@ function assignPositions(players,positions){
   return result;
 }
 
+// 맞라인 등급 격차 최소화: 팀 내 포지션 스왑 최적화
+function fixGradeMatchups(t1,t2,posOrder){
+  var gv={S:3,A:2,B:1,C:0};
+  var gof=function(p){return p?gv[AN[p.name]?AN[p.name].t:'B']||0:0;};
+  var viol=function(p1,p2){return p1&&p2?Math.abs(gof(p1)-gof(p2))>1?1:0:0;};
+  // 팀 내 두 포지션 선수 스왑 가능 여부: 서로 상대 포지션에서 플레이 가능해야 함
+  // (단, 포지션 미지정 = 모든 포지션 가능으로 간주)
+  var canSwap=function(pa,pb,posA,posB){
+    var aOk=pa.positions.length===0||pa.positions.indexOf(posB)>=0;
+    var bOk=pb.positions.length===0||pb.positions.indexOf(posA)>=0;
+    return aOk&&bOk;
+  };
+  var improved=true,maxIter=30;
+  while(improved&&maxIter-->0){
+    improved=false;
+    // t1, t2 각각 시도
+    [t1,t2].forEach(function(team){
+      var opp=team===t1?t2:t1;
+      for(var i=0;i<posOrder.length;i++){
+        for(var j=i+1;j<posOrder.length;j++){
+          var pi=posOrder[i],pj=posOrder[j];
+          var a=team[pi],b=team[pj];
+          if(!a||!b)continue;
+          if(!canSwap(a,b,pi,pj))continue;
+          // 현재 위반 합산
+          var before=viol(a,opp[pi])+viol(b,opp[pj]);
+          // 스왑 후 위반 합산
+          var after=viol(b,opp[pi])+viol(a,opp[pj]);
+          if(after<before){
+            team[pi]=b;team[pj]=a;improved=true;
+          }
+        }
+      }
+    });
+  }
+}
+
 window.generateRoster=function(){
   var checks=document.querySelectorAll('.roster-check:checked');
   var selected=Array.from(checks).map(function(c){return c.value;});
@@ -990,6 +1027,9 @@ window.generateRoster=function(){
   var t1=assignPositions(team1,posOrder);
   var t2=assignPositions(team2,posOrder);
 
+  // 맞라인 등급 격차 최소화 최적화
+  fixGradeMatchups(t1,t2,posOrder);
+
   var t1Total=posOrder.reduce(function(s,p){return s+(t1[p]?t1[p].rawScore:0);},0);
   var t2Total=posOrder.reduce(function(s,p){return s+(t2[p]?t2[p].rawScore:0);},0);
   var balance=Math.round(Math.min(t1Total,t2Total)/Math.max(t1Total,t2Total)*100);
@@ -999,12 +1039,16 @@ window.generateRoster=function(){
   // 결과 렌더
   var posLabel={T:'탑',J:'정글',M:'미드',B:'원딜',S:'서폿'};
   var balCol=balance>=95?'#4ade80':balance>=85?'#fbbf24':'#f87171';
+  var gvR={S:3,A:2,B:1,C:0};
   var rows=posOrder.map(function(pos){
     var p1=t1[pos],p2=t2[pos];
-    return'<tr>'
+    var g1=p1?gvR[AN[p1.name]?AN[p1.name].t:'B']||0:0;
+    var g2=p2?gvR[AN[p2.name]?AN[p2.name].t:'B']||0:0;
+    var mismatch=p1&&p2&&Math.abs(g1-g2)>1;
+    return'<tr style="'+(mismatch?'background:rgba(251,191,36,.05)':'')+'">'
       +'<td class="roster-pos" style="text-align:center">'+pos+'<div style="font-size:.62rem;color:#334155">'+posLabel[pos]+'</div></td>'
       +'<td style="text-align:right;padding-right:24px">'+(p1?at(AN[p1.name]?AN[p1.name].t:'B')+' <b class="roster-player">'+p1.name+'</b>':'<span style="color:#334155">?</span>')+'</td>'
-      +'<td style="text-align:center;color:#334155;font-size:.8rem">vs</td>'
+      +'<td style="text-align:center;color:#334155;font-size:.8rem">'+(mismatch?'<span title="등급 격차 2단계 이상" style="color:#fbbf24;font-size:.9rem">⚠️</span>':'vs')+'</td>'
       +'<td style="padding-left:24px">'+(p2?at(AN[p2.name]?AN[p2.name].t:'B')+' <b class="roster-player">'+p2.name+'</b>':'<span style="color:#334155">?</span>')+'</td>'
     +'</tr>';
   }).join('');
