@@ -884,15 +884,16 @@ function renderRosterPage(){
       var a=AN[nm]||{t:'B',p:''};
       var rs=window._radarStats&&window._radarStats[nm];
       var ss=rs?Math.round((rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0)):0;
-      return'<label class="roster-chk selected" id="rck-'+nm.replace(/\s/g,'_')+'" onclick="rosterToggle(this)">'
-        +'<input type="checkbox" class="roster-check" value="'+nm+'" checked>'
+      var id='rck-'+nm.replace(/\s/g,'_');
+      return'<div class="roster-chk selected" id="'+id+'" onclick="rosterToggle(this)">'
+        +'<input type="checkbox" class="roster-check" value="'+nm+'" checked style="display:none">'
         +at(a.t)
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:.82rem;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
           +'<div style="font-size:.66rem;color:#475569">'+a.p+'</div>'
         +'</div>'
         +(ss?'<span style="font-size:.68rem;color:#64748b">'+ss+'</span>':'')
-      +'</label>';
+      +'</div>';
     }).join('')
     +'</div>'
     // 생성 버튼
