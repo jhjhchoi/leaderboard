@@ -1093,8 +1093,15 @@ window.generateRoster=function(){
   else if(teamSize===4)posOrder=['T','J','M','B'];
   else posOrder=['T','M','B'];
 
-  var t1=assignPositions(team1,posOrder);
-  var t2=assignPositions(team2,posOrder);
+  // 포지션 배정 순서 랜덤화: 동일 선수가 항상 같은 포지션에 고정되는 현상 방지
+  function shuffleArr(arr){
+    var a=arr.slice();
+    for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+    return a;
+  }
+
+  var t1=assignPositions(shuffleArr(team1),posOrder);
+  var t2=assignPositions(shuffleArr(team2),posOrder);
 
   // 맞라인 등급 격차 최소화 최적화
   fixGradeMatchups(t1,t2,posOrder);
