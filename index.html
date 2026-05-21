@@ -1061,12 +1061,17 @@ window.generateRoster=function(){
     var rs=window._radarStats&&window._radarStats[nm];
     var ss=rs?((rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0)):300;
     // 3년 평균 승률
-    var d6d=window._d6data&&window._d6data.find(function(p){return p.name===nm;})||{winRate:50};
-    var d5d=d25.find(function(p){return p.name===nm;})||{winRate:50};
-    var d4d=d24.find(function(p){return p.name===nm;})||{winRate:50};
-    var avgWR=(d6d.winRate+d5d.winRate+d4d.winRate)/3;
-    // 복합 점수: STAT 70% + 승률(0-100→0-600 스케일) 30% + 랜덤 ±10%
-    var composite=(ss*0.7+(avgWR*6)*0.3)*(1+(Math.random()-0.5)*0.2);
+    var d6d=window._d6data&&window._d6data.find(function(p){return p.name===nm;})||{wins:0,games:0};
+    var d5d=d25.find(function(p){return p.name===nm;})||{wins:0,games:0};
+    var d4d=d24.find(function(p){return p.name===nm;})||{wins:0,games:0};
+    // 판수 보정 승률 (베이지안 스무딩): 판수 적은 선수의 이상값 완화
+    // k=5 → 0판이면 50%, 판수 늘수록 실제 승률로 수렴
+    var totalWins=(d6d.wins||0)+(d5d.wins||0)+(d4d.wins||0);
+    var totalGames=(d6d.games||0)+(d5d.games||0)+(d4d.games||0);
+    var k=5;
+    var adjWR=(totalWins+k)/(totalGames+2*k); // 0~1 스케일
+    // 복합 점수: STAT 40% + 보정승률(0-1→0-600 스케일) 60% + 랜덤 ±10%
+    var composite=(ss*0.4+(adjWR*600)*0.6)*(1+(Math.random()-0.5)*0.2);
     var a=AN[nm]||{p:''};
     var dataPos=getDataPositions(nm);
     return{name:nm,score:composite,rawScore:ss,wr:avgWR,positions:dataPos&&dataPos.length?dataPos:parsePosString(a.p)};
