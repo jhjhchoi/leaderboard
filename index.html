@@ -1820,17 +1820,19 @@ function renderFormWidget(insights){
   // 경기당 수상 3개(MOM·스페셜·투혼상) → 30건 = 약 10경기 분량
   var RECENT_SLICE=30;
   var momCnt={},spcCnt={},spiCnt={};
-  ALL.forEach(function(p){momCnt[p]=0;spcCnt[p]=0;spiCnt[p]=0;});
+  // 동률 시 최신순 타이브레이커: 각 선수의 가장 최근 수상 인덱스 (낮을수록 최신)
+  var momRecent={},spcRecent={},spiRecent={};
+  ALL.forEach(function(p){momCnt[p]=0;spcCnt[p]=0;spiCnt[p]=0;momRecent[p]=Infinity;spcRecent[p]=Infinity;spiRecent[p]=Infinity;});
   var hasData=false;
   var usingFallback=false; // fallback 여부를 별도 추적
 
   if(insights.recentAwards&&insights.recentAwards.length){
-    insights.recentAwards.slice(0,RECENT_SLICE).forEach(function(a){
+    insights.recentAwards.slice(0,RECENT_SLICE).forEach(function(a,idx){
       var t=(a.type||'').trim();
       if(momCnt[a.player]!==undefined){
-        if(t==='MOM')    {momCnt[a.player]++;hasData=true;}
-        if(t==='스페셜') {spcCnt[a.player]++;hasData=true;}
-        if(t==='투혼상') {spiCnt[a.player]++;hasData=true;}
+        if(t==='MOM')    {momCnt[a.player]++;if(idx<momRecent[a.player])momRecent[a.player]=idx;hasData=true;}
+        if(t==='스페셜') {spcCnt[a.player]++;if(idx<spcRecent[a.player])spcRecent[a.player]=idx;hasData=true;}
+        if(t==='투혼상') {spiCnt[a.player]++;if(idx<spiRecent[a.player])spiRecent[a.player]=idx;hasData=true;}
       }
     });
   }
@@ -1853,9 +1855,10 @@ function renderFormWidget(insights){
     return'<div style="padding:10px 16px 12px;border-bottom:1px solid #1e293b;margin-bottom:4px;font-size:.78rem;color:#475569">🔥 최근 활약 현황 — 인사이트 데이터 추출 후 표시됩니다</div>';
   }
 
-  var topMOM=ALL.slice().sort(function(a,b){return momCnt[b]-momCnt[a];}).slice(0,3);
-  var topSpc=ALL.slice().sort(function(a,b){return spcCnt[b]-spcCnt[a];}).slice(0,3);
-  var topSpi=ALL.slice().sort(function(a,b){return spiCnt[b]-spiCnt[a];}).slice(0,3);
+  // 1차: 횟수 많은 순 / 동률 시 2차: 최근 수상일 앞선 순
+  var topMOM=ALL.slice().sort(function(a,b){return momCnt[b]!==momCnt[a]?momCnt[b]-momCnt[a]:momRecent[a]-momRecent[b];}).slice(0,3);
+  var topSpc=ALL.slice().sort(function(a,b){return spcCnt[b]!==spcCnt[a]?spcCnt[b]-spcCnt[a]:spcRecent[a]-spcRecent[b];}).slice(0,3);
+  var topSpi=ALL.slice().sort(function(a,b){return spiCnt[b]!==spiCnt[a]?spiCnt[b]-spiCnt[a]:spiRecent[a]-spiRecent[b];}).slice(0,3);
 
   // usingFallback일 때만 "누적 기준" 표시 — hasData만으론 구분 불가
   var periodLabel=usingFallback?'누적 기준 (인사이트 재추출 시 최근 기준으로 전환)':'최근 10경기 기준';
