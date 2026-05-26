@@ -1182,7 +1182,7 @@ window.copyRoster=function(){
     lines.push(pos+'  '+pad+p2);
   });
   lines.push('──────────────────');
-  lines.push('⚖️ 전력 균형 '+Math.round(Math.min(r.t1Total,r.t2Total)/Math.max(r.t1Total,r.t2Total)*100)+'%');
+  lines.push('⚖️ 1팀 '+r.t1Total+' vs 2팀 '+r.t2Total+'  (균형 '+Math.round(Math.min(r.t1Total,r.t2Total)/Math.max(r.t1Total,r.t2Total)*100)+'%)');
   if(r.subs.length){
     lines.push('');
     lines.push('🔄 식스맨');
