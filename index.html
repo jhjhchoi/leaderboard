@@ -1149,6 +1149,48 @@ window.generateRoster=function(){
       +'</div></div>';
   }
 
+  var infoHtml=''
+    +'<div style="margin-top:16px;padding:16px 18px;background:#0f172a;border-radius:12px;border:1px solid #1e293b">'
+      +'<div style="font-size:.72rem;font-weight:700;color:#475569;letter-spacing:.05em;margin-bottom:12px">📊 스코어 산출 방식</div>'
+      +'<div style="display:flex;flex-direction:column;gap:10px">'
+
+        // 팀 스코어
+        +'<div style="padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #818cf8">'
+          +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+            +'<span style="font-size:.8rem;font-weight:700;color:#c4b5fd">팀 스코어</span>'
+            +'<span style="font-size:.68rem;color:#475569;background:#0f172a;padding:1px 8px;border-radius:6px">1팀 '+Math.round(t1Total)+' vs 2팀 '+Math.round(t2Total)+'</span>'
+          +'</div>'
+          +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
+            +'출전 선수 각각의 <b style="color:#e2e8f0">레이더 스탯 6개 항목</b>(공격력·생존력·팀워크·경쟁력·안정성·챔피언풀)을 합산한 값입니다. '
+            +'두 팀의 합산 스탯 총량을 비교해 전력 차이를 한눈에 파악할 수 있습니다.'
+          +'</div>'
+        +'</div>'
+
+        // 전력 균형
+        +'<div style="padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid '+balCol+'">'
+          +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+            +'<span style="font-size:.8rem;font-weight:700;color:'+balCol+'">전력 균형 '+balance+'%</span>'
+            +'<span style="font-size:.68rem;color:#475569;background:#0f172a;padding:1px 8px;border-radius:6px">'+(balance>=95?'매우 균형 ✅':balance>=85?'양호 🟡':'불균형 ⚠️')+'</span>'
+          +'</div>'
+          +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
+            +'낮은 팀 스코어 ÷ 높은 팀 스코어 × 100으로 계산합니다. '
+            +'<b style="color:#e2e8f0">95% 이상</b>이면 매우 균형 잡힌 대진, <b style="color:#e2e8f0">85% 미만</b>이면 전력 차가 크므로 리롤을 권장합니다.'
+          +'</div>'
+        +'</div>'
+
+        // 팀 배정 공식
+        +'<div style="padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #38bdf8">'
+          +'<div style="font-size:.8rem;font-weight:700;color:#7dd3fc;margin-bottom:6px">팀 배정 공식</div>'
+          +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
+            +'팀을 나눌 때는 <b style="color:#e2e8f0">레이더 스탯 40% + 3년 보정 승률 60%</b>를 합산한 복합 점수를 사용하며, '
+            +'매번 ±10% 랜덤 변동이 추가됩니다. 스네이크 드래프트 방식으로 배정되어 '
+            +'강한 선수가 한 팀에 몰리지 않도록 설계되어 있습니다.'
+          +'</div>'
+        +'</div>'
+
+      +'</div>'
+    +'</div>';
+
   document.getElementById('roster-result').innerHTML=
     '<div style="background:#1e293b;border-radius:12px;border:1px solid #334155;overflow:hidden">'
       +'<div style="padding:14px 18px;background:rgba(129,140,248,.08);border-bottom:1px solid #334155;display:flex;align-items:center;gap:12px">'
@@ -1158,7 +1200,8 @@ window.generateRoster=function(){
       +'</div>'
       +'<table class="roster-table"><tbody>'+rows+'</tbody></table>'
     +'</div>'
-    +subsHtml;
+    +subsHtml
+    +infoHtml;
 
   document.getElementById('roster-reroll').style.display='inline-block';
   document.getElementById('roster-copy-btn').style.display='inline-block';
