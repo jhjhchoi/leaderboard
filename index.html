@@ -177,7 +177,6 @@ var d25=[{"name":"jhgogo","games":96,"kda":3.78,"wins":65,"losses":31,"winRate":
 var AN={"우주최강승원":{"t":"S","ch":"트페, 사일러스, 럼블","r":"절대 무력","p":"TOP/MID/JG/AD/SUP"},"jhgogo":{"t":"S","ch":"스웨인, 오른, 쉔","r":"총사령관","p":"TOP/MID/JG/AD/SUP"},"xoxo":{"t":"S","ch":"요네, 이렐리아, 벨베스","r":"공포의 창","p":"TOP/MID/JG/AD/SUP"},"voskresni":{"t":"A","ch":"애쉬, 럭스, 트리스타나","r":"화력의 정석","p":"AD"},"아몰랑 해줘":{"t":"A","ch":"질리언, 소라카, 타릭","r":"헌신의 서포터","p":"SUP"},"찰스킹":{"t":"S","ch":"티모, 피오라, 마스터이","r":"무자비한 딜러","p":"TOP/JG"},"푱푱이형":{"t":"A","ch":"럭스, 세나, 제라스","r":"장거리 포킹","p":"MID/SUP"},"정봉이22":{"t":"B","ch":"미스 포춘, 잭스, 트리스타나","r":"안정적 딜러","p":"TOP/AD"},"Red레몬":{"t":"B","ch":"가렌, 세주아니, 문도박사","r":"돌격 대장","p":"TOP/MID/JG"},"kulkyuni":{"t":"A","ch":"하이머딩거, 아칼리, 멜","r":"변칙 기술자","p":"MID"},"머터리1":{"t":"B","ch":"요릭, 말자하, 자이라","r":"전략적 변수","p":"TOP/SUP"},"땡큐맨":{"t":"B","ch":"워윅, 세트, 브라이어","r":"강철 근성","p":"JG"}};
 var SID='1PuB7iE8KEv-cqtn7BXfU4hmLh_YSj291XU_-0vPDsp4',GID='298748317',GID25='1664331952',GID24='399882087';
 var ALL=['jhgogo','푱푱이형','머터리1','찰스킹','kulkyuni','xoxo','정봉이22','Red레몬','voskresni','우주최강승원','아몰랑 해줘','땡큐맨'];
-var TM={'xoxo':'다이아','찰스킹':'다이아','jhgogo':'플래티넘','우주최강승원':'플래티넘','kulkyuni':'골드','voskresni':'실버','푱푱이형':'실버','땡큐맨':'실버','아몰랑 해줘':'브론즈','Red레몬':'브론즈','정봉이22':'아이언','머터리1':'아이언'};
 sortAllByTier();
 var CHAMP_EN={
   '아트록스':'Aatrox','아리':'Ahri','아칼리':'Akali','아크샨':'Akshan',
@@ -502,10 +501,10 @@ function p24(csv){
 }
 
 function pCSV(t){var ls=t.split('\n'),res=[];for(var i=0;i<ls.length;i++){var r=[],c='',q=false,l=ls[i];for(var j=0;j<l.length;j++){var x=l[j];if(x==='"'){q=!q;}else if(x===','&&!q){r.push(c.trim());c='';}else{c+=x;}}r.push(c.trim());res.push(r);}return res;}
-function p26(csv){if(!csv||csv.length<10)return[];var rows=pCSV(csv),PC=[4,14,24,34,44,54,64,74,84,94,104,114],EX=['탑내커','또벅초','쪼비'];var r7=rows[7]||[],r8=rows[8]||[],r9=rows[9]||[],r10=rows[10]||[],r11=rows[11]||[],r12=rows[12]||[],r14=rows[14]||[],r34=rows[34]||[],r35=rows[35]||[],r26=rows[26]||[],r37=rows[37]||[];return PC.map(function(c){var n=r7[c]||'';if(!n||EX.includes(n))return null;return{name:n,games:+r9[c]||0,kda:+r10[c]||0,wins:+r11[c]||0,losses:+r11[c+2]||0,winRate:+(r12[c]||'0').replace('%','')||0,score:+r14[c]||0,dpm:+r34[c]||0,gpm:+r35[c]||0,dtpm:+r26[c]||0,compScore:+r37[c]||0,tier:TM[n]||'',k:+r8[c]||0,a:+r8[c+2]||0};}).filter(Boolean);}
+function p26(csv){if(!csv||csv.length<10)return[];var rows=pCSV(csv),PC=[4,14,24,34,44,54,64,74,84,94,104,114],EX=['탑내커','또벅초','쪼비'];var r7=rows[7]||[],r8=rows[8]||[],r9=rows[9]||[],r10=rows[10]||[],r11=rows[11]||[],r12=rows[12]||[],r14=rows[14]||[],r34=rows[34]||[],r35=rows[35]||[],r26=rows[26]||[],r37=rows[37]||[];return PC.map(function(c){var n=r7[c]||'';if(!n||EX.includes(n))return null;return{name:n,games:+r9[c]||0,kda:+r10[c]||0,wins:+r11[c]||0,losses:+r11[c+2]||0,winRate:+(r12[c]||'0').replace('%','')||0,score:+r14[c]||0,dpm:+r34[c]||0,gpm:+r35[c]||0,dtpm:+r26[c]||0,compScore:+r37[c]||0,tier:getTierName(+r37[c]||0),k:+r8[c]||0,a:+r8[c+2]||0};}).filter(Boolean);}
 function kC(k){return k>=3.5?'#a78bfa':k>=2.5?'#4ade80':k>=2?'#60a5fa':'#94a3b8';}
 function at(t){return '<span class="at tier-'+t.toLowerCase()+'" data-tip-id="grade-'+t.toLowerCase()+'" style="cursor:pointer">'+t+'</span>';}
-function tb(tier){var m={'다이아':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'다이아':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return '<span class="b '+c[tier]+'" data-tip-id="tier" style="cursor:pointer">'+m[tier]+'</span>';}
+function tb(tier){var m={'챌린저':'👑 챌린저','다이아몬드':'💎 다이아','플래티넘':'🔷 플래','골드':'🥇 골드','실버':'🥈 실버','브론즈':'🥉 브론즈','아이언':'⚙️ 아이언'};var c={'챌린저':'cha','다이아몬드':'dia','플래티넘':'pla','골드':'gol','실버':'sil','브론즈':'bro','아이언':'iro'};return '<span class="b '+(c[tier]||'iro')+'" data-tip-id="tier" style="cursor:pointer">'+(m[tier]||tier)+'</span>';}
 function wr(p,w,l){var col=p>=55?'#4ade80':p>=50?'#60a5fa':'#f87171';return '<div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(p,100)+'%;background:'+col+'"></div></div><span>'+p.toFixed(1)+'%</span><small>'+w+'W/'+l+'L</small></div>';}
 function pod(arr,k,fmt){if(!arr||arr.length<3)return '';var s=[...arr].sort(function(a,b){return b[k]-a[k];});function pm(nm){var e=nm.replace(/'/g,"\\'");return '<div class="pm" onclick="showPlayerMatches(\''+e+'\',null)" style="cursor:pointer">'+nm+'</div>';}return '<div class="podium"><div class="pod p2"><div class="pn2">2nd</div>'+pm(s[1].name)+'<div class="pv">'+fmt(s[1][k])+'</div></div><div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div>'+pm(s[0].name)+'<div class="pv">'+fmt(s[0][k])+'</div></div><div class="pod p3"><div class="pn2">3rd</div>'+pm(s[2].name)+'<div class="pv">'+fmt(s[2][k])+'</div></div></div>';}
 function calcAll(d26){return ALL.map(function(n){var p6=d26.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0},p5=d25.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0},p4=d24.find(function(p){return p.name===n;})||{games:0,wins:0,losses:0,score:0,kda:0};var tg=p6.games+p5.games+p4.games,tw=p6.wins+p5.wins+p4.wins,tl=p6.losses+p5.losses+p4.losses,wK=tg>0?(p6.kda*p6.games+p5.kda*p5.games+p4.kda*p4.games)/tg:0,wr2=(tw+tl)>0?tw/(tw+tl)*100:0,a=AN[n]||{t:'B'};return{name:n,totalGames:tg,totalWins:tw,totalLosses:tl,totalScore:p6.score+p5.score+p4.score,kda:Math.round(wK*100)/100,winRate:Math.round(wr2*100)/100,at:a.t,s26:p6.kda,s25:p5.kda,s24:p4.kda};}).sort(function(a,b){var k=curSort.k,v=curSort.d,av=Number(a[k])||0,bv=Number(b[k])||0;return(bv-av)*v;});}
@@ -1241,7 +1240,8 @@ window.copyRoster=function(){
 function renderStierPage(d6,sc25r,sc24r){
   // 티어 기준 설명
   var tierDefs=[
-    {cls:'dia',ico:'💎',name:'다이아몬드',range:'80점 이상',desc:'팀 최정상. 압도적 퍼포먼스로 에이스 자리를 굳힌 선수.'},
+    {cls:'cha',ico:'👑',name:'챌린저',range:'90점 이상',desc:'리그 최고의 선수. 모든 지표에서 압도적인 퍼포먼스로 독보적인 위치를 점하는 선수.'},
+    {cls:'dia',ico:'💎',name:'다이아몬드',range:'89~80점',desc:'팀 최정상급. 압도적 퍼포먼스로 에이스 자리를 굳힌 선수.'},
     {cls:'pla',ico:'🔷',name:'플래티넘',range:'79~70점',desc:'안정적인 상위권. 피지컬과 판단력이 모두 검증된 선수.'},
     {cls:'gol',ico:'🥇',name:'골드',range:'69~60점',desc:'1인분 이상. 팀 승리에 꾸준히 기여하는 허리 역할.'},
     {cls:'sil',ico:'🥈',name:'실버',range:'59~50점',desc:'평균 수준. 무난하지만 기복이 있는 유형.'},
@@ -1250,7 +1250,7 @@ function renderStierPage(d6,sc25r,sc24r){
   ];
   var defHtml=tierDefs.map(function(t){
     return'<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:#1e293b;border-radius:10px;border-left:3px solid var(--tc)">'
-      .replace('var(--tc)', t.cls==='dia'?'#818cf8':t.cls==='pla'?'#60a5fa':t.cls==='gol'?'#fbbf24':t.cls==='sil'?'#94a3b8':t.cls==='bro'?'#cd7f32':'#475569')
+      .replace('var(--tc)', t.cls==='cha'?'#facc15':t.cls==='dia'?'#818cf8':t.cls==='pla'?'#60a5fa':t.cls==='gol'?'#fbbf24':t.cls==='sil'?'#94a3b8':t.cls==='bro'?'#cd7f32':'#475569')
       +'<div style="font-size:1.3rem;flex-shrink:0">'+t.ico+'</div>'
       +'<div><div style="font-size:.85rem;font-weight:800;color:#f1f5f9;margin-bottom:2px">'+t.name+' <span style="font-size:.72rem;font-weight:400;color:#64748b">(종합점수 '+t.range+')</span></div>'
       +'<div style="font-size:.78rem;color:#94a3b8;line-height:1.5">'+t.desc+'</div></div>'
