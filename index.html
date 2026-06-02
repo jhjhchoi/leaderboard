@@ -182,7 +182,7 @@ var CHAMP_EN={
   '아트록스':'Aatrox','아리':'Ahri','아칼리':'Akali','아크샨':'Akshan',
   '알리스타':'Alistar','아무무':'Amumu','애니비아':'Anivia','애니':'Annie',
   '아펠리오스':'Aphelios','애쉬':'Ashe','아우렐리온 솔':'AurelionSol',
-  '오로라':'Aurora','아지르':'Azir','바드':'Bard','벨베스':'Belveth',
+  '오로라':'Aurora','아지르':'Azir','바드':'Bard','벨베스':'BelVeth',
   '블리츠크랭크':'Blitzcrank','브랜드':'Brand','브라움':'Braum','브라이어':'Briar',
   '케이틀린':'Caitlyn','케이트린':'Caitlyn','카밀':'Camille',
   '카시오페아':'Cassiopeia','초가스':'Chogath','코르키':'Corki',
@@ -229,7 +229,7 @@ var CHAMP_EN={
   '블라디미르':'Vladimir','오공':'MonkeyKing','룰루':'Lulu',
   '클레드':'Kled','나피리':'Naafiri','스몰더':'Smolder','닐라':'Nilah',
   '흐웨이':'Hwei','암베사':'Ambessa','유나라':'Yunara','오로라':'Aurora',
-  '멜':'Mel','밀리오':'Milio','렐':'Rell','벨베스':'BelVeth',
+  '멜':'Mel','밀리오':'Milio','렐':'Rell',
   '리 신':'LeeSin','누누':'Nunu','탐켄치':'TahmKench',
   '문도박사':'DrMundo','자헨':'Zaahen'
 };
@@ -1288,9 +1288,9 @@ function renderStierPage(d6,sc25r,sc24r){
 }
 var curSort={k:"kda",d:1};var lastD6=null;
 function render(d6,dKA26,dKA25,dKA24){lastD6=d6;if(dKA26)window._dKA26=dKA26;if(dKA25)window._dKA25=dKA25;if(dKA24)window._dKA24=dKA24;var dA=calcAll(d6);var sc25=calcCompScores(d25);var sc24=calcCompScores(d24);var lb='<div id="pa" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024-2026 종합</span></div>'+pod(dA,curSort.k,function(v){var k=curSort.k;if(k==='totalScore')return Number(v).toLocaleString();if(k==='winRate')return Number(v).toFixed(1)+'%';if(k==='totalGames')return Number(v);return Number(v).toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th class="sh desc" data-s="kda">평균KDA</th><th>승률(W/L)</th><th class="sh" data-s="winRate">합산승점 <span class="tip-icon" data-tip-id="score">i</span></th><th class="sh" data-s="totalScore">총경기</th><th class="sh" data-s="s26">2026</th><th class="sh" data-s="s25">2025</th><th class="sh" data-s="s24">2024</th></tr></thead><tbody>'+aRows(dA,d6)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'all')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'all')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'all'):'')+'</div>'+'<div id="p6" class="yp act"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2026년</span></div>'+pod(d6,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>DPM</th><th>GPM</th><th>종합 <span class="tip-icon" data-tip-id="cs26">i</span></th></tr></thead><tbody>'+r6(d6)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'26')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'26')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'26'):'')+'</div>'+'<div id="p5" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2025년</span></div>'+pod(d25,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d25,sc25)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'25')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'25')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'25'):'')+'</div>'+'<div id="p4" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024년</span></div>'+pod(d24,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점</th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d24,sc24)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'24')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'24')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'24'):'')+'</div>';document.getElementById('lb-inner').innerHTML=lb;document.getElementById('cards-inner').innerHTML=bCards(d6,sc25,sc24);document.getElementById('rec-inner').innerHTML=bRec(d6,dA,sc25,sc24);
-document.getElementById('stier-inner').innerHTML=renderStierPage(d6,sc25,sc24);var shh=document.querySelectorAll('th.sh');for(var ssi=0;ssi<shh.length;ssi++){(function(thEl){thEl.addEventListener('click',function(){var k=thEl.getAttribute('data-s');if(curSort.k===k){curSort.d*=-1;}else{curSort.k=k;curSort.d=1;}document.querySelectorAll('th.sh').forEach(function(t){t.classList.remove('asc','desc');});thEl.classList.add(curSort.d===1?'desc':'asc');if(lastD6){var _curYr=null;['pa','p6','p5','p4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.classList.contains('act'))_curYr=id;});render(lastD6);if(_curYr&&_curYr!=='p6'){sY(_curYr==='pa'?'a':_curYr.replace('p',''));}}});})(shh[ssi]);}var yb=document.querySelectorAll('.yb2');for(var i=0;i<yb.length;i++){yb[i].addEventListener('click',(function(b){return function(){sY(b.getAttribute('data-yr'));};})(yb[i]));}}
+document.getElementById('stier-inner').innerHTML=renderStierPage(d6,sc25,sc24);var shh=document.querySelectorAll('th.sh');for(var ssi=0;ssi<shh.length;ssi++){(function(thEl){thEl.addEventListener('click',function(){var k=thEl.getAttribute('data-s');if(curSort.k===k){curSort.d*=-1;}else{curSort.k=k;curSort.d=1;}document.querySelectorAll('th.sh').forEach(function(t){t.classList.remove('asc','desc');});thEl.classList.add(curSort.d===1?'desc':'asc');if(lastD6){var _curYr=null;['pa','p6','p5','p4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.classList.contains('act'))_curYr=id;});render(lastD6);if(_curYr&&_curYr!=='p6'){sY(_curYr==='pa'?'a':_curYr.replace('p',''));}}});})(shh[ssi]);}var yb=document.querySelectorAll('[data-yr]');for(var i=0;i<yb.length;i++){yb[i].addEventListener('click',(function(b){return function(){sY(b.getAttribute('data-yr'));};})(yb[i]));}}
 function sT(id){var ps=document.querySelectorAll('.pn'),bs=document.querySelectorAll('.tb');for(var i=0;i<ps.length;i++)ps[i].className='pn';for(var i=0;i<bs.length;i++)bs[i].className='tb';var el=document.getElementById(id);if(el)el.className='pn act';var b=document.querySelector('[data-tab="'+id+'"]');if(b)b.className='tb act';}
-function sY(yr){var ps=document.querySelectorAll('.yp'),bs=document.querySelectorAll('.yb2');for(var i=0;i<ps.length;i++)ps[i].className='yp';for(var i=0;i<bs.length;i++)bs[i].className='yb2';var el=document.getElementById('p'+yr);if(el)el.className='yp act';var b=document.querySelector('[data-yr="'+yr+'"]');if(b)b.className='yb2 act';}
+function sY(yr){var ps=document.querySelectorAll('.yp'),bs=document.querySelectorAll('[data-yr]');for(var i=0;i<ps.length;i++)ps[i].className='yp';for(var i=0;i<bs.length;i++)bs[i].className='yb2';var el=document.getElementById('p'+yr);if(el)el.className='yp act';var b=document.querySelector('[data-yr="'+yr+'"]');if(b)b.className='yb2 act';}
 var tbs=document.querySelectorAll('.tb');for(var i=0;i<tbs.length;i++){tbs[i].addEventListener('click',(function(b){return function(){sT(b.getAttribute('data-tab'));};})(tbs[i]));}
 var st=document.getElementById('status');
 function doFetch(){
@@ -1699,7 +1699,7 @@ function buildMatchPopupHtml(match){
 
   return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
     +'<span style="font-size:.72rem;color:'+yearCol+';font-weight:700">'+match.year+'시즌</span>'
-    +(is2026?'<span style="font-size:.65rem;background:rgba(129,140,248,.15);color:#818cf8;border:1px solid rgba(129,140,248,.4);padding:1px 7px;border-radius:4px;font-weight:700">딜량 · 피해량 포함</span>':'')
+    +''
     +'</div>'
     +'<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px">'
       +'<span style="font-size:1.3rem;font-weight:900;color:#f1f5f9">'+match.date+'</span>'
@@ -2082,10 +2082,11 @@ document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
 document.addEventListener('click',function(e){
   var tip=document.getElementById('g-tooltip');
-  if(e.target.classList.contains('tip-icon')||e.target.classList.contains('at')||e.target.classList.contains('b')||e.target.classList.contains('aw-tag')||e.target.classList.contains('stat-tip')){
-    var id=e.target.getAttribute('data-tip-id');
+  var el=e.target.closest('[data-tip-id]');
+  if(el){
+    var id=el.getAttribute('data-tip-id');
     if(_tipOpen===id){tip.style.display='none';_tipOpen=null;}
-    else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=e.target.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
+    else{tip.innerHTML=TIPS[id]||'';tip.style.display='block';var r=el.getBoundingClientRect();var left=r.left-120;if(left<8)left=8;if(left+310>window.innerWidth)left=window.innerWidth-318;tip.style.left=left+'px';tip.style.top=(r.bottom+8)+'px';_tipOpen=id;}
     e.stopPropagation();
   } else if(tip&&tip.style.display==='block'){tip.style.display='none';_tipOpen=null;}
 });
