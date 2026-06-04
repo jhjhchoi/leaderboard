@@ -2145,13 +2145,19 @@ window.closeMatchPopup=function(){
 };
 window.showMatchByDatePlayer=function(date,player,champ){
   var log=window._matchLog||[];
-  // 1순위: 해당 날짜 + 해당 선수가 출전한 경기
+  // 1순위: 날짜 + 선수 + 챔피언 정확히 매칭
   var idx=log.findIndex(function(m){
     if(m.date!==date)return false;
-    var allPlayers=(m.team1||'')+'|'+(m.team2||'');
-    return allPlayers.indexOf(player+'('+champ+')')>=0||allPlayers.indexOf(player+'(')>=0;
+    var all=(m.team1||'')+'|'+(m.team2||'');
+    return all.indexOf(player+'('+champ+')')>=0;
   });
-  // 2순위: 날짜만 일치하는 첫 번째 경기
+  // 2순위: 날짜 + 선수만 매칭 (챔피언 불명확한 경우)
+  if(idx<0)idx=log.findIndex(function(m){
+    if(m.date!==date)return false;
+    var all=(m.team1||'')+'|'+(m.team2||'');
+    return all.indexOf(player+'(')>=0;
+  });
+  // 3순위: 날짜만
   if(idx<0)idx=log.findIndex(function(m){return m.date===date;});
   if(idx>=0){showMatchPopup(idx);return;}
   document.getElementById('match-popup-body').innerHTML=
