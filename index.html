@@ -561,8 +561,8 @@ function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights
     var p4 = d24all.find(function(x){return x.name===nm;})||{games:0};
     var g6=p6.games||0, g5=p5.games||0, g4=p4.games||0;
     var tg = g6+g5+g4||1;
-    // 연도별 가중치: 2026×3, 2025×2, 2024×1 (최근 시즌일수록 더 강하게 반영)
-    var w6=g6*3, w5=g5*2, w4=g4*1;
+    // 연도별 가중치: 2026×5, 2025×2, 2024×0.5 (최근 기록 집중 반영, 2년+ 기록 대폭 축소)
+    var w6=g6*5, w5=g5*2, w4=g4*0.5;
     var wt=w6+w5+w4||1;
 
     // 공격력: 연도별 경기당 킬 × 연도가중 + 2026 DPM 보정
@@ -811,10 +811,10 @@ function renderGradePage(d6,sc25r,sc24r){
     +'<span style="color:#f472b6">📊 안정성</span>·<span style="color:#fbbf24">🎮 챔피언폭</span> — 수상 인정도 · 챔피언 다양성 × 승률<br>'
     +'<div style="margin-top:10px;padding:10px 14px;background:rgba(129,140,248,.08);border-radius:8px;border-left:3px solid #818cf8">'
       +'<span style="color:#818cf8;font-weight:700">⚖️ 연도별 가중치</span> &nbsp;'
-      +'<span style="color:#f1f5f9;font-weight:700">2026 × 3</span><span style="color:#475569"> · </span>'
+      +'<span style="color:#f1f5f9;font-weight:700">2026 × 5</span><span style="color:#475569"> · </span>'
       +'<span style="color:#f1f5f9;font-weight:700">2025 × 2</span><span style="color:#475569"> · </span>'
-      +'<span style="color:#f1f5f9;font-weight:700">2024 × 1</span>'
-      +'<span style="color:#64748b;font-size:.78rem;display:block;margin-top:3px">최근 시즌일수록 등급 산정에 더 강하게 반영 — 현재 실력에 집중</span>'
+      +'<span style="color:#f1f5f9;font-weight:700">2024 × 0.5</span>'
+      +'<span style="color:#64748b;font-size:.78rem;display:block;margin-top:3px">최근 기록에 집중 반영 — 2024년 이전 기록은 대폭 축소 (초보 시절 데이터 영향 최소화)</span>'
     +'</div>'
     +'</div></div>';
 
@@ -1066,12 +1066,13 @@ window.generateRoster=function(){
     var d6d=window._d6data&&window._d6data.find(function(p){return p.name===nm;})||{wins:0,games:0};
     var d5d=d25.find(function(p){return p.name===nm;})||{wins:0,games:0};
     var d4d=d24.find(function(p){return p.name===nm;})||{wins:0,games:0};
-    // 판수 보정 승률 (베이지안 스무딩): 판수 적은 선수의 이상값 완화
+    // 연도별 가중 승률 (2026×5, 2025×2, 2024×0.5) + 베이지안 스무딩
     // k=5 → 0판이면 50%, 판수 늘수록 실제 승률로 수렴
-    var totalWins=(d6d.wins||0)+(d5d.wins||0)+(d4d.wins||0);
-    var totalGames=(d6d.games||0)+(d5d.games||0)+(d4d.games||0);
+    var wt6=5,wt5=2,wt4=0.5;
+    var wWins=(d6d.wins||0)*wt6+(d5d.wins||0)*wt5+(d4d.wins||0)*wt4;
+    var wGames=(d6d.games||0)*wt6+(d5d.games||0)*wt5+(d4d.games||0)*wt4;
     var k=5;
-    var adjWR=(totalWins+k)/(totalGames+2*k); // 0~1 스케일
+    var adjWR=(wWins+k)/(wGames+2*k); // 0~1 스케일
     // 복합 점수: STAT 40% + 보정승률(0-1→0-600 스케일) 60% + 랜덤 ±10%
     var composite=(ss*0.4+(adjWR*600)*0.6)*(1+(Math.random()-0.5)*0.2);
     var a=AN[nm]||{p:''};
@@ -1184,9 +1185,10 @@ window.generateRoster=function(){
         +'<div style="padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid #38bdf8">'
           +'<div style="font-size:.8rem;font-weight:700;color:#7dd3fc;margin-bottom:6px">팀 배정 공식</div>'
           +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
-            +'팀을 나눌 때는 <b style="color:#e2e8f0">레이더 스탯 40% + 3년 보정 승률 60%</b>를 합산한 복합 점수를 사용하며, '
+            +'팀을 나눌 때는 <b style="color:#e2e8f0">레이더 스탯 40% + 가중 승률 60%</b>를 합산한 복합 점수를 사용하며, '
             +'매번 ±10% 랜덤 변동이 추가됩니다. 스네이크 드래프트 방식으로 배정되어 '
-            +'강한 선수가 한 팀에 몰리지 않도록 설계되어 있습니다.'
+            +'강한 선수가 한 팀에 몰리지 않도록 설계되어 있습니다.<br>'
+            +'<span style="color:#818cf8;font-size:.72rem">⚖️ 가중치 — 2026 × 5 · 2025 × 2 · 2024 × 0.5 (최근 기록 집중 반영)</span>'
           +'</div>'
         +'</div>'
 
