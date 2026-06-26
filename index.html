@@ -231,8 +231,11 @@ var CHAMP_EN={
   '흐웨이':'Hwei','암베사':'Ambessa','유나라':'Yunara','오로라':'Aurora',
   '멜':'Mel','밀리오':'Milio','렐':'Rell',
   '리 신':'LeeSin','누누':'Nunu','탐켄치':'TahmKench',
-  '문도박사':'DrMundo','자헨':'Zaahen'
+  '문도박사':'DrMundo','자헨':'Zaahen',
+  '로크':'Locke'
 };
+// 챔피언 초상화 로드 실패 시 표시할 더미 초상화 (사람 실루엣)
+var _champPH="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Crect width='22' height='22' rx='4' fill='%231e293b'/%3E%3Ccircle cx='11' cy='8' r='4.5' fill='%23334155'/%3E%3Cellipse cx='11' cy='18' rx='7.5' ry='5' fill='%23334155'/%3E%3C/svg%3E";
 var _ddver='15.10.1';
 // 챔피언 약어 맵
 var CHAMP_ABBREV={'트위스티드 페이트':'트페','아우렐리온 솔':'아우솔','누누와 윌럼프':'누누','레나타 글라스크':'레나타','문도 박사':'문도','마스터 이':'마이','미스 포츈':'미포'};
@@ -241,13 +244,17 @@ function champIcon(name,sz){
   var en=CHAMP_EN[name];
   if(!en){var nsp=name.replace(/\s/g,'');en=CHAMP_EN[nsp];}
   sz=sz||22;
-  if(!en)return''; // 매핑 없는 챔피언은 회색박스 없이 빈 문자열 반환
+  var phBox='<span style="display:inline-flex;align-items:center;justify-content:center;'
+    +'width:'+sz+'px;height:'+sz+'px;border-radius:4px;background:#1e293b;border:1px solid #334155;'
+    +'flex-shrink:0;overflow:hidden;vertical-align:middle">'
+    +'<img src="'+_champPH+'" width="'+sz+'" height="'+sz+'" style="display:block"></span>';
+  if(!en)return phBox; // 매핑 없는 챔피언 → 더미 초상화 박스 표시
   var base='https://ddragon.leagueoflegends.com/cdn/'+_ddver+'/img/champion/';
   var alt=en.charAt(0)+en.slice(1).toLowerCase();
   var img='<img src="'+base+en+'.png"'
     +' width="'+sz+'" height="'+sz+'" style="display:block"'
     +' data-alt="'+base+alt+'.png"'
-    +' onerror="if(!this._r){this._r=1;this.src=this.dataset.alt;}else{this.style.display=\'none\';}">';
+    +' onerror="if(!this._r){this._r=1;this.src=this.dataset.alt;}else{this.onerror=null;this.src=window._champPH;}">';
   return'<span style="display:inline-flex;align-items:center;justify-content:center;'
     +'width:'+sz+'px;height:'+sz+'px;border-radius:4px;background:#2d3748;'
     +'flex-shrink:0;overflow:hidden;vertical-align:middle">'+img+'</span>';
