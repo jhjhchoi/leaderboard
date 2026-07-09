@@ -153,7 +153,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
 <div class="hero"><h1>런치롤탐 리더보드</h1><p>2024 · 2025 · 2026 사내 League of Legends 내전 통계</p></div><div class="sbar" id="status"><span class="sld">⏳ 로딩 중...</span></div>
 <div class="tabs-wrap">
   <div class="tab-group act">
-    <div class="tgl">📊 랭킹</div>
+    <div class="tgl">🥇 랭킹</div>
     <div class="tgb">
       <button class="tb act" data-tab="lb">📊 리더보드</button>
       <button class="tb" data-tab="poslb">🧭 포지션별</button>
@@ -185,7 +185,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
     </div>
   </div>
   <div class="tab-group">
-    <div class="tgl">🎲 게임</div>
+    <div class="tgl">🎮 게임</div>
     <div class="tgb">
       <button class="tb" data-tab="roster">🎲 대진표</button>
     </div>
@@ -2058,6 +2058,37 @@ function buildMatchPopupHtml(match){
   }
   var durStr=fmtDuration(match.duration||'');
 
+  // 팀(1팀/2팀) 로스터가 메모에 없을 때: 팀 구분 없이 전 선수 스탯만 단일 블록으로 표시
+  function rosterlessBlock(){
+    var names=Object.keys(kdaMap);
+    if(!names.length)return'<div style="flex:1;color:#64748b;font-size:.8rem;padding:12px">선수 기록이 없습니다.</div>';
+    names.sort(function(a,b){var ka=kdaMap[a],kb=kdaMap[b];return (kb.kda||0)-(ka.kda||0);});
+    var maxKA=1;names.forEach(function(n){var s=kdaMap[n];if(s.k+s.a>maxKA)maxKA=s.k+s.a;});
+    var rows=names.map(function(nm){
+      var kda=kdaMap[nm];var ka=kda.k+kda.a;var kdaCol=kdaColor(kda);
+      var inAN=AN[nm];
+      return'<div style="padding:7px 0;border-bottom:1px solid rgba(51,65,85,.22)">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+          +(inAN?at(inAN.t):'')
+          +'<span style="font-size:.82rem;font-weight:700;color:#f1f5f9;flex:1">'+nm+'</span>'
+          +(awardIconMap[nm]?'<span style="font-size:.8rem">'+awardIconMap[nm]+'</span>':'')
+          +'<span style="font-size:.78rem;font-weight:900;color:'+kdaCol+';background:rgba(255,255,255,.06);padding:1px 8px;border-radius:4px">'+kda.kda+(kda.d===0?' PD':'')+'</span>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:5px;font-size:.75rem;padding-left:2px">'
+          +'<b style="color:#4ade80">'+kda.k+'</b><span style="color:#334155">/</span>'
+          +'<b style="color:#f87171">'+kda.d+'</b><span style="color:#334155">/</span>'
+          +'<b style="color:#60a5fa">'+kda.a+'</b>'
+          +(is2026&&kda.ddealt?'<span style="color:#fb923c;font-size:.68rem;margin-left:6px">딜 '+kda.ddealt.toLocaleString()+'</span>':'')
+        +'</div>'
+      +'</div>';
+    }).join('');
+    return'<div style="flex:1;min-width:220px;background:rgba(255,255,255,.03);border-radius:10px;border:1.5px solid #334155;padding:12px 14px">'
+      +'<div style="font-size:.72rem;font-weight:800;color:#fbbf24;margin-bottom:4px">⚠️ 팀 로스터 미기록</div>'
+      +'<div style="font-size:.66rem;color:#64748b;margin-bottom:10px;line-height:1.5">경기 메모에 <b style="color:#94a3b8">1팀:/2팀:</b> 로스터가 없어 팀을 구분할 수 없습니다. 전체 선수 기록만 표시합니다.</div>'
+      +rows
+    +'</div>';
+  }
+
   return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
     +'<span style="font-size:.72rem;color:'+yearCol+';font-weight:700">'+match.year+'시즌</span>'
     +''
@@ -2068,8 +2099,9 @@ function buildMatchPopupHtml(match){
       +(durStr?'<span style="font-size:.75rem;color:#475569">⏱ '+durStr+'</span>':'')
     +'</div>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">'
-      +teamBlock(t1,win1,'1팀')
-      +teamBlock(t2,!win1,'2팀')
+      +((t1.length||t2.length)
+        ?teamBlock(t1,win1,'1팀')+teamBlock(t2,!win1,'2팀')
+        :rosterlessBlock())
     +'</div>'
     +''
     +'<div style="font-size:.78rem;font-weight:800;color:#94a3b8;margin-bottom:8px;letter-spacing:.5px">🏅 수상</div>'
