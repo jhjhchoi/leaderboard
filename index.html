@@ -22,7 +22,7 @@ body{background:#0f172a;color:#f1f5f9;font-family:'Pretendard','Segoe UI',system
 .tabs-wrap{display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:6px 0;background:#1e293b;border-bottom:1px solid #334155;padding:10px 12px 6px}
 .tab-group{display:flex;flex-direction:column;align-items:center;padding:0 12px}
 .tab-group+.tab-group{border-left:1px solid rgba(51,65,85,.7)}
-.tgl{font-size:.66rem;font-weight:800;color:#64748b;letter-spacing:.06em;margin-bottom:1px;white-space:nowrap}
+.tgl{font-size:.82rem;font-weight:800;color:#94a3b8;letter-spacing:.04em;margin-bottom:4px;white-space:nowrap}
 .tab-group.act .tgl{color:#c084fc}
 .tgb{display:flex}
 .tgb .tb{padding:7px 11px;font-size:.86rem;border-bottom-width:2.5px;border-radius:6px 6px 0 0}
@@ -155,39 +155,39 @@ th.sh.desc::after{content:' ▼';opacity:1}
   <div class="tab-group act">
     <div class="tgl">📊 랭킹</div>
     <div class="tgb">
-      <button class="tb act" data-tab="lb">리더보드</button>
-      <button class="tb" data-tab="poslb">포지션별</button>
-      <button class="tb" data-tab="stier">시즌 티어</button>
+      <button class="tb act" data-tab="lb">📊 리더보드</button>
+      <button class="tb" data-tab="poslb">🧭 포지션별</button>
+      <button class="tb" data-tab="stier">🏆 시즌 티어</button>
     </div>
   </div>
   <div class="tab-group">
     <div class="tgl">👤 선수</div>
     <div class="tgb">
-      <button class="tb" data-tab="cards">선수 카드</button>
-      <button class="tb" data-tab="ptier">선수 등급</button>
-      <button class="tb" data-tab="champ">챔피언</button>
+      <button class="tb" data-tab="cards">🃏 선수 카드</button>
+      <button class="tb" data-tab="ptier">🏅 선수 등급</button>
+      <button class="tb" data-tab="champ">🏹 챔피언</button>
     </div>
   </div>
   <div class="tab-group">
     <div class="tgl">🤝 상성</div>
     <div class="tgb">
-      <button class="tb" data-tab="synergy">베스트 파트너</button>
-      <button class="tb" data-tab="rivals">라이벌</button>
+      <button class="tb" data-tab="synergy">💞 베스트 파트너</button>
+      <button class="tb" data-tab="rivals">⚔️ 라이벌</button>
     </div>
   </div>
   <div class="tab-group">
     <div class="tgl">📜 기록</div>
     <div class="tgb">
-      <button class="tb" data-tab="matchlog">경기 로그</button>
-      <button class="tb" data-tab="perf-tab">퍼포먼스</button>
-      <button class="tb" data-tab="awards">명예의 전당</button>
-      <button class="tb" data-tab="records">기록관</button>
+      <button class="tb" data-tab="matchlog">📋 경기 로그</button>
+      <button class="tb" data-tab="perf-tab">💥 퍼포먼스</button>
+      <button class="tb" data-tab="awards">🎖️ 명예의 전당</button>
+      <button class="tb" data-tab="records">📚 기록관</button>
     </div>
   </div>
   <div class="tab-group">
     <div class="tgl">🎲 게임</div>
     <div class="tgb">
-      <button class="tb" data-tab="roster">대진표</button>
+      <button class="tb" data-tab="roster">🎲 대진표</button>
     </div>
   </div>
 </div>
@@ -1192,68 +1192,42 @@ function renderGradePage(d6,sc25r,sc24r){
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'+gradeCards+'</div>'
     +'</div>';
 
-  // 스코프별 STAT SCORE 랭킹 테이블 빌더
-  function mkGradeTbl(stats,subLabel,isAll){
-    if(!stats)return'<div class="spinner">⏳ 데이터 로딩 중...</div>';
-    var entries=ALL.map(function(nm){
-      var rs=stats[nm];
-      if(!rs)return null;
-      if(!isAll&&!(rs._g>0))return null; // 해당 시즌 미출전 선수 제외
-      var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
-      return{nm:nm,rs:rs,total:total};
-    }).filter(Boolean).sort(function(a,b){return b.total-a.total;});
-    var STAT_TIP_IDS=['stat-atk','stat-survive','stat-teamwork','stat-compete','stat-stability','stat-champpool'];
-    var rows=entries.map(function(e,i){
-      var nm=e.nm,rs=e.rs,total=e.total;
-      var t=AN[nm]?AN[nm].t:'B';
-      var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[t]||'#94a3b8';
-      var bar=['공격력','생존력','팀워크','승부력','안정성','챔피언폭'].map(function(lbl,j){
-        var keys=['atk','survive','teamwork','compete','stability','champPool'];
-        var v=rs[keys[j]]||0;
-        return'<div style="display:flex;align-items:center;gap:4px;font-size:.68rem">'
-          +'<span class="stat-tip" data-tip-id="'+STAT_TIP_IDS[j]+'" style="color:#64748b;min-width:3em;cursor:pointer">'+lbl+'</span>'
-          +'<div style="flex:1;height:5px;background:#1e293b;border-radius:3px;overflow:hidden">'
-            +'<div style="width:'+v+'%;height:100%;background:'+tc+';border-radius:3px"></div>'
-          +'</div>'
-          +'<span style="color:'+tc+';min-width:2em;text-align:right;font-weight:700">'+v+'</span>'
-        +'</div>';
-      }).join('');
-      return'<tr><td class="rk">'+(i+1)+'</td>'
-        +pnc(nm,t)
-        +'<td style="color:'+tc+';font-weight:900;font-size:1rem;text-align:center">'+total+'</td>'
-        +(isAll?'':'<td style="color:#64748b;text-align:center">'+rs._g+'</td>')
-        +'<td style="min-width:180px;padding:6px 8px"><div style="display:flex;flex-direction:column;gap:2px">'+bar+'</div></td>'
-        +'</tr>';
+  // STAT SCORE 랭킹 테이블 (3년 종합 단일 기준 — 사이트 전역 등급 배지와 동일)
+  var stats=window._radarStats||{};
+  var entries=ALL.map(function(nm){
+    var rs=stats[nm];
+    if(!rs)return null;
+    var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
+    return{nm:nm,rs:rs,total:total};
+  }).filter(Boolean).sort(function(a,b){return b.total-a.total;});
+  var STAT_TIP_IDS=['stat-atk','stat-survive','stat-teamwork','stat-compete','stat-stability','stat-champpool'];
+  var rows=entries.map(function(e,i){
+    var nm=e.nm,rs=e.rs,total=e.total;
+    var t=AN[nm]?AN[nm].t:'B';
+    var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[t]||'#94a3b8';
+    var bar=['공격력','생존력','팀워크','승부력','안정성','챔피언폭'].map(function(lbl,j){
+      var keys=['atk','survive','teamwork','compete','stability','champPool'];
+      var v=rs[keys[j]]||0;
+      return'<div style="display:flex;align-items:center;gap:4px;font-size:.68rem">'
+        +'<span class="stat-tip" data-tip-id="'+STAT_TIP_IDS[j]+'" style="color:#64748b;min-width:3em;cursor:pointer">'+lbl+'</span>'
+        +'<div style="flex:1;height:5px;background:#1e293b;border-radius:3px;overflow:hidden">'
+          +'<div style="width:'+v+'%;height:100%;background:'+tc+';border-radius:3px"></div>'
+        +'</div>'
+        +'<span style="color:'+tc+';min-width:2em;text-align:right;font-weight:700">'+v+'</span>'
+      +'</div>';
     }).join('');
-    return'<div class="kda-section-wrap">'
-      +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · '+subLabel+'</span></div>'
-      +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th>'+(isAll?'':'<th>경기</th>')+'<th>스탯 상세</th></tr></thead>'
-      +'<tbody>'+rows+'</tbody></table></div>';
-  }
-
-  var scopes=window._radarScopes||{all:window._radarStats};
-  var yearBtns='<div class="yt" style="margin-bottom:14px">'
-    +[['2026','2026년'],['2025','2025년'],['2024','2024년'],['all','🌐 3년 종합']].map(function(pair,i){
-      return'<button class="yb2'+(i===0?' act':'')+'" data-gyr="'+pair[0]+'" onclick="setGradeYear(\''+pair[0]+'\')">'+pair[1]+'</button>';
-    }).join('')+'</div>';
-  var yearNote='<div style="margin-bottom:14px;padding:10px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #64748b;font-size:.75rem;color:#94a3b8">'
-    +'📌 시즌 탭은 <b style="color:#f1f5f9">해당 시즌 지표만으로</b> 산출한 참고 랭킹입니다. 공식 등급(S/A/B/C 배지)은 <b style="color:#f1f5f9">🌐 3년 종합 STAT SCORE</b> 기준으로 부여됩니다.</div>';
-  var secs=''
-    +'<div id="grade-year-2026">'+yearNote+mkGradeTbl(scopes['2026'],'2026 시즌',false)+'</div>'
-    +'<div id="grade-year-2025" style="display:none">'+yearNote+mkGradeTbl(scopes['2025'],'2025 시즌',false)+'</div>'
-    +'<div id="grade-year-2024" style="display:none">'+yearNote+mkGradeTbl(scopes['2024'],'2024 시즌',false)+'</div>'
-    +'<div id="grade-year-all" style="display:none">'+info+mkGradeTbl(scopes.all,'3년 합산',true)+'</div>';
-  return yearBtns+secs;
+    return'<tr><td class="rk">'+(i+1)+'</td>'
+      +pnc(nm,t)
+      +'<td style="color:'+tc+';font-weight:900;font-size:1rem;text-align:center">'+total+'</td>'
+      +'<td style="min-width:180px;padding:6px 8px"><div style="display:flex;flex-direction:column;gap:2px">'+bar+'</div></td>'
+      +'</tr>';
+  }).join('');
+  var tbl='<div class="kda-section-wrap">'
+    +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · 3년 합산</span></div>'
+    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th><th>스탯 상세</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>';
+  return info+tbl;
 }
-window.setGradeYear=function(y){
-  ['2026','2025','2024','all'].forEach(function(q){
-    var el=document.getElementById('grade-year-'+q);
-    if(el)el.style.display=q===y?'block':'none';
-  });
-  document.querySelectorAll('[data-gyr]').forEach(function(b){
-    b.classList.toggle('act',b.getAttribute('data-gyr')===y);
-  });
-};
 
 // ═══════════════════════════════════════════════════════════════
 // 🎲 대진표 자동 생성
@@ -1366,9 +1340,12 @@ function renderRosterPage(){
       +'<button class="roster-btn" onclick="generateRoster()" style="background:linear-gradient(135deg,#818cf8,#c084fc);color:#fff;font-size:1rem;padding:12px 28px">🎲 대진표 생성</button>'
       +'<button class="roster-btn" id="roster-reroll" onclick="generateRoster()" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;display:none">🔄 다시 뽑기</button>'
       +'<button class="roster-btn" id="roster-copy-btn" onclick="copyRoster()" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;display:none">📋 슬랙 공유</button>'
-      +'<label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#94a3b8;cursor:pointer;padding:6px 10px;border:1px solid #334155;border-radius:8px;background:#1e293b" title="최근 10경기 승률을 복합점수에 30% 반영합니다">'
-        +'<input type="checkbox" id="roster-recent-form" style="accent-color:#818cf8">🔥 최근 폼 반영'
-      +'</label>'
+      +'<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #334155;border-radius:8px;background:#1e293b">'
+        +'<label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#94a3b8;cursor:pointer;margin:0">'
+          +'<input type="checkbox" id="roster-recent-form" style="accent-color:#818cf8">🔥 최근 폼 반영'
+        +'</label>'
+        +'<span class="tip-icon" data-tip-id="roster-recent">i</span>'
+      +'</span>'
     +'</div>'
     // 결과 영역
     +'<div id="roster-result"></div>'
@@ -1661,7 +1638,7 @@ window.generateRoster=function(){
       +'<div style="padding:14px 18px;background:rgba(129,140,248,.08);border-bottom:1px solid #334155;display:flex;align-items:center;gap:12px">'
         +'<span style="font-size:1rem;font-weight:800;color:#f1f5f9">🎮 대진표</span>'
         +'<span style="font-size:.75rem;color:'+balCol+';font-weight:700;background:rgba(255,255,255,.06);padding:2px 10px;border-radius:10px">⚖️ 전력 균형 '+balance+'%</span>'
-        +'<span style="font-size:.75rem;color:#7dd3fc;font-weight:700;background:rgba(255,255,255,.06);padding:2px 10px;border-radius:10px" title="팀 복합점수 차이를 Elo 방식으로 환산한 예상 승률">📈 예상 승률 1팀 '+winProb1+'% : '+(100-winProb1)+'% 2팀</span>'
+        +'<span style="font-size:.75rem;color:#7dd3fc;font-weight:700;background:rgba(255,255,255,.06);padding:2px 10px;border-radius:10px" title="팀 복합점수 차이를 Elo 방식으로 환산한 예상 승률">📈 예상 승률 · 1팀 '+winProb1+'% : '+(100-winProb1)+'% 2팀</span>'
         +'<span style="font-size:.72rem;color:#475569;margin-left:auto">1팀 '+Math.round(t1Total)+' vs 2팀 '+Math.round(t2Total)+'</span>'
       +'</div>'
       +'<table class="roster-table"><tbody>'+rows+'</tbody></table>'
@@ -1693,7 +1670,7 @@ window.copyRoster=function(){
   lines.push('──────────────────');
   lines.push('⚖️ 1팀 '+Math.round(r.t1Total)+' vs 2팀 '+Math.round(r.t2Total)+'  (균형 '+Math.round(Math.min(r.t1Total,r.t2Total)/Math.max(r.t1Total,r.t2Total)*100)+'%)');
   var _wp1=Math.round(1/(1+Math.pow(10,-(r.t1Total-r.t2Total)/600))*100);
-  lines.push('📈 예상 승률 1팀 '+_wp1+'% : '+(100-_wp1)+'% 2팀');
+  lines.push('📈 예상 승률 | 1팀 '+_wp1+'% : '+(100-_wp1)+'% 2팀');
   if(r.subs.length){
     lines.push('');
     lines.push('🔄 식스맨');
@@ -1793,18 +1770,6 @@ var csNew26=calcCompScores(d6new,'2026');
 d6new.forEach(function(p){if(csNew26[p.name]!=null){p.compScore=csNew26[p.name];p.tier=getTierName(p.compScore);}});
 var sc25r=calcCompScores(d25,'2025');var sc24r=calcCompScores(d24,'2024');
 window._radarStats=computeRadarStats(calcAll(d6new),window._dKA26||{},window._dKA25||{},window._dKA24||{},d6new,d25,d24,insightsData,allLogAgg.champData);
-// 연도별 스코프 레이더 스탯 (선수 등급 연도 탭용)
-var awMapFrom=function(awardsData){
-  var m={};ALL.forEach(function(n){m[n]={mom:0,spc:0,spi:0};});
-  (awardsData||[]).forEach(function(a){if(m[a.name]){m[a.name].mom+=a.mom||0;m[a.name].spc+=a.special||0;m[a.name].spi+=a.spirit||0;}});
-  return m;
-};
-window._radarScopes={
-  all:window._radarStats,
-  '2026':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,logData.champData,'2026',awMapFrom(logData.awardsData)),
-  '2025':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,log25P.champData,'2025',awMapFrom(log25P.awardsData)),
-  '2024':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,log24P.champData,'2024',awMapFrom(log24P.awardsData))
-};
 // ── STAT SCORE 기반 S/A/B/C 등급 결정 ────────────────────────────
 // 신 정규화(z-score, 평균 300점)에 맞춘 등급컷: S≥360 / A≥300 / B≥240 / C<240
 ALL.forEach(function(nm){
@@ -2472,7 +2437,8 @@ var TIPS={
   'stat-teamwork':'🤝 팀워크\n\n같은 포지션 평균 대비 킬관여율 (KP%)\n\n팀 킬 중 본인이 킬 또는 어시스트로 관여한 비율(프로씬 표준 지표)을 롤 평균과 비교. 서포터는 서포터 평균과, 미드는 미드 평균과 비교하므로 포지션 간 공정한 비교가 가능.',
   'stat-compete':'🏆 승부력\n\n베이지안 보정 가중 승률 + 수상 결정력\n\n연도가중(2026×5·2025×2·2024×0.5) 승률에 표본 보정을 적용하고, MOM(×1.0)·스페셜(×0.6)·투혼상(×0.4) 수상률을 가산한 "이기게 만드는 힘". 경기 수가 적으면 50%로 수렴해 소수 경기 뻥튀기를 방지.',
   'stat-stability':'📊 안정성\n\n경기별 기여 지수의 기복(표준편차) — 낮을수록 고득점\n\n매 경기 롤 보정 킬관여율과 데스지분으로 "그 경기 기여도"를 산출하고, 그 기복이 작을수록 높은 점수. 잘할 때와 못할 때의 편차가 적은, 계산이 서는 선수를 의미. 6경기 이상부터 산출.',
-  'stat-champpool':'🎮 챔피언폭\n\n√(픽 챔피언 수) × 베이지안 보정 챔프 평균 승률\n\n다양한 챔피언을 실제로 얼마나 잘 다루는지. 1~2판 챔프의 승률 뻥튀기를 통계 보정으로 완화해, 넓으면서도 검증된 챔프폭일수록 높은 점수.'
+  'stat-champpool':'🎮 챔피언폭\n\n√(픽 챔피언 수) × 베이지안 보정 챔프 평균 승률\n\n다양한 챔피언을 실제로 얼마나 잘 다루는지. 1~2판 챔프의 승률 뻥튀기를 통계 보정으로 완화해, 넓으면서도 검증된 챔프폭일수록 높은 점수.',
+  'roster-recent':'🔥 최근 폼 반영<br><br>체크하면 각 선수의 <b>최근 10경기 성적(폼)</b>을 팀 배정에 추가로 반영합니다.<br><br>기본 복합점수(레이더 STAT 50% + 통산 보정승률 50%)를 <b>70%</b>로 낮추고, 최근 10경기 승률을 <b>30%</b> 섞습니다.<br><br>· 최근 10경기 승률은 소수 표본 왜곡을 막기 위해 베이지안 보정(가상 2승 2패 가산)을 적용<br>· 요즘 물오른 선수는 점수↑, 최근 부진한 선수는 점수↓ → 그날의 실제 컨디션에 가까운 대진<br>· 통산 실력보다 “지금 잘하는 사람”을 중시하고 싶을 때 사용'
 };
 document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
 var _tipOpen=null;
