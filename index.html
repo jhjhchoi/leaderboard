@@ -18,11 +18,16 @@ body{background:#0f172a;color:#f1f5f9;font-family:'Pretendard','Segoe UI',system
 .tabs{display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto}
 .tb{padding:13px 24px;cursor:pointer;color:#94a3b8;font-size:1rem;font-weight:600;border:none;background:none;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent}
 .tb.act{color:#818cf8;border-bottom-color:#818cf8}.tb:hover{color:#f1f5f9}
-.tabs-groups{border-bottom:none;background:#0f172a}
-.tg{padding:12px 22px;cursor:pointer;color:#94a3b8;font-size:1rem;font-weight:800;border:none;background:none;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent}
-.tg.act{color:#c084fc;border-bottom-color:#c084fc}.tg:hover{color:#f1f5f9}
-.tabs-sub{background:#16213b}
-.tabs-sub .tb{padding:10px 18px;font-size:.9rem}
+/* 그룹핑 탭 바 — 전 탭 상시 노출(원클릭), 중앙 정렬 */
+.tabs-wrap{display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:6px 0;background:#1e293b;border-bottom:1px solid #334155;padding:10px 12px 6px}
+.tab-group{display:flex;flex-direction:column;align-items:center;padding:0 12px}
+.tab-group+.tab-group{border-left:1px solid rgba(51,65,85,.7)}
+.tgl{font-size:.66rem;font-weight:800;color:#64748b;letter-spacing:.06em;margin-bottom:1px;white-space:nowrap}
+.tab-group.act .tgl{color:#c084fc}
+.tgb{display:flex}
+.tgb .tb{padding:7px 11px;font-size:.86rem;border-bottom-width:2.5px;border-radius:6px 6px 0 0}
+.tgb .tb:hover{background:rgba(129,140,248,.07)}
+@media (max-width:640px){.tab-group{padding:0 8px}.tgb .tb{padding:6px 8px;font-size:.8rem}}
 .ct{max-width:1200px;margin:0 auto;padding:20px 14px}
 .pn{display:none}.pn.act{display:block}
 .yt{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
@@ -145,27 +150,46 @@ th.sh.desc::after{content:' ▼';opacity:1}
 </style>
 </head>
 <body>
-<div class="hero"><h1>런치롤탐 리더보드</h1><p>2024 · 2025 · 2026 사내 League of Legends 내전 통계</p></div><div class="sbar" id="status"><span class="sld">⏳ 로딩 중...</span></div><div class="tabs tabs-groups">
-  <button class="tg act" data-group="rank">📊 랭킹</button>
-  <button class="tg" data-group="player">👤 선수</button>
-  <button class="tg" data-group="rel">🤝 상성</button>
-  <button class="tg" data-group="rec">📜 기록</button>
-  <button class="tg" data-group="game">🎲 대진표</button>
-</div>
-<div class="tabs tabs-sub" id="subtabs">
-  <button class="tb act" data-tab="lb">📊 리더보드</button>
-  <button class="tb" data-tab="poslb">🧭 포지션별</button>
-  <button class="tb" data-tab="stier">🏆 시즌 티어</button>
-  <button class="tb" data-tab="ptier">🏅 선수 등급</button>
-  <button class="tb" data-tab="cards">🃏 선수 카드</button>
-  <button class="tb" data-tab="champ">🏹 챔피언</button>
-  <button class="tb" data-tab="perf-tab">💥 퍼포먼스</button>
-  <button class="tb" data-tab="synergy">🤝 베스트 파트너</button>
-  <button class="tb" data-tab="rivals">⚔️ 숙명의 라이벌</button>
-  <button class="tb" data-tab="records">📜 기록관</button>
-  <button class="tb" data-tab="matchlog">📋 경기 로그</button>
-  <button class="tb" data-tab="awards">🎖️ 명예의 전당</button>
-  <button class="tb" data-tab="roster">🎲 대진표</button>
+<div class="hero"><h1>런치롤탐 리더보드</h1><p>2024 · 2025 · 2026 사내 League of Legends 내전 통계</p></div><div class="sbar" id="status"><span class="sld">⏳ 로딩 중...</span></div>
+<div class="tabs-wrap">
+  <div class="tab-group act">
+    <div class="tgl">📊 랭킹</div>
+    <div class="tgb">
+      <button class="tb act" data-tab="lb">리더보드</button>
+      <button class="tb" data-tab="poslb">포지션별</button>
+      <button class="tb" data-tab="stier">시즌 티어</button>
+    </div>
+  </div>
+  <div class="tab-group">
+    <div class="tgl">👤 선수</div>
+    <div class="tgb">
+      <button class="tb" data-tab="cards">선수 카드</button>
+      <button class="tb" data-tab="ptier">선수 등급</button>
+      <button class="tb" data-tab="champ">챔피언</button>
+    </div>
+  </div>
+  <div class="tab-group">
+    <div class="tgl">🤝 상성</div>
+    <div class="tgb">
+      <button class="tb" data-tab="synergy">베스트 파트너</button>
+      <button class="tb" data-tab="rivals">라이벌</button>
+    </div>
+  </div>
+  <div class="tab-group">
+    <div class="tgl">📜 기록</div>
+    <div class="tgb">
+      <button class="tb" data-tab="matchlog">경기 로그</button>
+      <button class="tb" data-tab="perf-tab">퍼포먼스</button>
+      <button class="tb" data-tab="awards">명예의 전당</button>
+      <button class="tb" data-tab="records">기록관</button>
+    </div>
+  </div>
+  <div class="tab-group">
+    <div class="tgl">🎲 게임</div>
+    <div class="tgb">
+      <button class="tb" data-tab="roster">대진표</button>
+    </div>
+  </div>
 </div>
 <div class="ct">
   <div id="lb" class="pn act"><div id="form-widget"></div><div class="yt"><button class="yb2 act" data-yr="6">2026년</button><button class="yb2" data-yr="5">2025년</button><button class="yb2" data-yr="4">2024년</button><button class="yb2" data-yr="a">🌐 3년 종합</button></div><div id="lb-inner"><div class="spinner">⏳ 로딩 중...</div></div></div>
@@ -716,13 +740,15 @@ function mlPosBase(base,size,pos,field){
 var YEAR_W={'2026':5,'2025':2,'2024':0.5};
 
 // 선수별 롤 상대(rel) 지표: 실제 누적 ÷ 롤 평균 기대 누적 (1.0 = 같은 롤 평균)
-function mlRelMetrics(games,base){
+// scope: '2026'|'2025'|'2024' = 해당 시즌만(균등 가중) / 생략 = 3년 연도가중
+function mlRelMetrics(games,base,scope){
   var acc={};
   ALL.forEach(function(nm){acc[nm]={actK:0,expK:0,actKP:0,expKP:0,actD:0,expD:0,actDmg:0,expDmg:0,n:0,pgi:[],pgiW:[]};});
   games.forEach(function(g){
     var a=acc[g.name];
     if(!a||!g.pos||g.teamK<=0||g.teamD<=0)return;
-    var w=YEAR_W[g.year]||1;
+    if(scope&&g.year!==scope)return;
+    var w=scope?1:(YEAR_W[g.year]||1);
     a.n++;
     a.actK+=w*g.k;        a.expK+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kill');
     a.actKP+=w*(g.k+g.a); a.expKP+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kp');
@@ -778,107 +804,137 @@ function statZNorm(vals,names,gamesMap,K){
 }
 
 // ── 포지션별 리더보드 ─────────────────────────────────────────────
-// 같은 포지션에서 뛴 경기만 모아 롤 상대 지표로 랭킹 (5경기 이상 랭크, 미만은 참고 표기)
+// 같은 포지션에서 뛴 경기만 모아 롤 상대 지표로 랭킹
+// 연도 탭(2026/2025/2024/3년종합) × 포지션 탭(T/J/M/B/S)
 var _POSLB_LABEL={T:'탑',J:'정글',M:'미드',B:'원딜',S:'서폿'};
+var _POSLB_SCOPES=[['2026','2026년'],['2025','2025년'],['2024','2024년'],['all','🌐 3년 종합']];
 function renderPosLbPage(){
   var games=window._mlGames||[],base=window._mlBase||{};
   if(!games.length)return'<div class="spinner">⏳ 데이터 로딩 중...</div>';
-  var acc={}; // pos|name → 누적
-  games.forEach(function(g){
-    if(!g.pos||g.teamK<=0||g.teamD<=0)return;
-    var key=g.pos+'|'+g.name;
-    if(!acc[key])acc[key]={pos:g.pos,name:g.name,n:0,wins:0,rawKA:0,rawK:0,rawTeamK:0,rawD:0,rawTeamD:0,rawDmg:0,rawTeamDmg:0,dmgN:0,
-      actK:0,expK:0,actKP:0,expKP:0,actD:0,expD:0,actDmg:0,expDmg:0};
-    var a=acc[key],w=YEAR_W[g.year]||1;
-    a.n++;if(g.win)a.wins++;
-    a.rawKA+=g.k+g.a;a.rawK+=g.k;a.rawTeamK+=g.teamK;
-    a.rawD+=g.d;a.rawTeamD+=g.teamD;
-    a.actK+=w*g.k;        a.expK+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kill');
-    a.actKP+=w*(g.k+g.a); a.expKP+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kp');
-    a.actD+=w*g.d;        a.expD+=w*g.teamD*mlPosBase(base,g.size,g.pos,'death');
-    if(g.dmgOK&&g.teamDmg>0){a.rawDmg+=g.dmg;a.rawTeamDmg+=g.teamDmg;a.dmgN++;a.actDmg+=g.dmg;a.expDmg+=g.teamDmg*mlPosBase(base,g.size,g.pos,'dmg');}
-  });
-  var byPos={T:[],J:[],M:[],B:[],S:[]};
-  Object.keys(acc).forEach(function(key){
-    var a=acc[key];
-    if(!byPos[a.pos])return;
-    var relKill=a.expK>0?a.actK/a.expK:0;
-    var relKP=a.expKP>0?a.actKP/a.expKP:0;
-    var relSurv=Math.min(a.actD>0?a.expD/a.actD:2,2.5);
-    var relDmg=a.expDmg>0?a.actDmg/a.expDmg:null;
-    var bayesWR=(a.wins+3)/(a.n+6);
-    var atkRel=relDmg!=null?(relKill+relDmg)/2:relKill;
-    var score=Math.round(50*(0.3*atkRel+0.35*relKP+0.15*relSurv+0.2*bayesWR*2));
-    byPos[a.pos].push({name:a.name,n:a.n,wr:a.n>0?a.wins/a.n*100:0,
-      kpPct:a.rawTeamK>0?a.rawKA/a.rawTeamK*100:0,
-      dmgPct:a.rawTeamDmg>0?a.rawDmg/a.rawTeamDmg*100:null,
-      deathPct:a.rawTeamD>0?a.rawD/a.rawTeamD*100:0,
-      score:score});
-  });
+
+  // 스코프별(연도) 포지션 데이터 빌드
+  function buildScope(scope){
+    var acc={};
+    games.forEach(function(g){
+      if(!g.pos||g.teamK<=0||g.teamD<=0)return;
+      if(scope!=='all'&&g.year!==scope)return;
+      var key=g.pos+'|'+g.name;
+      if(!acc[key])acc[key]={pos:g.pos,name:g.name,n:0,wins:0,rawKA:0,rawK:0,rawTeamK:0,rawD:0,rawTeamD:0,rawDmg:0,rawTeamDmg:0,
+        actK:0,expK:0,actKP:0,expKP:0,actD:0,expD:0,actDmg:0,expDmg:0};
+      var a=acc[key],w=scope==='all'?(YEAR_W[g.year]||1):1;
+      a.n++;if(g.win)a.wins++;
+      a.rawKA+=g.k+g.a;a.rawK+=g.k;a.rawTeamK+=g.teamK;
+      a.rawD+=g.d;a.rawTeamD+=g.teamD;
+      a.actK+=w*g.k;        a.expK+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kill');
+      a.actKP+=w*(g.k+g.a); a.expKP+=w*g.teamK*mlPosBase(base,g.size,g.pos,'kp');
+      a.actD+=w*g.d;        a.expD+=w*g.teamD*mlPosBase(base,g.size,g.pos,'death');
+      if(g.dmgOK&&g.teamDmg>0){a.rawDmg+=g.dmg;a.rawTeamDmg+=g.teamDmg;a.actDmg+=g.dmg;a.expDmg+=g.teamDmg*mlPosBase(base,g.size,g.pos,'dmg');}
+    });
+    var byPos={T:[],J:[],M:[],B:[],S:[]};
+    Object.keys(acc).forEach(function(key){
+      var a=acc[key];
+      if(!byPos[a.pos])return;
+      var relKill=a.expK>0?a.actK/a.expK:0;
+      var relKP=a.expKP>0?a.actKP/a.expKP:0;
+      var relSurv=Math.min(a.actD>0?a.expD/a.actD:2,2.5);
+      var relDmg=a.expDmg>0?a.actDmg/a.expDmg:null;
+      var bayesWR=(a.wins+3)/(a.n+6);
+      var atkRel=relDmg!=null?(relKill+relDmg)/2:relKill;
+      var score=Math.round(50*(0.3*atkRel+0.35*relKP+0.15*relSurv+0.2*bayesWR*2));
+      byPos[a.pos].push({name:a.name,n:a.n,wr:a.n>0?a.wins/a.n*100:0,
+        kpPct:a.rawTeamK>0?a.rawKA/a.rawTeamK*100:0,
+        dmgPct:a.rawTeamDmg>0?a.rawDmg/a.rawTeamDmg*100:null,
+        deathPct:a.rawTeamD>0?a.rawD/a.rawTeamD*100:0,
+        score:score});
+    });
+    return byPos;
+  }
+
   var info='<div style="margin-bottom:16px;padding:14px 18px;background:#1e293b;border-radius:10px;border-left:3px solid #818cf8;font-size:.8rem;color:#94a3b8;line-height:1.7">'
     +'🧭 <b style="color:#f1f5f9">포지션별 리더보드</b> — 해당 포지션으로 출전한 경기만 집계합니다. '
     +'<b style="color:#f1f5f9">롤 스코어</b>는 같은 포지션 리그 평균 대비 킬·딜지분(30%) + 킬관여율(35%) + 데스회피(15%) + 보정승률(20%) 조합 (평균 50점). '
-    +'<span style="color:#64748b">5경기 이상만 순위에 오르며, 연도가중(2026×5·2025×2·2024×0.5)이 적용됩니다.</span></div>';
-  var btns='<div class="yt" style="margin-bottom:14px">'+['T','J','M','B','S'].map(function(p,i){
+    +'<span style="color:#64748b">시즌 탭은 3경기, 3년 종합은 5경기 이상만 순위에 오릅니다. 3년 종합은 연도가중(2026×5·2025×2·2024×0.5) 적용.</span></div>';
+  var yearBtns='<div class="yt" style="margin-bottom:10px">'+_POSLB_SCOPES.map(function(pair,i){
+    return'<button class="yb2'+(i===0?' act':'')+'" data-poslb-yr="'+pair[0]+'" onclick="setPosLbYear(\''+pair[0]+'\')">'+pair[1]+'</button>';
+  }).join('')+'</div>';
+  var posBtns='<div class="yt" style="margin-bottom:14px">'+['T','J','M','B','S'].map(function(p,i){
     return'<button class="yb2'+(i===0?' act':'')+'" data-poslb="'+p+'" style="border-color:'+(i===0?POS_COL[p]:'#334155')+';color:'+(i===0?POS_COL[p]:'#94a3b8')+'" onclick="setPosLb(\''+p+'\')">'+p+' '+_POSLB_LABEL[p]+'</button>';
   }).join('')+'</div>';
-  var sections=['T','J','M','B','S'].map(function(p,i){
-    var col=POS_COL[p];
-    var list=byPos[p].sort(function(a,b){return b.score-a.score;});
-    var ranked=list.filter(function(r){return r.n>=5;});
-    var minor=list.filter(function(r){return r.n<5;});
-    var rows=ranked.map(function(r,ri){
-      var wrCol=r.wr>=55?'#4ade80':r.wr>=50?'#60a5fa':'#f87171';
-      return'<tr><td class="rk">'+(ri+1)+'</td>'+pnc(r.name,AN[r.name]?AN[r.name].t:'B')
-        +'<td>'+r.n+'</td>'
-        +'<td style="color:'+wrCol+';font-weight:700">'+r.wr.toFixed(1)+'%</td>'
-        +'<td style="color:#60a5fa;font-weight:700">'+r.kpPct.toFixed(1)+'%</td>'
-        +'<td>'+(r.dmgPct!=null?'<span style="color:#fb923c;font-weight:700">'+r.dmgPct.toFixed(1)+'%</span>':'<span style="color:#475569">-</span>')+'</td>'
-        +'<td style="color:#94a3b8">'+r.deathPct.toFixed(1)+'%</td>'
-        +'<td style="color:'+col+';font-weight:900;font-size:.95rem">'+r.score+'</td></tr>';
+
+  var sections=_POSLB_SCOPES.map(function(pair){
+    var scope=pair[0],scopeLbl=pair[1].replace('🌐 ','');
+    var byPos=buildScope(scope);
+    var minGames=scope==='all'?5:3;
+    return['T','J','M','B','S'].map(function(p){
+      var col=POS_COL[p];
+      var list=byPos[p].sort(function(a,b){return b.score-a.score;});
+      var ranked=list.filter(function(r){return r.n>=minGames;});
+      var minor=list.filter(function(r){return r.n<minGames;});
+      var rows=ranked.map(function(r,ri){
+        var wrCol=r.wr>=55?'#4ade80':r.wr>=50?'#60a5fa':'#f87171';
+        return'<tr><td class="rk">'+(ri+1)+'</td>'+pnc(r.name,AN[r.name]?AN[r.name].t:'B')
+          +'<td>'+r.n+'</td>'
+          +'<td style="color:'+wrCol+';font-weight:700">'+r.wr.toFixed(1)+'%</td>'
+          +'<td style="color:#60a5fa;font-weight:700">'+r.kpPct.toFixed(1)+'%</td>'
+          +'<td>'+(r.dmgPct!=null?'<span style="color:#fb923c;font-weight:700">'+r.dmgPct.toFixed(1)+'%</span>':'<span style="color:#475569">-</span>')+'</td>'
+          +'<td style="color:#94a3b8">'+r.deathPct.toFixed(1)+'%</td>'
+          +'<td style="color:'+col+';font-weight:900;font-size:.95rem">'+r.score+'</td></tr>';
+      }).join('');
+      var minorHtml=minor.length?'<div style="margin-top:10px;font-size:.72rem;color:#475569">표본 부족('+minGames+'경기 미만): '
+        +minor.map(function(r){return r.name+' '+r.n+'판';}).join(' · ')+'</div>':'';
+      var show=(scope==='2026'&&p==='T');
+      return'<div id="poslb-'+scope+'-'+p+'" class="poslb-sec" style="display:'+(show?'block':'none')+'">'
+        +'<div class="kda-section-wrap"><div class="kda-section-title" style="border-left-color:'+col+'">'+posTag(p)+' '+_POSLB_LABEL[p]+' 랭킹 <span class="ka-sub">'+scopeLbl+' · 롤 상대 지표</span></div>'
+        +'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>경기</th><th>승률</th><th>킬관여 KP%</th><th>딜지분 <span style="font-size:.62rem;color:#475569">(2026)</span></th><th>데스지분</th><th style="color:'+col+'">롤 스코어</th></tr></thead>'
+        +'<tbody>'+(rows||'<tr><td colspan="8" style="color:#475569">기록 없음</td></tr>')+'</tbody></table>'+minorHtml+'</div></div>';
     }).join('');
-    var minorHtml=minor.length?'<div style="margin-top:10px;font-size:.72rem;color:#475569">표본 부족(5경기 미만): '
-      +minor.map(function(r){return r.name+' '+r.n+'판';}).join(' · ')+'</div>':'';
-    return'<div id="poslb-'+p+'" style="display:'+(i===0?'block':'none')+'">'
-      +'<div class="kda-section-wrap"><div class="kda-section-title" style="border-left-color:'+col+'">'+posTag(p)+' '+_POSLB_LABEL[p]+' 랭킹 <span class="ka-sub">3년 · 롤 상대 지표</span></div>'
-      +'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>경기</th><th>승률</th><th>킬관여 KP%</th><th>딜지분 <span style="font-size:.62rem;color:#475569">(2026)</span></th><th>데스지분</th><th style="color:'+col+'">롤 스코어</th></tr></thead>'
-      +'<tbody>'+(rows||'<tr><td colspan="8" style="color:#475569">기록 없음</td></tr>')+'</tbody></table>'+minorHtml+'</div></div>';
   }).join('');
-  return info+btns+sections;
+  return info+yearBtns+posBtns+sections;
 }
-window.setPosLb=function(p){
-  ['T','J','M','B','S'].forEach(function(q){
-    var el=document.getElementById('poslb-'+q);
-    if(el)el.style.display=q===p?'block':'none';
+window._poslbState={year:'2026',pos:'T'};
+function poslbApply(){
+  var st=window._poslbState;
+  document.querySelectorAll('.poslb-sec').forEach(function(el){el.style.display='none';});
+  var cur=document.getElementById('poslb-'+st.year+'-'+st.pos);
+  if(cur)cur.style.display='block';
+  document.querySelectorAll('[data-poslb-yr]').forEach(function(b){
+    b.classList.toggle('act',b.getAttribute('data-poslb-yr')===st.year);
   });
   document.querySelectorAll('[data-poslb]').forEach(function(b){
-    var q=b.getAttribute('data-poslb'),on=q===p;
+    var q=b.getAttribute('data-poslb'),on=q===st.pos;
     b.classList.toggle('act',on);
     b.style.borderColor=on?POS_COL[q]:'#334155';
     b.style.color=on?POS_COL[q]:'#94a3b8';
   });
-};
+}
+window.setPosLbYear=function(y){window._poslbState.year=y;poslbApply();};
+window.setPosLb=function(p){window._poslbState.pos=p;poslbApply();};
 
 // ── 육각형 레이더 차트 ─────────────────────────────────────────────
 // 6축 = 서로 다른 원천 지표 1:1 대응 (KDA 중복 반영 제거)
 //   공격력=롤 대비 딜지분+킬지분 / 생존력=롤 대비 데스 회피 / 팀워크=롤 대비 킬관여율
 //   승부력=보정 승률+수상 결정력 / 안정성=경기 기복(σ) / 챔피언폭=폭×승률
-function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights, champData) {
+// scope: '2026'|'2025'|'2024' = 해당 시즌 한정 / 생략 = 3년 연도가중
+// awardsOverride: 시즌 한정 수상 맵 {name:{mom,spc,spi}} (scope 사용 시 필수)
+function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights, champData, scope, awardsOverride) {
   // 파생지표 캐시 (doFetch에서 선계산, 없으면 자체 빌드)
   if(!window._mlRel){
     window._mlGames=mlBuildPlayerGames((insights&&insights.matchLog)||[]);
     window._mlBase=mlPosBaselines(window._mlGames);
     window._mlRel=mlRelMetrics(window._mlGames,window._mlBase);
   }
-  var rel=window._mlRel;
+  var rel=scope?mlRelMetrics(window._mlGames,window._mlBase,scope):window._mlRel;
 
   // 수상 집계 (승부력의 "결정력" 성분)
-  var awardMap={};
-  ALL.forEach(function(nm){awardMap[nm]={mom:0,spc:0,spi:0};});
-  if(insights&&insights.champAwards){
-    insights.champAwards.forEach(function(a){
-      if(awardMap[a.player]){awardMap[a.player].mom+=a.mom||0;awardMap[a.player].spc+=a.special||0;awardMap[a.player].spi+=a.spirit||0;}
-    });
+  var awardMap=awardsOverride;
+  if(!awardMap){
+    awardMap={};
+    ALL.forEach(function(nm){awardMap[nm]={mom:0,spc:0,spi:0};});
+    if(insights&&insights.champAwards){
+      insights.champAwards.forEach(function(a){
+        if(awardMap[a.player]){awardMap[a.player].mom+=a.mom||0;awardMap[a.player].spc+=a.special||0;awardMap[a.player].spi+=a.spirit||0;}
+      });
+    }
   }
 
   var raw={atk:{},survive:{},teamwork:{},compete:{},stability:{},champPool:{}};
@@ -898,11 +954,17 @@ function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights
     var p6=d6.find(function(p){return p.name===nm;})||{wins:0,games:0};
     var p5=d25all.find(function(p){return p.name===nm;})||{wins:0,games:0};
     var p4=d24all.find(function(p){return p.name===nm;})||{wins:0,games:0};
-    var wW=(p6.wins||0)*5+(p5.wins||0)*2+(p4.wins||0)*0.5;
-    var wG=(p6.games||0)*5+(p5.games||0)*2+(p4.games||0)*0.5;
+    var wW,wG,tg;
+    if(scope){ // 시즌 한정: 해당 시즌 승률만
+      var ps=scope==='2026'?p6:scope==='2025'?p5:p4;
+      wW=ps.wins||0;wG=ps.games||0;tg=wG||1;
+    }else{
+      wW=(p6.wins||0)*5+(p5.wins||0)*2+(p4.wins||0)*0.5;
+      wG=(p6.games||0)*5+(p5.games||0)*2+(p4.games||0)*0.5;
+      tg=(p6.games||0)+(p5.games||0)+(p4.games||0)||1;
+    }
     var adjWR=(wW+5)/(wG+10);
-    var tg=(p6.games||0)+(p5.games||0)+(p4.games||0)||1;
-    var aw=awardMap[nm];
+    var aw=awardMap[nm]||{mom:0,spc:0,spi:0};
     var awardRate=(aw.mom*1.0+aw.spc*0.6+aw.spi*0.4)/tg;
     raw.compete[nm]=adjWR+0.35*Math.min(awardRate,0.5);
 
@@ -924,6 +986,7 @@ function computeRadarStats(dA, dKA26, dKA25, dKA24, d6, d25all, d24all, insights
     var res=statZNorm(raw[k],ALL,gamesMap,Kmap[k]);
     ALL.forEach(function(nm){norm[nm][k]=res[nm];});
   });
+  ALL.forEach(function(nm){norm[nm]._g=gamesMap[nm]||0;}); // 스코프 내 경기 수 (연도 탭에서 미출전자 제외용)
   return norm;
 }
 
@@ -1129,42 +1192,68 @@ function renderGradePage(d6,sc25r,sc24r){
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'+gradeCards+'</div>'
     +'</div>';
 
-  // 선수 랭킹 테이블 (STAT SCORE 기준)
-  var ranked=ALL.slice().sort(function(a,b){
-    var sa=AN[a]?AN[a]._statScore||0:0;
-    var sb=AN[b]?AN[b]._statScore||0:0;
-    return sb-sa;
-  });
-  var rows=ranked.map(function(nm,i){
-    var rs=window._radarStats&&window._radarStats[nm];
-    var total=rs?(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0):0;
-    var t=AN[nm]?AN[nm].t:'B';
-    var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[t]||'#94a3b8';
+  // 스코프별 STAT SCORE 랭킹 테이블 빌더
+  function mkGradeTbl(stats,subLabel,isAll){
+    if(!stats)return'<div class="spinner">⏳ 데이터 로딩 중...</div>';
+    var entries=ALL.map(function(nm){
+      var rs=stats[nm];
+      if(!rs)return null;
+      if(!isAll&&!(rs._g>0))return null; // 해당 시즌 미출전 선수 제외
+      var total=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
+      return{nm:nm,rs:rs,total:total};
+    }).filter(Boolean).sort(function(a,b){return b.total-a.total;});
     var STAT_TIP_IDS=['stat-atk','stat-survive','stat-teamwork','stat-compete','stat-stability','stat-champpool'];
-    var bar=rs?['공격력','생존력','팀워크','승부력','안정성','챔피언폭'].map(function(lbl,j){
-      var keys=['atk','survive','teamwork','compete','stability','champPool'];
-      var v=rs[keys[j]]||0;
-      return'<div style="display:flex;align-items:center;gap:4px;font-size:.68rem">'
-        +'<span class="stat-tip" data-tip-id="'+STAT_TIP_IDS[j]+'" style="color:#64748b;min-width:3em;cursor:pointer">'+lbl+'</span>'
-        +'<div style="flex:1;height:5px;background:#1e293b;border-radius:3px;overflow:hidden">'
-          +'<div style="width:'+v+'%;height:100%;background:'+tc+';border-radius:3px"></div>'
-        +'</div>'
-        +'<span style="color:'+tc+';min-width:2em;text-align:right;font-weight:700">'+v+'</span>'
-      +'</div>';
-    }).join(''):'';
-    return'<tr><td class="rk">'+(i+1)+'</td>'
-      +pnc(nm,t)
-      +'<td style="color:'+tc+';font-weight:900;font-size:1rem;text-align:center">'+total+'</td>'
-      +'<td style="min-width:180px;padding:6px 8px"><div style="display:flex;flex-direction:column;gap:2px">'+bar+'</div></td>'
-      +'</tr>';
-  }).join('');
-  var tbl='<div class="kda-section-wrap">'
-    +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · 3년 합산</span></div>'
-    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th><th>스탯 상세</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table></div>';
+    var rows=entries.map(function(e,i){
+      var nm=e.nm,rs=e.rs,total=e.total;
+      var t=AN[nm]?AN[nm].t:'B';
+      var tc={S:'#c084fc',A:'#60a5fa',B:'#4ade80'}[t]||'#94a3b8';
+      var bar=['공격력','생존력','팀워크','승부력','안정성','챔피언폭'].map(function(lbl,j){
+        var keys=['atk','survive','teamwork','compete','stability','champPool'];
+        var v=rs[keys[j]]||0;
+        return'<div style="display:flex;align-items:center;gap:4px;font-size:.68rem">'
+          +'<span class="stat-tip" data-tip-id="'+STAT_TIP_IDS[j]+'" style="color:#64748b;min-width:3em;cursor:pointer">'+lbl+'</span>'
+          +'<div style="flex:1;height:5px;background:#1e293b;border-radius:3px;overflow:hidden">'
+            +'<div style="width:'+v+'%;height:100%;background:'+tc+';border-radius:3px"></div>'
+          +'</div>'
+          +'<span style="color:'+tc+';min-width:2em;text-align:right;font-weight:700">'+v+'</span>'
+        +'</div>';
+      }).join('');
+      return'<tr><td class="rk">'+(i+1)+'</td>'
+        +pnc(nm,t)
+        +'<td style="color:'+tc+';font-weight:900;font-size:1rem;text-align:center">'+total+'</td>'
+        +(isAll?'':'<td style="color:#64748b;text-align:center">'+rs._g+'</td>')
+        +'<td style="min-width:180px;padding:6px 8px"><div style="display:flex;flex-direction:column;gap:2px">'+bar+'</div></td>'
+        +'</tr>';
+    }).join('');
+    return'<div class="kda-section-wrap">'
+      +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · '+subLabel+'</span></div>'
+      +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th>'+(isAll?'':'<th>경기</th>')+'<th>스탯 상세</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div>';
+  }
 
-  return info+tbl;
+  var scopes=window._radarScopes||{all:window._radarStats};
+  var yearBtns='<div class="yt" style="margin-bottom:14px">'
+    +[['2026','2026년'],['2025','2025년'],['2024','2024년'],['all','🌐 3년 종합']].map(function(pair,i){
+      return'<button class="yb2'+(i===0?' act':'')+'" data-gyr="'+pair[0]+'" onclick="setGradeYear(\''+pair[0]+'\')">'+pair[1]+'</button>';
+    }).join('')+'</div>';
+  var yearNote='<div style="margin-bottom:14px;padding:10px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #64748b;font-size:.75rem;color:#94a3b8">'
+    +'📌 시즌 탭은 <b style="color:#f1f5f9">해당 시즌 지표만으로</b> 산출한 참고 랭킹입니다. 공식 등급(S/A/B/C 배지)은 <b style="color:#f1f5f9">🌐 3년 종합 STAT SCORE</b> 기준으로 부여됩니다.</div>';
+  var secs=''
+    +'<div id="grade-year-2026">'+yearNote+mkGradeTbl(scopes['2026'],'2026 시즌',false)+'</div>'
+    +'<div id="grade-year-2025" style="display:none">'+yearNote+mkGradeTbl(scopes['2025'],'2025 시즌',false)+'</div>'
+    +'<div id="grade-year-2024" style="display:none">'+yearNote+mkGradeTbl(scopes['2024'],'2024 시즌',false)+'</div>'
+    +'<div id="grade-year-all" style="display:none">'+info+mkGradeTbl(scopes.all,'3년 합산',true)+'</div>';
+  return yearBtns+secs;
 }
+window.setGradeYear=function(y){
+  ['2026','2025','2024','all'].forEach(function(q){
+    var el=document.getElementById('grade-year-'+q);
+    if(el)el.style.display=q===y?'block':'none';
+  });
+  document.querySelectorAll('[data-gyr]').forEach(function(b){
+    b.classList.toggle('act',b.getAttribute('data-gyr')===y);
+  });
+};
 
 // ═══════════════════════════════════════════════════════════════
 // 🎲 대진표 자동 생성
@@ -1669,27 +1758,11 @@ function renderStierPage(d6,sc25r,sc24r){
 var curSort={k:"kda",d:1};var lastD6=null;
 function render(d6,dKA26,dKA25,dKA24){lastD6=d6;if(dKA26)window._dKA26=dKA26;if(dKA25)window._dKA25=dKA25;if(dKA24)window._dKA24=dKA24;var dA=calcAll(d6);var sc25=calcCompScores(d25,'2025');var sc24=calcCompScores(d24,'2024');var lb='<div id="pa" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024-2026 종합</span></div>'+pod(dA,curSort.k,function(v){var k=curSort.k;if(k==='totalScore')return Number(v).toLocaleString();if(k==='winRate')return Number(v).toFixed(1)+'%';if(k==='totalGames')return Number(v);return Number(v).toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th class="sh desc" data-s="kda">평균KDA</th><th>승률(W/L)</th><th class="sh" data-s="winRate">합산승점 <span class="tip-icon" data-tip-id="score">i</span></th><th class="sh" data-s="totalScore">총경기</th><th class="sh" data-s="s26">2026</th><th class="sh" data-s="s25">2025</th><th class="sh" data-s="s24">2024</th></tr></thead><tbody>'+aRows(dA,d6)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'all')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'all')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'all'):'')+'</div>'+'<div id="p6" class="yp act"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2026년</span></div>'+pod(d6,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>DPM</th><th>GPM</th><th>종합 <span class="tip-icon" data-tip-id="cs26">i</span></th></tr></thead><tbody>'+r6(d6)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'26')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'26')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'26'):'')+'</div>'+'<div id="p5" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2025년</span></div>'+pod(d25,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d25,sc25)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'25')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'25')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'25'):'')+'</div>'+'<div id="p4" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024년</span></div>'+pod(d24,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점</th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d24,sc24)+'</tbody></table></div>'+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'24')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'24')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'24'):'')+'</div>';document.getElementById('lb-inner').innerHTML=lb;document.getElementById('cards-inner').innerHTML=bCards(d6,sc25,sc24);document.getElementById('rec-inner').innerHTML=bRec(d6,dA,sc25,sc24);
 document.getElementById('stier-inner').innerHTML=renderStierPage(d6,sc25,sc24);var shh=document.querySelectorAll('th.sh');for(var ssi=0;ssi<shh.length;ssi++){(function(thEl){thEl.addEventListener('click',function(){var k=thEl.getAttribute('data-s');if(curSort.k===k){curSort.d*=-1;}else{curSort.k=k;curSort.d=1;}document.querySelectorAll('th.sh').forEach(function(t){t.classList.remove('asc','desc');});thEl.classList.add(curSort.d===1?'desc':'asc');if(lastD6){var _curYr=null;['pa','p6','p5','p4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.classList.contains('act'))_curYr=id;});render(lastD6);if(_curYr&&_curYr!=='p6'){sY(_curYr==='pa'?'a':_curYr.replace('p',''));}}});})(shh[ssi]);}var yb=document.querySelectorAll('[data-yr]');for(var i=0;i<yb.length;i++){yb[i].addEventListener('click',(function(b){return function(){sY(b.getAttribute('data-yr'));};})(yb[i]));}}
-// ── 2단 탭 내비게이션: 그룹 → 서브탭 ─────────────────────────────
-var TAB_GROUP={lb:'rank',poslb:'rank',stier:'rank',ptier:'rank',cards:'player',champ:'player','perf-tab':'player',synergy:'rel',rivals:'rel',records:'rec',matchlog:'rec',awards:'rec',roster:'game'};
-function setGroup(g,activateFirst){
-  var gs=document.querySelectorAll('.tg');
-  for(var i=0;i<gs.length;i++)gs[i].className=gs[i].getAttribute('data-group')===g?'tg act':'tg';
-  var tbs=document.querySelectorAll('.tabs-sub .tb'),visible=[];
-  for(var j=0;j<tbs.length;j++){
-    var show=TAB_GROUP[tbs[j].getAttribute('data-tab')]===g;
-    tbs[j].style.display=show?'':'none';
-    if(show)visible.push(tbs[j]);
-  }
-  // 단일 탭 그룹(대진표)은 서브탭 바 자체를 숨김
-  var sub=document.getElementById('subtabs');
-  if(sub)sub.style.display=visible.length>1?'':'none';
-  if(activateFirst&&visible.length)sT(visible[0].getAttribute('data-tab'));
-}
-function sT(id){var ps=document.querySelectorAll('.pn'),bs=document.querySelectorAll('.tb');for(var i=0;i<ps.length;i++)ps[i].className='pn';for(var i=0;i<bs.length;i++)bs[i].className='tb';var el=document.getElementById(id);if(el)el.className='pn act';var b=document.querySelector('[data-tab="'+id+'"]');if(b)b.className='tb act';var g=TAB_GROUP[id];if(g&&!document.querySelector('.tg.act[data-group="'+g+'"]'))setGroup(g,false);}
+// ── 그룹핑 탭 내비게이션: 전 탭 상시 노출, 원클릭 이동 ─────────────
+// 활성 탭이 속한 그룹의 라벨(.tgl)도 함께 하이라이트
+function sT(id){var ps=document.querySelectorAll('.pn'),bs=document.querySelectorAll('.tb');for(var i=0;i<ps.length;i++)ps[i].className='pn';for(var i=0;i<bs.length;i++)bs[i].className='tb';var el=document.getElementById(id);if(el)el.className='pn act';var b=document.querySelector('[data-tab="'+id+'"]');if(b)b.className='tb act';document.querySelectorAll('.tab-group').forEach(function(g){g.classList.toggle('act',!!(b&&g.contains(b)));});}
 function sY(yr){var ps=document.querySelectorAll('.yp'),bs=document.querySelectorAll('[data-yr]');for(var i=0;i<ps.length;i++)ps[i].className='yp';for(var i=0;i<bs.length;i++)bs[i].className='yb2';var el=document.getElementById('p'+yr);if(el)el.className='yp act';var b=document.querySelector('[data-yr="'+yr+'"]');if(b)b.className='yb2 act';}
 var tbs=document.querySelectorAll('.tb');for(var i=0;i<tbs.length;i++){tbs[i].addEventListener('click',(function(b){return function(){sT(b.getAttribute('data-tab'));};})(tbs[i]));}
-var tgs=document.querySelectorAll('.tg');for(var i=0;i<tgs.length;i++){tgs[i].addEventListener('click',(function(b){return function(){setGroup(b.getAttribute('data-group'),true);};})(tgs[i]));}
-setGroup('rank',false); // 초기: 랭킹 그룹 서브탭만 노출
 var st=document.getElementById('status');
 function doFetch(){
   Promise.all([
@@ -1709,7 +1782,8 @@ function doFetch(){
     var ka26=parseKA(csv26,7,8),ka25=parseKA(csv25,5,6),ka24=parseKA(csv24,5,6);
     var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;sortAllByTier();render(d6new,ka26,ka25,ka24);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);try{var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));document.getElementById('synergy-inner').innerHTML=renderSynergyPage(insightsData);document.getElementById('rivals-inner').innerHTML=renderRivalsPage(insightsData);document.getElementById('perf-tab-inner').innerHTML=renderPerfPage(insightsData);document.getElementById('matchlog-inner').innerHTML=renderMatchLogPage(insightsData);window._matchLog=insightsData.matchLog||[];window._posData=buildPosData(window._matchLog);setTimeout(initPerfTabs,100);var fw=document.getElementById('form-widget');if(fw)fw.innerHTML=renderFormWidget(insightsData);
 // 레이더 스탯 계산 (insights + champData 모두 사용 가능한 시점)
-var allLogAgg=aggregateLogs(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));
+var log25P=parseLogCSV(csvLog25),log24P=parseLogCSV(csvLog24);
+var allLogAgg=aggregateLogs(logData,log25P,log24P);
 // matchLog 파생지표 선계산 (레이더·compScore 공용 캐시)
 window._mlGames=mlBuildPlayerGames(insightsData.matchLog||[]);
 window._mlBase=mlPosBaselines(window._mlGames);
@@ -1719,6 +1793,18 @@ var csNew26=calcCompScores(d6new,'2026');
 d6new.forEach(function(p){if(csNew26[p.name]!=null){p.compScore=csNew26[p.name];p.tier=getTierName(p.compScore);}});
 var sc25r=calcCompScores(d25,'2025');var sc24r=calcCompScores(d24,'2024');
 window._radarStats=computeRadarStats(calcAll(d6new),window._dKA26||{},window._dKA25||{},window._dKA24||{},d6new,d25,d24,insightsData,allLogAgg.champData);
+// 연도별 스코프 레이더 스탯 (선수 등급 연도 탭용)
+var awMapFrom=function(awardsData){
+  var m={};ALL.forEach(function(n){m[n]={mom:0,spc:0,spi:0};});
+  (awardsData||[]).forEach(function(a){if(m[a.name]){m[a.name].mom+=a.mom||0;m[a.name].spc+=a.special||0;m[a.name].spi+=a.spirit||0;}});
+  return m;
+};
+window._radarScopes={
+  all:window._radarStats,
+  '2026':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,logData.champData,'2026',awMapFrom(logData.awardsData)),
+  '2025':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,log25P.champData,'2025',awMapFrom(log25P.awardsData)),
+  '2024':computeRadarStats(null,null,null,null,d6new,d25,d24,insightsData,log24P.champData,'2024',awMapFrom(log24P.awardsData))
+};
 // ── STAT SCORE 기반 S/A/B/C 등급 결정 ────────────────────────────
 // 신 정규화(z-score, 평균 300점)에 맞춘 등급컷: S≥360 / A≥300 / B≥240 / C<240
 ALL.forEach(function(nm){
@@ -2276,7 +2362,7 @@ function renderPerfPage(insights){
     var valAlign=isDmg?'right':'left';
     // 고정 컬럼 너비 — 세 테이블이 동일한 세로 그리드 공유
     var W={rk:'34px',player:'148px',champ:'148px',val:'118px',date:'96px',won:'46px',year:'44px'};
-    var rows=data.slice(0,10).map(function(r,i){
+    var rows=data.slice(0,20).map(function(r,i){
       var val=valFmt(r);var wonCol=r.won==='승'?'#4ade80':'#f87171';
       return'<tr>'
         +'<td class="rk" style="width:'+W.rk+'">'+(i+1)+'</td>'
@@ -2300,13 +2386,13 @@ function renderPerfPage(insights){
       +'</tr></thead><tbody>'+rows+'</tbody></table>';
   }
   return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#94a3b8">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 10 <span class="ka-sub">단일 경기 최고 기록</span></div>'
+    +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 20 <span class="ka-sub">단일 경기 최고 기록</span></div>'
     +perfTable(insights.topKDA,'KDA',function(r){return r.kda+' ('+r.k+'/'+r.d+'/'+r.a+')';})
     +'</div>'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">🗡️ 가한 피해량 TOP 10 <span class="ka-sub">단일 경기</span></div>'
+    +'<div class="kda-section-wrap"><div class="kda-section-title">🗡️ 가한 피해량 TOP 20 <span class="ka-sub">단일 경기</span></div>'
     +perfTable(insights.topDmgDealt,'피해량',function(r){return r.val.toLocaleString();})
     +'</div>'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">🛡️ 받은 피해량 TOP 10 <span class="ka-sub">단일 경기</span></div>'
+    +'<div class="kda-section-wrap"><div class="kda-section-title">🛡️ 받은 피해량 TOP 20 <span class="ka-sub">단일 경기</span></div>'
     +perfTable(insights.topDmgTaken,'받은피해량',function(r){return r.val.toLocaleString();})
     +'</div>'
     +'</div>';
