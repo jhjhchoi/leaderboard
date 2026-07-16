@@ -19,15 +19,16 @@ body{background:#0f172a;color:#f1f5f9;font-family:'Pretendard','Segoe UI',system
 .tb{padding:13px 24px;cursor:pointer;color:#94a3b8;font-size:1rem;font-weight:600;border:none;background:none;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent}
 .tb.act{color:#818cf8;border-bottom-color:#818cf8}.tb:hover{color:#f1f5f9}
 /* 그룹핑 탭 바 — 전 탭 상시 노출(원클릭), 중앙 정렬 */
-.tabs-wrap{display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:6px 0;background:#1e293b;border-bottom:1px solid #334155;padding:10px 12px 6px}
-.tab-group{display:flex;flex-direction:column;align-items:center;padding:0 12px}
-.tab-group+.tab-group{border-left:1px solid rgba(51,65,85,.7)}
-.tgl{font-size:.82rem;font-weight:800;color:#94a3b8;letter-spacing:.04em;margin-bottom:4px;white-space:nowrap}
+.tabs-wrap{display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:10px;background:#1e293b;border-bottom:1px solid #334155;padding:14px 16px}
+.tab-group{display:flex;flex-direction:column;align-items:center;padding:9px 14px 8px;background:rgba(255,255,255,.025);border:1px solid rgba(51,65,85,.6);border-radius:10px;transition:.2s}
+.tab-group.act{background:rgba(192,132,252,.06);border-color:rgba(192,132,252,.35)}
+.tgl{font-size:.62rem;font-weight:700;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;white-space:nowrap}
 .tab-group.act .tgl{color:#c084fc}
-.tgb{display:flex}
-.tgb .tb{padding:7px 11px;font-size:.86rem;border-bottom-width:2.5px;border-radius:6px 6px 0 0}
+.tgb{display:flex;gap:2px}
+.tgb .tb{padding:6px 11px;font-size:.86rem;border:none;border-radius:6px;border-bottom:none}
+.tgb .tb.act{background:rgba(129,140,248,.14)}
 .tgb .tb:hover{background:rgba(129,140,248,.07)}
-@media (max-width:640px){.tab-group{padding:0 8px}.tgb .tb{padding:6px 8px;font-size:.8rem}}
+@media (max-width:640px){.tab-group{padding:7px 8px 6px}.tgb .tb{padding:6px 8px;font-size:.8rem}}
 .ct{max-width:1200px;margin:0 auto;padding:20px 14px}
 .pn{display:none}.pn.act{display:block}
 .yt{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
