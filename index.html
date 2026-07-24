@@ -685,15 +685,17 @@ function mlBuildPlayerGames(matchLog){
       if(entries.length<3)return;
       var posArr=_POS_MAP[entries.length]||_POS_MAP[5];
       var teamK=0,teamD=0,teamDmg=0,dmgOK=true;
-      var members=[];
+      var members=[],missingReg=false;
       entries.forEach(function(en,idx){
+        // 게스트(정규 12인 명단 외)는 포지션 슬롯(idx)만 차지, 통계엔 미집계
+        if(ALL.indexOf(en.name)<0)return;
         var st=kdaMap[en.name];
-        if(!st)return;
+        if(!st){missingReg=true;return;} // 정규 선수인데 KDA 누락 → 데이터 불완전
         teamK+=st.k;teamD+=st.d;
         if(st.ddealt>0)teamDmg+=st.ddealt;else dmgOK=false;
         members.push({name:en.name,pos:posArr[idx]||null,st:st});
       });
-      if(members.length<entries.length)return; // 스탯 누락 팀은 제외
+      if(missingReg)return; // 정규 선수 KDA 누락 팀은 제외 (게스트 누락은 허용)
       members.forEach(function(mb){
         games.push({name:mb.name,year:m.year,date:m.date,pos:mb.pos,size:entries.length,win:pair[1],
           k:mb.st.k,d:mb.st.d,a:mb.st.a,dmg:mb.st.ddealt||0,
