@@ -1869,8 +1869,15 @@ function parseInsightsCSV(csv){
       case'dld': d.topDmgDealt.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'dlt': d.topDmgTaken.push({player:c[0],champ:c[1],val:toN(c[2]),date:c[3],won:c[4],year:c[5]});break;
       case'rec': d.recentAwards.push({date:c[0],player:c[1],type:c[2]});break;
-      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],playerKda:c[8],duration:c[9]||''});break;
+      case'mlog': if(c[0]&&c[2]) d.matchLog.push({date:c[0],year:c[1],result:c[2],team1:c[3],team2:c[4],mom:c[5],special:c[6],spirit:c[7],playerKda:c[8],duration:c[9]||'',row:toN(c[10])});break;
     }
+  });
+  // 경기 로그 정렬: 날짜 내림차순 + 같은 날은 시트 행번호 내림차순(나중 경기가 위)
+  // 시트는 위→아래가 시간순이므로 행번호가 클수록 나중 경기.
+  // 행번호가 없는 구버전 데이터는 0으로 동률 → 안정 정렬로 CSV 순서 유지(폴백)
+  d.matchLog.sort(function(a,b){
+    if(a.date!==b.date)return a.date<b.date?1:-1;
+    return (b.row||0)-(a.row||0);
   });
   return d;
 }
