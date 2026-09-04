@@ -323,7 +323,8 @@ function parseLogCSV(csv){
   return{champData:champData,awardsData:awardsData};
 }
 
-function renderChampPage(champData,insightsOverride){
+function renderChampPage(champData,insightsOverride,kdaMapOverride){
+  var _ckda=kdaMapOverride||window._champKdaAll||{};
   var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
@@ -353,17 +354,32 @@ function renderChampPage(champData,insightsOverride){
     html+='</div>';
     // 바디 (접힌 상태)
     html+='<div class="acc-body" id="'+uid+'">';
-    html+='<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽수</th><th style="color:#4ade80">승</th><th style="color:#f87171">패</th><th>승률</th></tr></thead><tbody>';
+    html+='<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽수</th><th style="color:#4ade80">승</th><th style="color:#f87171">패</th><th>승률</th><th>KDA <span class="tip-icon" data-tip-id="champ-kda">i</span></th></tr></thead><tbody>';
     data.forEach(function(d,i){
       var col=d.wr>=60?'#4ade80':d.wr>=50?'#60a5fa':'#f87171';
       var _ins=insightsOverride||window._insights;
       var _ab=_ins?champAwardBadge(p,d.ch,_ins):'';
       var _pEnc=p.replace(/'/g,"\\'"), _cEnc=d.ch.replace(/'/g,"\\'");
+      // 챔피언별 KDA — 3픽 미만은 표본 부족이라 흐리게 표시
+      var kd=_ckda[p+'|'+d.ch];
+      var kdaCell='<span style="color:#334155">-</span>';
+      if(kd&&kd.picks>0){
+        var kdaVal=kd.d>0?(kd.k+kd.a)/kd.d:(kd.k+kd.a);
+        var low=kd.picks<3;
+        var kcol=low?'#64748b':kC(kdaVal);
+        kdaCell='<div style="line-height:1.35'+(low?';opacity:.55':'')+'">'
+          +'<span style="color:'+kcol+';font-weight:800">'+kdaVal.toFixed(2)+'</span>'
+          +(kd.d===0?'<span style="font-size:.6rem;color:#a78bfa;margin-left:3px">PD</span>':'')
+          +'<div style="font-size:.62rem;color:#64748b">'
+            +(kd.k/kd.picks).toFixed(1)+' / '+(kd.d/kd.picks).toFixed(1)+' / '+(kd.a/kd.picks).toFixed(1)
+          +'</div></div>';
+      }
       html+='<tr onclick="showPlayerChampMatches(\''+_pEnc+'\',\''+_cEnc+'\')" style="cursor:pointer" title="'+d.ch+' 출전 경기 보기"><td class="rk">'+(i+1)+'</td><td class="nm"><span style="display:inline-flex;align-items:center;gap:6px;width:100%"><span style="display:inline-flex;gap:2px;width:30px;flex-shrink:0;align-items:center">'+champPosTagHtml(p,d.ch)+'</span><span style="display:inline-flex;flex-shrink:0">'+champIcon(d.ch,22)+'</span><span style="min-width:7.5em;display:inline-block">'+d.ch+'</span>'+_ab+'</span></td><td>'+d.picks+'</td>'
         +'<td style="color:#4ade80;font-weight:700">'+d.wins+'</td>'
         +'<td style="color:#f87171;font-weight:700">'+d.losses+'</td>'
         +'<td><div class="wc"><div class="wb"><div class="wf" style="width:'+Math.min(d.wr,100)+'%;background:'+col+'"></div></div>'
-        +'<span>'+d.wr+'%</span></div></td></tr>';
+        +'<span>'+d.wr+'%</span></div></td>'
+        +'<td>'+kdaCell+'</td></tr>';
     });
     html+='</tbody></table></div>';
   });
@@ -438,13 +454,47 @@ function computeYearChampAwards(matchLog, yearStr){
   });
   return Object.values(map);
 }
+// ── 선수-챔피언별 KDA 집계 ────────────────────────────────────────
+// 경기 로그의 로스터(선수→챔피언)와 선수별 K/D/A를 조인해 산출.
+// 반환: {"선수|챔피언": {picks, k, d, a}}  (누적 합계 — KDA는 (총K+총A)/총D)
+function buildChampKdaMap(matchLog, yearStr){
+  var map={};
+  (matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return; // 연도 필터 (null이면 전체)
+    // 해당 경기 선수별 K/D/A 파싱
+    var kdaMap={};
+    if(m.playerKda){
+      m.playerKda.split('|').forEach(function(e){
+        var i=e.indexOf(':');if(i<0)return;
+        var parts=e.substring(i+1).trim().split('/');
+        if(parts.length<3)return;
+        kdaMap[e.substring(0,i).trim()]={k:+parts[0]||0,d:+parts[1]||0,a:+parts[2]||0};
+      });
+    }
+    [m.team1,m.team2].forEach(function(teamStr){
+      if(!teamStr)return;
+      teamStr.split('|').forEach(function(e){
+        var bi=e.lastIndexOf('(');if(bi<0)return;
+        var pl=e.substring(0,bi).trim(), ch=e.substring(bi+1).replace(')','').trim();
+        if(ALL.indexOf(pl)<0)return;      // 게스트 제외 (통계 미집계)
+        var st=kdaMap[pl];if(!st)return;  // KDA 없는 기록 제외
+        var key=pl+'|'+ch;
+        if(!map[key])map[key]={picks:0,k:0,d:0,a:0};
+        var A=map[key];
+        A.picks++;A.k+=st.k;A.d+=st.d;A.a+=st.a;
+      });
+    });
+  });
+  return map;
+}
 function setChampYear(yr){
   var log=_logs[yr]||{champData:{}};
   // 연도 매핑: '6'→'2026', '5'→'2025', '4'→'2024', 'a'→null(전체)
   var yearMap={'6':'2026','5':'2025','4':'2024','a':null};
   var yearStr=yearMap[yr];
   var yearInsights={champAwards:computeYearChampAwards(window._matchLog||[],yearStr)};
-  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{},yearInsights);
+  var kdaMap=buildChampKdaMap(window._matchLog||[],yearStr);
+  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{},yearInsights,kdaMap);
 }
 function setupAwardsYearBtns(){
   var inner=document.getElementById('awards-inner');if(!inner)return;
@@ -2480,6 +2530,7 @@ var TIPS={
   'stat-compete':'🏆 승부력\n\n베이지안 보정 가중 승률 + 수상 결정력\n\n연도가중(2026×5·2025×2·2024×0.5) 승률에 표본 보정을 적용하고, MOM(×1.0)·스페셜(×0.6)·투혼상(×0.4) 수상률을 가산한 "이기게 만드는 힘". 경기 수가 적으면 50%로 수렴해 소수 경기 뻥튀기를 방지.',
   'stat-stability':'📊 안정성\n\n경기별 기여 지수의 기복(표준편차) — 낮을수록 고득점\n\n매 경기 롤 보정 킬관여율과 데스지분으로 "그 경기 기여도"를 산출하고, 그 기복이 작을수록 높은 점수. 잘할 때와 못할 때의 편차가 적은, 계산이 서는 선수를 의미. 6경기 이상부터 산출.',
   'stat-champpool':'🎮 챔피언폭\n\n√(픽 챔피언 수) × 베이지안 보정 챔프 평균 승률\n\n다양한 챔피언을 실제로 얼마나 잘 다루는지. 1~2판 챔프의 승률 뻥튀기를 통계 보정으로 완화해, 넓으면서도 검증된 챔프폭일수록 높은 점수.',
+  'champ-kda':'⚡ 챔피언별 KDA<br><br>그 챔피언으로 <b>실제 출전한 경기</b>의 K/D/A만 모아 산출합니다.<br><br><b>KDA = (총킬 + 총어시스트) ÷ 총데스</b><br>아래 작은 숫자는 <b>경기당 평균 K / D / A</b>입니다.<br><br>· 승률과 함께 보면 유용합니다 — 승률은 낮은데 KDA가 높으면 "개인은 잘했는데 팀이 졌다", 둘 다 높으면 "진짜 주력 챔프"<br>· <b>3픽 미만은 흐리게</b> 표시됩니다 (표본 부족 — 한두 판 기록은 편차가 큼)<br>· <b>PD</b> = 데스 0 (Perfect Death)',
   'roster-recent':'🔥 최근 폼 반영<br><br>체크하면 각 선수의 <b>최근 10경기 성적(폼)</b>을 팀 배정에 추가로 반영합니다.<br><br>기본 복합점수(레이더 STAT 50% + 통산 보정승률 50%)를 <b>70%</b>로 낮추고, 최근 10경기 승률을 <b>30%</b> 섞습니다.<br><br>· 최근 10경기 승률은 소수 표본 왜곡을 막기 위해 베이지안 보정(가상 2승 2패 가산)을 적용<br>· 요즘 물오른 선수는 점수↑, 최근 부진한 선수는 점수↓ → 그날의 실제 컨디션에 가까운 대진<br>· 통산 실력보다 “지금 잘하는 사람”을 중시하고 싶을 때 사용'
 };
 document.body.insertAdjacentHTML('beforeend','<div id="g-tooltip"></div>');
