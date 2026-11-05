@@ -323,9 +323,73 @@ function parseLogCSV(csv){
   return{champData:champData,awardsData:awardsData};
 }
 
-function renderChampPage(champData,insightsOverride,kdaMapOverride){
+// 리그 전체 챔피언 메타 — 선수별이 아닌 "우리 리그에서" 관점
+function buildChampMeta(matchLog,yearStr){
+  var meta={};
+  (matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return;
+    [[m.team1,m.result==='1팀 승'],[m.team2,m.result==='2팀 승']].forEach(function(pair){
+      (pair[0]||'').split('|').forEach(function(e){
+        var b=e.lastIndexOf('(');if(b<0)return;
+        var nm=e.substring(0,b).trim();
+        if(ALL.indexOf(nm)<0)return;             // 게스트 제외
+        var ch=e.substring(b+1).replace(')','').trim();
+        if(!ch)return;
+        if(!meta[ch])meta[ch]={champ:ch,picks:0,wins:0,players:{}};
+        meta[ch].picks++;if(pair[1])meta[ch].wins++;
+        meta[ch].players[nm]=(meta[ch].players[nm]||0)+1;
+      });
+    });
+  });
+  return meta;
+}
+function renderChampMeta(matchLog,yearStr,subLbl){
+  var meta=buildChampMeta(matchLog,yearStr);
+  var list=Object.keys(meta).map(function(k){
+    var c=meta[k];
+    var top=Object.keys(c.players).sort(function(a,b){return c.players[b]-c.players[a];})[0];
+    return{champ:c.champ,picks:c.picks,wins:c.wins,wr:Math.round(c.wins/c.picks*100),
+      master:top,masterPicks:c.players[top]};
+  });
+  if(!list.length)return'';
+  var MIN=8;  // 승률 순위 최소 픽수
+  var totalPicks=list.reduce(function(s,c){return s+c.picks;},0);
+  var byPick=list.slice().sort(function(a,b){return b.picks-a.picks;}).slice(0,10);
+  var pool=list.filter(function(c){return c.picks>=MIN;});
+  var byWr=pool.slice().sort(function(a,b){return(b.wr-a.wr)||(b.picks-a.picks);}).slice(0,10);
+  var byWrLow=pool.slice().sort(function(a,b){return(a.wr-b.wr)||(b.picks-a.picks);}).slice(0,5);
+  function row(c,i,showWr){
+    var wrCol=c.wr>=60?'#4ade80':c.wr>=50?'#60a5fa':'#f87171';
+    return'<tr><td class="rk">'+(i+1)+'</td>'
+      +'<td class="nm"><span style="display:inline-flex;align-items:center;gap:6px">'+champIcon(c.champ,20)+'<span>'+c.champ+'</span></span></td>'
+      +'<td>'+c.picks+'</td>'
+      +'<td style="color:'+wrCol+';font-weight:700">'+c.wr+'%</td>'
+      +'<td class="nm" style="font-size:.75rem;color:#94a3b8">'+(c.master||'-')+' <span style="color:#475569">'+c.masterPicks+'</span></td></tr>';
+  }
+  function tbl(title,arr,note){
+    return'<div style="flex:1;min-width:280px">'
+      +'<div style="font-size:.8rem;font-weight:800;color:#c4b5fd;margin-bottom:6px">'+title+'</div>'
+      +(note?'<div style="font-size:.68rem;color:#64748b;margin-bottom:6px">'+note+'</div>':'')
+      +'<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽</th><th>승률</th><th style="text-align:left">최다 픽</th></tr></thead>'
+      +'<tbody>'+arr.map(row).join('')+'</tbody></table></div>';
+  }
+  return'<div class="kda-section-wrap" style="margin-bottom:20px">'
+    +'<div class="kda-section-title">🌐 리그 챔피언 메타 <span class="ka-sub">'+subLbl+' · 선수 전체 합산</span></div>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:10px;line-height:1.6">'
+      +'우리 리그에서 어떤 챔피언이 많이 나오고 잘 이기는지 봅니다. 총 <b style="color:#94a3b8">'+list.length+'종</b>이 <b style="color:#94a3b8">'+totalPicks+'번</b> 선택됐습니다. '
+      +'<span style="color:#475569">승률 순위는 '+MIN+'픽 이상만</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:18px;flex-wrap:wrap">'
+      +tbl('🔥 최다 픽 TOP 10',byPick,'')
+      +tbl('🏆 승률 TOP 10',byWr,'')
+    +'</div>'
+    +(byWrLow.length?'<div style="margin-top:16px">'+tbl('💀 승률 하위 5',byWrLow,'자주 나오지만 결과가 안 좋은 챔피언')+'</div>':'')
+    +'</div>';
+}
+function renderChampPage(champData,insightsOverride,kdaMapOverride,yearStr,subLbl){
   var _ckda=kdaMapOverride||window._champKdaAll||{};
-  var html='<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
+  var _meta=renderChampMeta(window._matchLog||[],yearStr,subLbl||'3년 종합');
+  var html=_meta+'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
     var totalPicks=data.reduce(function(s,d){return s+d.picks;},0);
@@ -494,7 +558,8 @@ function setChampYear(yr){
   var yearStr=yearMap[yr];
   var yearInsights={champAwards:computeYearChampAwards(window._matchLog||[],yearStr)};
   var kdaMap=buildChampKdaMap(window._matchLog||[],yearStr);
-  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{},yearInsights,kdaMap);
+  var champSubLbl={'6':'2026년','5':'2025년','4':'2024년','a':'3년 종합'}[yr]||'3년 종합';
+  document.getElementById('champ-inner').innerHTML=renderChampPage(log.champData||{},yearInsights,kdaMap,yearStr,champSubLbl);
 }
 function setupAwardsYearBtns(){
   var inner=document.getElementById('awards-inner');if(!inner)return;
@@ -1107,7 +1172,7 @@ function kBar(v,max){var pct=max>0?Math.min(v/max*100,100):0;var col=pct>=70?'#a
 // 승률 랭킹 — 해당 시즌 전체 경기 기준. 승률과 함께 승/패를 병기해 표본 크기를 드러냄
 function bWinRateLB(d6,yr){
   var isAll=!yr||yr==='all';
-  var subLbl=isAll?'2024-2026 합산':yr==='26'?'2026년':yr==='25'?'2025년':'2024년';
+  var subLbl=isAll?'2024-2026 종합':yr==='26'?'2026년':yr==='25'?'2025년':'2024년';
   function yearWL(p,key){var x=p||{};return{w:+(x.wins||0),l:+(x.losses||0)};}
   var data=ALL.map(function(n){
     var p6=yearWL(d6.find(function(p){return p.name===n;}));
@@ -1139,7 +1204,7 @@ function bWinRateLB(d6,yr){
       +(isAll?yc(p.r26)+yc(p.r25)+yc(p.r24):'')
       +'</tr>';
   }).join('');
-  return'<div class="ka-lb"><div class="ka-title">📈 승률 랭킹 <span class="ka-sub">'+subLbl+'</span></div>'
+  return'<div class="ka-lb"><div class="ka-title">📈 승률 리더보드 <span class="ka-sub">'+subLbl+'</span></div>'
     +podHtml
     +'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>승률(W/L)</th><th>경기</th>'+thCols+'</tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>';
@@ -1164,11 +1229,16 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
       +pnc(p.name,AN[p.name]?AN[p.name].t:'B')
       +'<td><div class="kbar-wrap"><div class="kbar-bg"><div class="kbar-fill" style="width:'+pct+'%;background:'+col+'"></div></div><span class="kbar-val" style="color:'+col+'">'+p.total+'승</span></div></td>'
       +'<td style="color:#818cf8">'+p.w26+'</td><td style="color:#34d399">'+p.w25+'</td><td style="color:#fb923c">'+p.w24+'</td>'
+      +'<td>'+trendIcon(p.w26,p.w25,p.w24)+'</td>'
     +'</tr>';
   }).join('');
-  var winSection='<h3 class="st">🏆 누적 승리수 연도별 추이</h3>'
-    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>3년 합산</th><th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th></tr></thead>'
+  var winSection='<h3 class="st">🏆 누적 승리수</h3>'
+    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>3년 합산</th><th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th><th>추세</th></tr></thead>'
     +'<tbody>'+winRows+'</tbody></table>';
+
+  // ── 연승·연패 기록 + 경기 길이 (경기 로그 기반) ────────────────────
+  var streakSection=renderStreakSection();
+  var durSection=renderDurationSection();
 
   // ── 연도별 추이 테이블 ────────────────────────────────────────────
   function trendIcon(v6,v5,v4){if(!v5)return'🆕';if(v6>v5&&v5>v4)return'📈📈';if(v6>v5)return'📈';if(v6<v5)return'📉';return'↔️';}
@@ -1177,14 +1247,6 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
       +'<table class="t"><thead><tr><th>선수</th><th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th><th>추세</th></tr></thead>'
       +'<tbody>'+rows+'</tbody></table>';
   }
-  var tblWins=ALL.map(function(nm){
-    var p6=d6.find(function(p){return p.name===nm;})||{wins:0};
-    var p5=d25.find(function(p){return p.name===nm;})||{wins:0};
-    var p4=d24.find(function(p){return p.name===nm;})||{wins:0};
-    return'<tr>'+pnc(nm,AN[nm]?AN[nm].t:'B')
-      +'<td style="color:#818cf8">'+p6.wins+'</td><td style="color:#34d399">'+p5.wins+'</td><td style="color:#fb923c">'+p4.wins+'</td>'
-      +'<td>'+trendIcon(p6.wins,p5.wins,p4.wins)+'</td></tr>';
-  }).join('');
   var tblScore=ALL.map(function(nm){
     var p6=d6.find(function(p){return p.name===nm;})||{score:0};
     var p5=d25.find(function(p){return p.name===nm;})||{score:0};
@@ -1212,29 +1274,110 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
       +'<td style="color:#818cf8">'+a6+'</td><td style="color:#34d399">'+a5+'</td><td style="color:#fb923c">'+a4+'</td>'
       +'<td>'+trendIcon(a6,a5,a4)+'</td></tr>';
   }).join('');
-  var tblWR=ALL.map(function(nm){
-    var p6=d6.find(function(p){return p.name===nm;})||{winRate:0};
-    var p5=d25.find(function(p){return p.name===nm;})||{winRate:0};
-    var p4=d24.find(function(p){return p.name===nm;})||{winRate:0};
-    var c6=p6.winRate>=55?'#4ade80':p6.winRate>=50?'#60a5fa':'#f87171';
-    var c5=p5.winRate>=55?'#4ade80':p5.winRate>=50?'#60a5fa':'#f87171';
-    var c4=p4.winRate>=55?'#4ade80':p4.winRate>=50?'#60a5fa':'#f87171';
-    return'<tr>'+pnc(nm,AN[nm]?AN[nm].t:'B')
-      +'<td style="color:'+c6+'">'+p6.winRate.toFixed(1)+'%</td>'
-      +'<td style="color:'+c5+'">'+p5.winRate.toFixed(1)+'%</td>'
-      +'<td style="color:'+c4+'">'+p4.winRate.toFixed(1)+'%</td>'
-      +'<td>'+trendIcon(p6.winRate,p5.winRate,p4.winRate)+'</td></tr>';
-  }).join('');
 
   return sAll+s26+s25+s24
+    +streakSection
+    +durSection
     +'<h3 class="st">📈 KDA 연도별 추이</h3><table class="t"><thead><tr><th>선수</th><th>2026</th><th>2025</th><th>2024</th><th>추세</th><th>3년 평균</th></tr></thead><tbody>'+tr+'</tbody></table>'
     +winSection
-    +mkTrendTbl('🏆 승리수 연도별 추이',tblWins)
     +mkTrendTbl('💰 승점 <span class="tip-icon" data-tip-id="score">i</span> 연도별 추이',tblScore)
     +mkTrendTbl('⚔️ 킬 연도별 추이',tblKill)
-    +mkTrendTbl('🤝 어시스트 연도별 추이',tblAssist)
-    +mkTrendTbl('📈 승률 연도별 추이',tblWR);
+    +mkTrendTbl('🤝 어시스트 연도별 추이',tblAssist);
+    // 📈 승률 연도별 추이는 제거 — 리더보드의 「승률 리더보드」 3년 종합 탭이
+    // 동일한 연도별 승률을 순위와 함께 보여주므로 중복
 }
+// ── 연승·연패 기록 ────────────────────────────────────────────────
+// 경기 로그를 날짜 오름차순으로 훑어 선수별 최장 연승/연패와 현재 진행 중인 기록을 뽑는다
+function buildStreaks(matchLog){
+  var log=(matchLog||[]).slice().sort(function(a,b){
+    if(a.date!==b.date)return a.date<b.date?-1:1;
+    return (a.row||0)-(b.row||0);      // 같은 날은 시트 기록 순서(=시간순)
+  });
+  var st={};
+  ALL.forEach(function(n){st[n]={bestW:0,bestL:0,curW:0,curL:0,last:null,games:0};});
+  log.forEach(function(m){
+    var win1=m.result==='1팀 승';
+    [[m.team1,win1],[m.team2,!win1]].forEach(function(pair){
+      (pair[0]||'').split('|').forEach(function(e){
+        var b=e.lastIndexOf('(');if(b<0)return;
+        var nm=e.substring(0,b).trim();
+        var s=st[nm];if(!s)return;
+        s.games++;
+        if(pair[1]){s.curW++;s.curL=0;if(s.curW>s.bestW)s.bestW=s.curW;s.last='W';}
+        else{s.curL++;s.curW=0;if(s.curL>s.bestL)s.bestL=s.curL;s.last='L';}
+      });
+    });
+  });
+  return st;
+}
+function renderStreakSection(){
+  var st=buildStreaks(window._matchLog||[]);
+  var list=ALL.map(function(n){var s=st[n];return{name:n,bestW:s.bestW,bestL:s.bestL,
+    cur:s.last==='W'?s.curW:s.last==='L'?-s.curL:0,games:s.games};})
+    .filter(function(x){return x.games>0;});
+  if(!list.length)return'';
+  var byW=list.slice().sort(function(a,b){return b.bestW-a.bestW;});
+  var rows=byW.map(function(x,i){
+    var curTxt=x.cur>0?'<span style="color:#4ade80;font-weight:800">'+x.cur+'연승 중</span>'
+      :x.cur<0?'<span style="color:#f87171;font-weight:800">'+(-x.cur)+'연패 중</span>'
+      :'<span style="color:#475569">-</span>';
+    return'<tr><td class="rk">'+(i+1)+'</td>'+pnc(x.name,AN[x.name]?AN[x.name].t:'B')
+      +'<td style="color:#4ade80;font-weight:800">'+x.bestW+'연승</td>'
+      +'<td style="color:#f87171;font-weight:800">'+x.bestL+'연패</td>'
+      +'<td>'+curTxt+'</td></tr>';
+  }).join('');
+  return'<h3 class="st">🔥 연승 · 연패 기록</h3>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px">3년 전체 경기를 시간순으로 훑어 구한 최장 기록입니다. 「진행 중」은 가장 최근 경기 기준입니다.</div>'
+    +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>최장 연승</th><th>최장 연패</th><th>진행 중</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>';
+}
+// ── 경기 길이 ────────────────────────────────────────────────────
+function parseDurMin(s){
+  if(!s)return null;
+  var p=String(s).split(':').map(Number);
+  if(p.length<2||isNaN(p[0])||isNaN(p[1]))return null;
+  // mm:ss 또는 mm:ss:00 형태 (h:mm:ss는 h<=2일 때만 시간으로 간주)
+  if(p.length===3&&p[0]<=2&&p[0]>0)return p[0]*60+p[1]+p[2]/60;
+  return p[0]+p[1]/60;
+}
+function renderDurationSection(){
+  var log=window._matchLog||[];
+  var withDur=log.map(function(m){return{m:m,min:parseDurMin(m.duration)};})
+    .filter(function(x){return x.min&&x.min>=10&&x.min<=90;});
+  if(!withDur.length)return'';
+  var mins=withDur.map(function(x){return x.min;}).sort(function(a,b){return a-b;});
+  var avg=mins.reduce(function(a,b){return a+b;},0)/mins.length;
+  var med=mins[Math.floor(mins.length/2)];
+  function fmt(v){return Math.floor(v)+'분 '+Math.round((v-Math.floor(v))*60)+'초';}
+  var longest=withDur.slice().sort(function(a,b){return b.min-a.min;})[0];
+  var shortest=withDur.slice().sort(function(a,b){return a.min-b.min;})[0];
+  // 연도별 평균
+  var byYear={};
+  withDur.forEach(function(x){
+    var y=x.m.year;if(!byYear[y])byYear[y]=[];byYear[y].push(x.min);
+  });
+  var yearRows=Object.keys(byYear).sort().reverse().map(function(y){
+    var a=byYear[y],m=a.reduce(function(s,v){return s+v;},0)/a.length;
+    return'<tr><td style="font-weight:800;color:'+({'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[y]||'#94a3b8')+'">'+y+'</td>'
+      +'<td>'+a.length+'경기</td><td style="font-weight:700">'+fmt(m)+'</td></tr>';
+  }).join('');
+  function card(label,val,sub,col){
+    return'<div style="flex:1;min-width:150px;padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid '+col+'">'
+      +'<div style="font-size:.7rem;color:#64748b;margin-bottom:3px">'+label+'</div>'
+      +'<div style="font-size:1.05rem;font-weight:900;color:'+col+'">'+val+'</div>'
+      +(sub?'<div style="font-size:.68rem;color:#475569;margin-top:2px">'+sub+'</div>':'')
+      +'</div>';
+  }
+  return'<h3 class="st">⏱ 경기 길이</h3>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px">경기 시간이 기록된 '+withDur.length+'경기 기준입니다.</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
+      +card('평균',fmt(avg),'중앙값 '+fmt(med),'#818cf8')
+      +card('최장 경기',fmt(longest.min),longest.m.date,'#f87171')
+      +card('최단 경기',fmt(shortest.min),shortest.m.date,'#4ade80')
+    +'</div>'
+    +'<table class="t"><thead><tr><th>시즌</th><th>경기</th><th>평균 길이</th></tr></thead><tbody>'+yearRows+'</tbody></table>';
+}
+
 // ── 선수 등급 페이지 (STAT SCORE 기반 S/A/B 체계) ─────────────────
 function renderGradePage(d6,sc25r,sc24r){
   var gradeInfo=[
@@ -1776,6 +1919,59 @@ window.copyRoster=function(){
   });
 };
 
+// 시즌 티어 — 분포 + 승강 하이라이트
+function renderTierHighlight(d6,sc25r,sc24r){
+  var TIERS=['챌린저','다이아몬드','플래티넘','골드','실버','브론즈','아이언'];
+  var ICO={'챌린저':'👑','다이아몬드':'💎','플래티넘':'🔷','골드':'🥇','실버':'🥈','브론즈':'🥉','아이언':'⚙️'};
+  var rank={};TIERS.forEach(function(t,i){rank[t]=TIERS.length-i;});  // 높을수록 상위
+  var sc26={};(d6||[]).forEach(function(p){sc26[p.name]=p.compScore;});
+  var rows=ALL.map(function(n){
+    var s6=sc26[n],s5=sc25r?sc25r[n]:null,s4=sc24r?sc24r[n]:null;
+    return{name:n,s6:s6,s5:s5,
+      t6:s6!=null?getTierName(s6):null,t5:s5!=null?getTierName(s5):null,
+      t4:s4!=null?getTierName(s4):null};
+  }).filter(function(x){return x.t6;});
+  if(!rows.length)return'';
+  // 2026 티어 분포
+  var dist={};rows.forEach(function(x){dist[x.t6]=(dist[x.t6]||0)+1;});
+  var distHtml=TIERS.filter(function(t){return dist[t];}).map(function(t){
+    return'<div style="display:flex;align-items:center;gap:7px;padding:6px 11px;background:#1e293b;border-radius:8px;border:1px solid #334155">'
+      +'<span style="font-size:.9rem">'+ICO[t]+'</span>'
+      +'<span style="font-size:.76rem;color:#cbd5e1;font-weight:700">'+t+'</span>'
+      +'<span style="font-size:.9rem;font-weight:900;color:'+tierColor(rows.filter(function(x){return x.t6===t;})[0].s6)+'">'+dist[t]+'</span>'
+      +'<span style="font-size:.66rem;color:#475569">명</span></div>';
+  }).join('');
+  // 2025 → 2026 승강
+  var moves=rows.filter(function(x){return x.t5&&x.t6&&x.t5!==x.t6;})
+    .map(function(x){return{name:x.name,from:x.t5,to:x.t6,step:rank[x.t6]-rank[x.t5],diff:(x.s6-x.s5)};})
+    .sort(function(a,b){return Math.abs(b.step)-Math.abs(a.step)||Math.abs(b.diff)-Math.abs(a.diff);});
+  var ups=moves.filter(function(m){return m.step>0;}).slice(0,4);
+  var downs=moves.filter(function(m){return m.step<0;}).slice(0,4);
+  function moveChip(m,up){
+    var col=up?'#4ade80':'#f87171';
+    return'<div style="padding:8px 12px;background:#1e293b;border-radius:9px;border-left:3px solid '+col+';min-width:195px;flex:1">'
+      +'<div style="font-size:.78rem;font-weight:800;color:#f1f5f9">'+m.name+'</div>'
+      +'<div style="font-size:.7rem;color:#64748b;margin-top:2px">'
+        +ICO[m.from]+' '+m.from+' <span style="color:'+col+'">→</span> '+ICO[m.to]+' '+m.to
+        +' <span style="color:'+col+';font-weight:800">('+(m.diff>0?'+':'')+m.diff.toFixed(1)+')</span></div>'
+    +'</div>';
+  }
+  var movesHtml='';
+  if(ups.length||downs.length){
+    movesHtml='<div style="margin-top:16px">'
+      +'<div style="font-size:.8rem;font-weight:800;color:#c4b5fd;margin-bottom:6px">📊 2025 → 2026 티어 변동</div>'
+      +(ups.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+ups.map(function(m){return moveChip(m,true);}).join('')+'</div>':'')
+      +(downs.length?'<div style="display:flex;gap:8px;flex-wrap:wrap">'+downs.map(function(m){return moveChip(m,false);}).join('')+'</div>':'')
+      +'</div>';
+  }else{
+    movesHtml='<div style="margin-top:14px;font-size:.76rem;color:#475569">2025 대비 티어가 바뀐 선수가 없습니다.</div>';
+  }
+  return'<div class="kda-section-wrap" style="margin-bottom:20px">'
+    +'<div class="kda-section-title">🎖️ 2026 티어 분포 <span class="ka-sub">'+rows.length+'명</span></div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+distHtml+'</div>'
+    +movesHtml
+    +'</div>';
+}
 function renderStierPage(d6,sc25r,sc24r){
   // 티어 기준 설명
   var tierDefs=[
@@ -1823,7 +2019,7 @@ function renderStierPage(d6,sc25r,sc24r){
   }).join('');
   var tierTable='<h3 class="st">🏆 시즌 티어 연도별 추이</h3>'
     +'<table class="t"><thead><tr><th>선수</th><th style="text-align:center">2026</th><th style="text-align:center">2025</th><th style="text-align:center">2024</th><th style="text-align:center">추세</th></tr></thead><tbody>'+tierTr+'</tbody></table>';
-  return infoBox+tierTable;
+  return infoBox+renderTierHighlight(d6,sc25r,sc24r)+tierTable;
 }
 var curSort={k:"kda",d:1};var lastD6=null;
 function render(d6,dKA26,dKA25,dKA24){lastD6=d6;if(dKA26)window._dKA26=dKA26;if(dKA25)window._dKA25=dKA25;if(dKA24)window._dKA24=dKA24;var dA=calcAll(d6);var sc25=calcCompScores(d25,'2025');var sc24=calcCompScores(d24,'2024');var lb='<div id="pa" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024-2026 종합</span></div>'+pod(dA,curSort.k,function(v){var k=curSort.k;if(k==='totalScore')return Number(v).toLocaleString();if(k==='winRate')return Number(v).toFixed(1)+'%';if(k==='totalGames')return Number(v);return Number(v).toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th class="sh desc" data-s="kda">평균KDA</th><th>승률(W/L)</th><th class="sh" data-s="winRate">합산승점 <span class="tip-icon" data-tip-id="score">i</span></th><th class="sh" data-s="totalScore">총경기</th><th class="sh" data-s="s26">2026</th><th class="sh" data-s="s25">2025</th><th class="sh" data-s="s24">2024</th></tr></thead><tbody>'+aRows(dA,d6)+'</tbody></table></div>'+bWinRateLB(d6,'all')+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'all')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'all')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'all'):'')+'</div>'+'<div id="p6" class="yp act"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2026년</span></div>'+pod(d6,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>DPM</th><th>GPM</th><th>종합 <span class="tip-icon" data-tip-id="cs26">i</span></th></tr></thead><tbody>'+r6(d6)+'</tbody></table></div>'+bWinRateLB(d6,'26')+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'26')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'26')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'26'):'')+'</div>'+'<div id="p5" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2025년</span></div>'+pod(d25,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d25,sc25)+'</tbody></table></div>'+bWinRateLB(d6,'25')+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'25')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'25')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'25'):'')+'</div>'+'<div id="p4" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024년</span></div>'+pod(d24,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점</th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d24,sc24)+'</tbody></table></div>'+bWinRateLB(d6,'24')+(window._dKA26&&window._dKA25&&window._dKA24?bWinLB(d6,'24')+bKillLB(window._dKA26,window._dKA25,window._dKA24,'24')+bAssistLB(window._dKA26,window._dKA25,window._dKA24,'24'):'')+'</div>';document.getElementById('lb-inner').innerHTML=lb;document.getElementById('cards-inner').innerHTML=bCards(d6,sc25,sc24);document.getElementById('rec-inner').innerHTML=bRec(d6,dA,sc25,sc24);
@@ -1850,7 +2046,7 @@ function doFetch(){
     var _dummy=csv26,csvLog=results[3]||'',csvLog25=results[4]||'',csvLog24=results[5]||'',csvInsights=results[6]||'';
     var d6new=p26(csv26);
     var ka26=parseKA(csv26,7,8),ka25=parseKA(csv25,5,6),ka24=parseKA(csv24,5,6);
-    var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;sortAllByTier();render(d6new,ka26,ka25,ka24);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);try{var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));document.getElementById('synergy-inner').innerHTML=renderSynergyPage(insightsData);document.getElementById('rivals-inner').innerHTML=renderRivalsPage(insightsData);document.getElementById('perf-tab-inner').innerHTML=renderPerfPage(insightsData);document.getElementById('matchlog-inner').innerHTML=renderMatchLogPage(insightsData);window._matchLog=insightsData.matchLog||[];window._posData=buildPosData(window._matchLog);setTimeout(initPerfTabs,100);var fw=document.getElementById('form-widget');if(fw)fw.innerHTML=renderFormWidget(insightsData);
+    var d25new=p24(csv25);var d24new=p24(csv24);if(d25new&&d25new.length)d25=d25new;if(d24new&&d24new.length)d24=d24new;sortAllByTier();render(d6new,ka26,ka25,ka24);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');var y=btn.getAttribute('data-tyr');['all','26','25','24'].forEach(function(yr){var el=document.getElementById('tier-year-'+yr);if(el)el.style.display=y===yr?'block':'none';});});});},100);setTimeout(function(){document.querySelectorAll('[data-tyr]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-tyr]').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');['all','26','25','24'].forEach(function(y){var el=document.getElementById('tier-year-'+y);if(el)el.style.display=btn.getAttribute('data-tyr')===y?'block':'none';});});}); },100);var logData=parseLogCSV(csvLog);try{var insightsData=parseInsightsCSV(csvInsights);window._insights=insightsData;initAllLogPages(logData,parseLogCSV(csvLog25),parseLogCSV(csvLog24));window._matchLog=insightsData.matchLog||[];window._posData=buildPosData(window._matchLog);document.getElementById('synergy-inner').innerHTML=renderSynergyPage(insightsData);document.getElementById('rivals-inner').innerHTML=renderRivalsPage(insightsData);document.getElementById('perf-tab-inner').innerHTML=renderPerfPage(insightsData);document.getElementById('matchlog-inner').innerHTML=renderMatchLogPage(insightsData);var fw=document.getElementById('form-widget');if(fw)fw.innerHTML=renderFormWidget(insightsData);
 // 레이더 스탯 계산 (insights + champData 모두 사용 가능한 시점)
 var log25P=parseLogCSV(csvLog25),log24P=parseLogCSV(csvLog24);
 var allLogAgg=aggregateLogs(logData,log25P,log24P);
@@ -2305,16 +2501,78 @@ function renderMatchLogPage(insights){
   return summary+timeline;
 }
 
+// ── 선수 쌍 통계 (경기 로그 기반, 연도 필터 지원) ──────────────────
+// duo: 같은 팀으로 함께 뛴 기록 / vs: 상대 팀으로 맞붙은 기록
+// 키는 이름을 정렬해 "A|B" 형태로 통일 (vs.aWin = 키 앞쪽 이름이 이긴 횟수)
+function buildPairStats(matchLog,yearStr){
+  var duo={},vs={};
+  function key(a,b){return a<b?a+'|'+b:b+'|'+a;}
+  function roster(s){
+    return(s||'').split('|').map(function(e){var b=e.lastIndexOf('(');return b<0?null:e.substring(0,b).trim();})
+      .filter(function(n){return n&&ALL.indexOf(n)>=0;});
+  }
+  (matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return;
+    var t1=roster(m.team1),t2=roster(m.team2);
+    if(!t1.length||!t2.length)return;
+    var win1=m.result==='1팀 승';
+    [[t1,win1],[t2,!win1]].forEach(function(pair){
+      var team=pair[0],won=pair[1];
+      for(var i=0;i<team.length;i++)for(var j=i+1;j<team.length;j++){
+        var k=key(team[i],team[j]);
+        if(!duo[k])duo[k]={g:0,w:0};
+        duo[k].g++;if(won)duo[k].w++;
+      }
+    });
+    t1.forEach(function(a){t2.forEach(function(b){
+      var k=key(a,b);
+      if(!vs[k])vs[k]={g:0,aWin:0};
+      vs[k].g++;
+      var firstIsOnT1=(k.split('|')[0]===a);
+      if((firstIsOnT1&&win1)||(!firstIsOnT1&&!win1))vs[k].aWin++;
+    });});
+  });
+  return{duo:duo,vs:vs};
+}
+// 특정 선수의 파트너 목록 (동행 많은 순 정렬 전 raw)
+function duoPartners(duo,player,minGames){
+  var out=[];
+  Object.keys(duo).forEach(function(k){
+    var ab=k.split('|');
+    if(ab[0]!==player&&ab[1]!==player)return;
+    var d=duo[k];
+    if(d.g<(minGames||0))return;
+    out.push({partner:ab[0]===player?ab[1]:ab[0],together:d.g,wins:d.w,wr:Math.round(d.w/d.g*100)});
+  });
+  return out;
+}
+var _SYN_YEARS=[['26','2026년','2026'],['25','2025년','2025'],['24','2024년','2024'],['all','🌐 3년 종합',null]];
 function renderSynergyPage(insights){
-  if(!insights||!insights.synergy.length){
+  var log=(insights&&insights.matchLog)||window._matchLog||[];
+  if(!log.length){
     return'<div class="spinner">💡 Apps Script에서 🔥 인사이트 데이터 추출을 실행해주세요.</div>';
   }
-  var synInfo='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 선수별 베스트 파트너 요약 · 선수 행 클릭 시 전체 목록 펼쳐져요 (최소 5경기 이상 기준)</div>';
+  return'<div class="yt" style="margin-bottom:14px">'
+    +_SYN_YEARS.map(function(p,i){
+      return'<button class="yb2'+(i===0?' act':'')+'" data-syr="'+p[0]+'" onclick="setSynYear(\''+p[0]+'\')">'+p[1]+'</button>';
+    }).join('')
+    +'</div><div id="syn-body">'+renderSynergyBody('26')+'</div>';
+}
+window.setSynYear=function(yr){
+  document.querySelectorAll('[data-syr]').forEach(function(b){b.classList.toggle('act',b.getAttribute('data-syr')===yr);});
+  var el=document.getElementById('syn-body');
+  if(el)el.innerHTML=renderSynergyBody(yr);
+};
+function renderSynergyBody(yr){
+  var ent=_SYN_YEARS.filter(function(p){return p[0]===yr;})[0]||_SYN_YEARS[0];
+  var subLbl=ent[1].replace('🌐 ','');
+  var stats=buildPairStats(window._matchLog||[],ent[2]);
+  window._synCur=stats.duo; // 상세 토글이 참조
+  var MIN=5;
+  var synInfo='<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8">🤝 '+subLbl+' 선수별 베스트 파트너 · 선수 행 클릭 시 전체 목록 펼쳐져요 (최소 '+MIN+'경기 이상 기준)</div>';
   var synRows='';
   ALL.forEach(function(p){
-    var pairs=insights.synergy.filter(function(s){return(s.p1===p||s.p2===p)&&s.together>=5;})
-      .map(function(s){var partner=s.p1===p?s.p2:s.p1;return{partner:partner,together:s.together,wins:s.wins,wr:s.wr};})
-      .sort(function(a,b){return b.wr-a.wr;});
+    var pairs=duoPartners(stats.duo,p,MIN).sort(function(a,b){return b.wr-a.wr;});
     var best=pairs[0];
     var wrCol=best?(best.wr>=60?'#4ade80':best.wr>=50?'#60a5fa':'#f87171'):'#475569';
     var uid='syn-'+p.replace(/\s/g,'_');
@@ -2330,16 +2588,158 @@ function renderSynergyPage(insights){
       +'<div style="padding:10px;background:rgba(129,140,248,.05);border-top:1px solid #334155" id="'+uid+'-detail"></div>'
       +'</td></tr>';
   });
-  return'<div style="padding-bottom:20px">'+synInfo
+  return'<div style="padding-bottom:20px">'+renderDuoHighlight(stats.duo,subLbl,MIN)+synInfo
     +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="t" style="min-width:480px"><thead><tr><th style="text-align:left">선수</th><th style="text-align:left">베스트 파트너</th><th>함께 승률</th><th>동행</th><th></th></tr></thead>'
-    +'<tbody>'+synRows+'</tbody></table></div></div>';
+    +'<tbody>'+synRows+'</tbody></table></div>'
+    +renderDuoHeatmap(stats.duo,subLbl,MIN)
+    +'</div>';
+}
+// 최고·최악의 듀오 — 중복 없는 「쌍」 기준 요약
+// (아래 선수별 표는 각자의 베스트 파트너라 같은 쌍이 두 번 나오므로, 쌍 관점 답을 먼저 제시)
+function renderDuoHighlight(duo,subLbl,minGames){
+  var pairs=Object.keys(duo).map(function(k){
+    var ab=k.split('|'),d=duo[k];
+    return{a:ab[0],b:ab[1],g:d.g,w:d.w,wr:Math.round(d.w/d.g*100)};
+  }).filter(function(x){return x.g>=minGames;});
+  if(!pairs.length)return'';
+  var best=pairs.slice().sort(function(x,y){return(y.wr-x.wr)||(y.g-x.g);}).slice(0,3);
+  var worst=pairs.slice().sort(function(x,y){return(x.wr-y.wr)||(y.g-x.g);}).slice(0,3);
+  var most=pairs.slice().sort(function(x,y){return y.g-x.g;})[0];
+  function chip(p,col){
+    return'<div style="padding:9px 12px;background:#1e293b;border-radius:9px;border-left:3px solid '+col+';min-width:190px;flex:1">'
+      +'<div style="font-size:.78rem;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.a+' + '+p.b+'</div>'
+      +'<div style="font-size:.7rem;color:#64748b;margin-top:2px">'
+        +'<b style="color:'+col+';font-size:.85rem">'+p.wr+'%</b> · '+p.g+'판 '+p.w+'승</div>'
+    +'</div>';
+  }
+  return'<div class="kda-section-wrap" style="margin-bottom:16px">'
+    +'<div class="kda-section-title">🏆 최고 · 최악의 듀오 <span class="ka-sub">'+subLbl+' · '+minGames+'경기 이상 함께한 조합</span></div>'
+    +'<div style="font-size:.72rem;color:#64748b;margin-bottom:8px">가장 많이 함께한 조합은 <b style="color:#94a3b8">'+most.a+' + '+most.b+'</b> ('+most.g+'판 · '+most.wr+'%)</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+best.map(function(p){return chip(p,'#4ade80');}).join('')+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+worst.map(function(p){return chip(p,'#f87171');}).join('')+'</div>'
+    +'</div>';
+}
+// 듀오 승률 히트맵 — 12×12, 같은 팀으로 함께 뛴 승률을 색으로
+function renderDuoHeatmap(duo,subLbl,minGames){
+  function cellColor(wr,g){
+    if(g<minGames)return'background:#111827;color:#334155';
+    // 50% 기준 양방향: 높으면 초록, 낮으면 빨강 (세기는 50%에서 떨어진 정도)
+    var d=Math.max(-25,Math.min(25,wr-50))/25;
+    var a=(0.12+Math.abs(d)*0.45).toFixed(2);
+    return d>=0?'background:rgba(74,222,128,'+a+');color:#e2e8f0'
+               :'background:rgba(248,113,113,'+a+');color:#e2e8f0';
+  }
+  var head='<th style="position:sticky;left:0;background:#334155;z-index:2"></th>'
+    +ALL.map(function(n){
+      return'<th style="font-size:.6rem;font-weight:700;padding:4px 2px;white-space:nowrap;color:#94a3b8">'+n.slice(0,4)+'</th>';
+    }).join('');
+  var rows=ALL.map(function(a){
+    var tds=ALL.map(function(b){
+      if(a===b)return'<td style="background:#0f172a"></td>';
+      var k=a<b?a+'|'+b:b+'|'+a;
+      var d=duo[k];
+      if(!d||!d.g)return'<td style="background:#111827;color:#334155;font-size:.6rem">-</td>';
+      var wr=Math.round(d.w/d.g*100);
+      return'<td title="'+a+' + '+b+' · '+d.g+'판 '+d.w+'승 ('+wr+'%)" '
+        +'style="'+cellColor(wr,d.g)+';font-size:.62rem;font-weight:700;padding:5px 2px;text-align:center">'
+        +(d.g>=minGames?wr:'<span style="opacity:.45">'+wr+'</span>')+'</td>';
+    }).join('');
+    return'<tr><td style="position:sticky;left:0;background:#1e293b;font-size:.65rem;font-weight:800;color:#e2e8f0;white-space:nowrap;padding:4px 8px;z-index:1">'
+      +a+'</td>'+tds+'</tr>';
+  }).join('');
+  return'<div class="kda-section-wrap" style="margin-top:22px">'
+    +'<div class="kda-section-title">🔥 듀오 승률 히트맵 <span class="ka-sub">'+subLbl+' · 같은 팀으로 함께 뛴 승률</span></div>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px;line-height:1.6">'
+      +'행과 열이 만나는 칸이 두 선수가 <b style="color:#94a3b8">같은 팀</b>이었을 때의 승률입니다. '
+      +'<span style="color:#4ade80">초록</span>=50% 초과 · <span style="color:#f87171">빨강</span>=50% 미만 · 진할수록 격차가 큽니다. '
+      +'<span style="color:#475569">흐린 숫자는 '+minGames+'경기 미만(표본 부족)</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+      +'<table style="border-collapse:separate;border-spacing:1px;min-width:480px"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'</div></div>';
 }
 
 function renderRivalsPage(insights){
-  if(!insights||!insights.rivals.length){
+  var log=(insights&&insights.matchLog)||window._matchLog||[];
+  if(!log.length){
     return'<div class="spinner">💡 Apps Script에서 🔥 인사이트 데이터 추출을 실행해주세요.</div>';
   }
-  var rivRows=insights.rivals.slice(0,15).map(function(r,i){
+  return'<div class="yt" style="margin-bottom:14px">'
+    +_SYN_YEARS.map(function(p,i){
+      return'<button class="yb2'+(i===0?' act':'')+'" data-ryr="'+p[0]+'" onclick="setRivalYear(\''+p[0]+'\')">'+p[1]+'</button>';
+    }).join('')
+    +'</div><div id="riv-body">'+renderRivalsBody('26')+'</div>';
+}
+window.setRivalYear=function(yr){
+  document.querySelectorAll('[data-ryr]').forEach(function(b){b.classList.toggle('act',b.getAttribute('data-ryr')===yr);});
+  var el=document.getElementById('riv-body');
+  if(el)el.innerHTML=renderRivalsBody(yr);
+};
+function renderRivalsBody(yr){
+  var ent=_SYN_YEARS.filter(function(p){return p[0]===yr;})[0]||_SYN_YEARS[0];
+  var subLbl=ent[1].replace('🌐 ','');
+  var stats=buildPairStats(window._matchLog||[],ent[2]);
+  return renderHeadToHead(stats.vs,subLbl)+renderAceDuel(window._insights,subLbl,ent[2]);
+}
+// 상대 전적 — 서로 다른 팀으로 맞붙은 실제 승패
+function renderHeadToHead(vs,subLbl){
+  var MIN=5;
+  var list=Object.keys(vs).map(function(k){
+    var ab=k.split('|'),d=vs[k];
+    return{a:ab[0],b:ab[1],g:d.g,aw:d.aWin,bw:d.g-d.aWin,
+      diff:Math.abs(d.aWin-(d.g-d.aWin)),awr:d.g>0?d.aWin/d.g*100:0};
+  }).filter(function(x){return x.g>=MIN;});
+  // 격차 큰 순 → "천적 관계"가 위로
+  var ranked=list.slice().sort(function(x,y){return(y.diff-x.diff)||(y.g-x.g);}).slice(0,15);
+  var rows=ranked.map(function(r,i){
+    var aLead=r.aw>r.bw,tie=r.aw===r.bw;
+    var aCol=tie?'#94a3b8':aLead?'#4ade80':'#f87171';
+    var bCol=tie?'#94a3b8':aLead?'#f87171':'#4ade80';
+    var pct=Math.round(r.awr);
+    return'<tr><td class="rk">'+(i+1)+'</td>'
+      +'<td class="nm" style="text-align:right">'+at(AN[r.a]?AN[r.a].t:'B')+' '+r.a
+        +' <span style="color:'+aCol+';font-weight:800">'+r.aw+'</span></td>'
+      +'<td style="text-align:center;width:120px">'
+        +'<div style="display:flex;height:7px;border-radius:4px;overflow:hidden;background:#0f172a">'
+          +'<div style="width:'+pct+'%;background:'+(tie?'#64748b':aLead?'#4ade80':'#f87171')+'"></div>'
+          +'<div style="flex:1;background:'+(tie?'#64748b':aLead?'#f87171':'#4ade80')+'"></div>'
+        +'</div>'
+        +'<div style="font-size:.6rem;color:#475569;margin-top:2px">'+r.g+'회 맞대결</div>'
+      +'</td>'
+      +'<td class="nm"><span style="color:'+bCol+';font-weight:800">'+r.bw+'</span> '
+        +at(AN[r.b]?AN[r.b].t:'B')+' '+r.b+'</td>'
+      +'<td style="color:'+(r.diff>=5?'#fbbf24':'#475569')+';font-weight:800;text-align:center">'
+        +(tie?'호각':'+'+r.diff)+'</td></tr>';
+  }).join('');
+  return'<div class="kda-section-wrap" style="margin-bottom:22px">'
+    +'<div class="kda-section-title">⚔️ 상대 전적 <span class="ka-sub">'+subLbl+' · 다른 팀으로 맞붙은 실제 승패</span></div>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px;line-height:1.6">'
+      +'두 선수가 <b style="color:#94a3b8">서로 다른 팀</b>이었던 경기의 승패입니다. 격차가 큰 순으로 정렬돼 「천적 관계」가 위에 옵니다. '
+      +'<span style="color:#475569">'+MIN+'회 이상 맞붙은 조합만 표시</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+    +'<table class="t" style="min-width:460px"><thead><tr><th>#</th><th style="text-align:right">선수 A</th><th>전적</th><th>선수 B</th><th>격차</th></tr></thead>'
+    +'<tbody>'+(rows||'<tr><td colspan="5" style="color:#475569;text-align:center">데이터 없음</td></tr>')+'</tbody></table></div></div>';
+}
+// 에이스 대결 — MOM vs 투혼상 맞대결 (기존 지표, 연도 필터 적용)
+function renderAceDuel(insights,subLbl,yearStr){
+  var cnt={};
+  function key(a,b){return a<b?a+'|'+b:b+'|'+a;}
+  (window._matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return;
+    function nm(s){if(!s)return null;var i=s.lastIndexOf('(');return i<0?null:s.substring(0,i).trim();}
+    var mom=nm(m.mom),spi=nm(m.spirit);
+    if(!mom||!spi||mom===spi)return;
+    if(ALL.indexOf(mom)<0||ALL.indexOf(spi)<0)return;
+    var k=key(mom,spi);
+    if(!cnt[k])cnt[k]={g:0,aw:0};
+    cnt[k].g++;
+    if(k.split('|')[0]===mom)cnt[k].aw++;   // MOM(승자)이 키 앞쪽이면 앞쪽 승
+  });
+  var rivRows=Object.keys(cnt).map(function(k){
+    var ab=k.split('|'),d=cnt[k];
+    return{p1:ab[0],p2:ab[1],count:d.g,w1:d.aw,w2:d.g-d.aw};
+  }).sort(function(a,b){return b.count-a.count;}).slice(0,15).map(function(r,i){
     var w1col=r.w1>r.w2?'#4ade80':r.w1<r.w2?'#f87171':'#94a3b8';
     var w2col=r.w2>r.w1?'#4ade80':r.w2<r.w1?'#f87171':'#94a3b8';
     return'<tr><td class="rk">'+(i+1)+'</td>'
@@ -2350,9 +2750,11 @@ function renderRivalsPage(insights){
         +'<span style="color:'+w2col+';font-size:.75rem;font-weight:700;margin-left:5px">'+r.w2+'승</span></td>'
       +'<td style="color:#fbbf24;font-weight:900">'+r.count+'회</td></tr>';
   }).join('');
-  return'<div style="padding-bottom:20px">'
-    +'<div style="margin-bottom:10px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #f87171;font-size:.82rem;color:#94a3b8">⚔️ 같은 경기에서 MOM(승리팀 에이스)과 투혼상(패배팀 에이스)으로 맞붙은 횟수 기준 · 초록=우세 · 빨강=열세</div>'
-    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="t" style="min-width:420px"><thead><tr><th>#</th><th>선수 A</th><th></th><th>선수 B</th><th>에이스 대결</th></tr></thead><tbody>'+rivRows+'</tbody></table></div>'
+  return'<div class="kda-section-wrap" style="padding-bottom:20px">'
+    +'<div class="kda-section-title">🏅 에이스 대결 <span class="ka-sub">'+subLbl+' · MOM vs 투혼상 맞대결</span></div>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px;line-height:1.6">같은 경기에서 <b style="color:#94a3b8">MOM(승리팀 에이스)</b>과 <b style="color:#94a3b8">투혼상(패배팀 에이스)</b>으로 맞붙은 횟수입니다. 초록=우세 · 빨강=열세</div>'
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="t" style="min-width:420px"><thead><tr><th>#</th><th>선수 A</th><th></th><th>선수 B</th><th>에이스 대결</th></tr></thead>'
+    +'<tbody>'+(rivRows||'<tr><td colspan="5" style="color:#475569;text-align:center">데이터 없음</td></tr>')+'</tbody></table></div>'
     +'</div>';
 }
 
@@ -2458,10 +2860,71 @@ function initPerfTabs(){
   });
 }
 
+// 경기 로그에서 단일 경기 기록 추출 (연도 필터 지원)
+// GAS 인사이트 시트는 전체 기간 TOP 20만 보관하므로, 연도별 집계는 원본 로그에서 재계산한다
+function buildPerfRecords(matchLog,yearStr){
+  var kdaRec=[],dealtRec=[],takenRec=[];
+  (matchLog||[]).forEach(function(m){
+    if(yearStr&&m.year!==yearStr)return;
+    var champOf={},wonBy={};
+    [[m.team1,m.result==='1팀 승'],[m.team2,m.result==='2팀 승']].forEach(function(pair){
+      (pair[0]||'').split('|').forEach(function(e){
+        var b=e.lastIndexOf('(');if(b<0)return;
+        var nm=e.substring(0,b).trim();
+        champOf[nm]=e.substring(b+1).replace(')','').trim();
+        wonBy[nm]=pair[1];
+      });
+    });
+    (m.playerKda||'').split('|').forEach(function(e){
+      var i=e.indexOf(':');if(i<0)return;
+      var nm=e.substring(0,i).trim();
+      if(ALL.indexOf(nm)<0)return;             // 게스트 제외
+      var ch=champOf[nm];if(!ch)return;        // 로스터에 없으면 제외
+      var p=e.substring(i+1).trim().split('/');
+      if(p.length<3)return;
+      var k=+p[0]||0,d=+p[1]||0,a=+p[2]||0;
+      var won=wonBy[nm]?'승':'패';
+      // K+A 5 미만은 제외 — 1/0/0 같은 공허한 고KDA 방지 (GAS와 동일 기준)
+      if(k+a>=5){
+        kdaRec.push({player:nm,champ:ch,date:m.date,won:won,year:m.year,
+          k:k,d:d,a:a,kda:d>0?Math.round((k+a)/d*100)/100:(k+a)});
+      }
+      if(p.length>=8){                          // 딜량은 2026 시즌부터 집계
+        var dealt=+p[3]||0,taken=+p[4]||0;
+        if(dealt>0)dealtRec.push({player:nm,champ:ch,date:m.date,won:won,year:m.year,val:dealt});
+        if(taken>0)takenRec.push({player:nm,champ:ch,date:m.date,won:won,year:m.year,val:taken});
+      }
+    });
+  });
+  kdaRec.sort(function(x,y){return y.kda-x.kda;});
+  dealtRec.sort(function(x,y){return y.val-x.val;});
+  takenRec.sort(function(x,y){return y.val-x.val;});
+  return{topKDA:kdaRec,topDmgDealt:dealtRec,topDmgTaken:takenRec};
+}
+var _PERF_YEARS=[['26','2026년','2026'],['25','2025년','2025'],['24','2024년','2024'],['all','🌐 3년 종합',null]];
 function renderPerfPage(insights){
-  if(!insights||(!insights.topKDA.length&&!insights.topDmgDealt.length&&!insights.topDmgTaken.length)){
+  var log=(insights&&insights.matchLog)||window._matchLog||[];
+  if(!log.length){
     return'<div class="spinner">💡 Apps Script에서 🔥 인사이트 데이터 추출을 실행해주세요.</div>';
   }
+  return'<div class="yt" style="margin-bottom:14px">'
+    +_PERF_YEARS.map(function(p,i){
+      return'<button class="yb2'+(i===0?' act':'')+'" data-pyr="'+p[0]+'" onclick="setPerfYear(\''+p[0]+'\')">'+p[1]+'</button>';
+    }).join('')
+    +'</div><div id="perf-body">'+renderPerfBody('26')+'</div>';
+}
+window.setPerfYear=function(yr){
+  document.querySelectorAll('[data-pyr]').forEach(function(b){b.classList.toggle('act',b.getAttribute('data-pyr')===yr);});
+  var el=document.getElementById('perf-body');
+  if(el)el.innerHTML=renderPerfBody(yr);
+};
+function renderPerfBody(yr){
+  var ent=_PERF_YEARS.filter(function(p){return p[0]===yr;})[0]||_PERF_YEARS[0];
+  var yearStr=ent[2],subLbl=ent[1].replace('🌐 ','');
+  var rec=buildPerfRecords(window._matchLog||[],yearStr);
+  var dmgNote=(yearStr&&yearStr!=='2026')
+    ? '📌 '+subLbl+'은 딜량 기록이 없습니다 — KDA만 집계됩니다. (딜량은 2026 시즌부터 수집)'
+    : '📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.';
   function perfTable(data,valLabel,valFmt){
     if(!data||!data.length)return'<div style="color:#64748b;padding:20px;text-align:center">데이터 없음</div>';
     var isDmg=(valLabel!=='KDA');
@@ -2491,15 +2954,16 @@ function renderPerfPage(insights){
       +'<th style="width:'+W.year+'">시즌</th>'
       +'</tr></thead><tbody>'+rows+'</tbody></table>';
   }
-  return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#94a3b8">📌 가한/받은 피해량은 2026 시즌 기준으로 집계됩니다.</div>'+'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 20 <span class="ka-sub">단일 경기 최고 기록</span></div>'
-    +perfTable(insights.topKDA,'KDA',function(r){return r.kda+' ('+r.k+'/'+r.d+'/'+r.a+')';})
+  return'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #334155;font-size:.78rem;color:#94a3b8">'+dmgNote+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr;gap:20px">'
+    +'<div class="kda-section-wrap"><div class="kda-section-title">⚡ KDA TOP 20 <span class="ka-sub">'+subLbl+' · 단일 경기 최고 기록</span></div>'
+    +perfTable(rec.topKDA,'KDA',function(r){return r.kda+' ('+r.k+'/'+r.d+'/'+r.a+')';})
     +'</div>'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">🗡️ 가한 피해량 TOP 20 <span class="ka-sub">단일 경기</span></div>'
-    +perfTable(insights.topDmgDealt,'피해량',function(r){return r.val.toLocaleString();})
+    +'<div class="kda-section-wrap"><div class="kda-section-title">🗡️ 가한 피해량 TOP 20 <span class="ka-sub">'+subLbl+' · 단일 경기</span></div>'
+    +perfTable(rec.topDmgDealt,'피해량',function(r){return r.val.toLocaleString();})
     +'</div>'
-    +'<div class="kda-section-wrap"><div class="kda-section-title">🛡️ 받은 피해량 TOP 20 <span class="ka-sub">단일 경기</span></div>'
-    +perfTable(insights.topDmgTaken,'받은피해량',function(r){return r.val.toLocaleString();})
+    +'<div class="kda-section-wrap"><div class="kda-section-title">🛡️ 받은 피해량 TOP 20 <span class="ka-sub">'+subLbl+' · 단일 경기</span></div>'
+    +perfTable(rec.topDmgTaken,'받은피해량',function(r){return r.val.toLocaleString();})
     +'</div>'
     +'</div>';
 }
@@ -2528,10 +2992,8 @@ window.toggleSynRow=function(uid,p){
   row.style.display='table-row';
   var detail=document.getElementById(uid+'-detail');
   if(!detail)return;
-  var insights=window._insights||{synergy:[]};
-  var pairs=insights.synergy.filter(function(s){return(s.p1===p||s.p2===p)&&s.together>=5;})
-    .map(function(s){var partner=s.p1===p?s.p2:s.p1;return{partner:partner,together:s.together,wins:s.wins,wr:s.wr};})
-    .sort(function(a,b){return b.wr-a.wr;});
+  // 현재 선택된 연도의 듀오 통계 사용 (renderSynergyBody가 갱신)
+  var pairs=duoPartners(window._synCur||{},p,5).sort(function(a,b){return b.wr-a.wr;});
   var rows=pairs.map(function(s,i){
     var wrCol=s.wr>=60?'#4ade80':s.wr>=50?'#60a5fa':'#f87171';
     return'<tr><td class="rk">'+(i+1)+'</td>'
