@@ -337,7 +337,9 @@ function buildChampMeta(matchLog,yearStr){
         if(!ch)return;
         if(!meta[ch])meta[ch]={champ:ch,picks:0,wins:0,players:{}};
         meta[ch].picks++;if(pair[1])meta[ch].wins++;
-        meta[ch].players[nm]=(meta[ch].players[nm]||0)+1;
+        // 선수별로 픽수(p)와 승수(w)를 함께 — 「최다 픽」 칸에 그 선수 본인 승률을 쓰기 위함
+        if(!meta[ch].players[nm])meta[ch].players[nm]={p:0,w:0};
+        meta[ch].players[nm].p++;if(pair[1])meta[ch].players[nm].w++;
       });
     });
   });
@@ -347,9 +349,10 @@ function renderChampMeta(matchLog,yearStr,subLbl){
   var meta=buildChampMeta(matchLog,yearStr);
   var list=Object.keys(meta).map(function(k){
     var c=meta[k];
-    var top=Object.keys(c.players).sort(function(a,b){return c.players[b]-c.players[a];})[0];
+    var top=Object.keys(c.players).sort(function(a,b){return c.players[b].p-c.players[a].p;})[0];
+    var mp=top?c.players[top]:null;
     return{champ:c.champ,picks:c.picks,wins:c.wins,wr:Math.round(c.wins/c.picks*100),
-      master:top,masterPicks:c.players[top]};
+      master:top,masterPicks:mp?mp.p:0,masterWr:mp&&mp.p?Math.round(mp.w/mp.p*100):null};
   });
   if(!list.length)return'';
   var MIN=8;  // 승률 순위 최소 픽수
@@ -364,15 +367,20 @@ function renderChampMeta(matchLog,yearStr,subLbl){
     var click='',cursor='';
     if(c.master){
       var _p=c.master.replace(/'/g,"\\'"),_c=c.champ.replace(/'/g,"\\'");
-      click=' onclick="showPlayerChampMatches(\''+_p+'\',\''+_c+'\')" title="'+c.master+'의 '+c.champ+' 출전 경기 보기"';
+      var _y=yearStr?"'"+yearStr+"'":'null';   // 선택한 연도만 보여주도록 전달
+      click=' onclick="showPlayerChampMatches(\''+_p+'\',\''+_c+'\','+_y+')"'
+        +' title="'+c.master+'의 '+c.champ+' 출전 경기 ('+c.masterPicks+'경기)"';
       cursor='cursor:pointer';
     }
+    var mWrCol=c.masterWr==null?'#475569':c.masterWr>=60?'#4ade80':c.masterWr>=50?'#60a5fa':'#f87171';
     return'<tr'+click+' style="'+cursor+'"><td class="rk">'+(i+1)+'</td>'
       +'<td class="nm"><span style="display:inline-flex;align-items:center;gap:6px">'+champIcon(c.champ,20)+'<span>'+c.champ+'</span></span></td>'
       +'<td>'+c.picks+'</td>'
       +'<td style="color:'+wrCol+';font-weight:700">'+c.wr+'%</td>'
       +'<td class="nm" style="font-size:.75rem;color:#94a3b8">'
-        +(c.master?'<span style="color:#cbd5e1">'+c.master+'</span> <span style="color:#475569">'+c.masterPicks+'</span>'
+        +(c.master?'<span style="color:#cbd5e1">'+c.master+'</span> '
+          +'<span style="color:#64748b">'+c.masterPicks+'픽</span> '
+          +'<span style="color:'+mWrCol+';font-weight:700">'+(c.masterWr!=null?c.masterWr+'%':'-')+'</span>'
           +' <span style="color:#818cf8;font-size:.68rem">›</span>':'-')
       +'</td></tr>';
   }
@@ -380,7 +388,8 @@ function renderChampMeta(matchLog,yearStr,subLbl){
     return'<div style="flex:1;min-width:280px">'
       +'<div style="font-size:.8rem;font-weight:800;color:#c4b5fd;margin-bottom:6px">'+title+'</div>'
       +(note?'<div style="font-size:.68rem;color:#64748b;margin-bottom:6px">'+note+'</div>':'')
-      +'<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th><th>픽</th><th>승률</th><th style="text-align:left">최다 픽</th></tr></thead>'
+      +'<table class="t"><thead><tr><th>#</th><th style="text-align:left">챔피언</th>'
+      +'<th>리그 픽</th><th>리그 승률</th><th style="text-align:left">최다 픽 선수 <span style="font-weight:400;color:#64748b">(본인 기록)</span></th></tr></thead>'
       +'<tbody>'+arr.map(row).join('')+'</tbody></table></div>';
   }
   return'<div class="kda-section-wrap" style="margin-bottom:20px">'
@@ -388,7 +397,8 @@ function renderChampMeta(matchLog,yearStr,subLbl){
     +'<div style="font-size:.74rem;color:#64748b;margin-bottom:10px;line-height:1.6">'
       +'우리 리그에서 어떤 챔피언이 많이 나오고 잘 이기는지 봅니다. 총 <b style="color:#94a3b8">'+list.length+'종</b>이 <b style="color:#94a3b8">'+totalPicks+'번</b> 선택됐습니다. '
       +'<span style="color:#475569">승률 순위는 '+MIN+'픽 이상만</span><br>'
-      +'<span style="color:#818cf8">📌 행을 클릭하면 「최다 픽」 선수가 그 챔피언으로 뛴 경기 목록이 열립니다</span>'
+      +'<span style="color:#94a3b8">「리그 픽·리그 승률」은 <b>선수 전체 합산</b>이고, 「최다 픽 선수」 옆 수치는 <b>그 선수 본인</b> 기록입니다 — 모수가 다릅니다.</span><br>'
+      +'<span style="color:#818cf8">📌 행을 클릭하면 그 선수가 해당 챔피언으로 뛴 경기 목록이 열립니다</span>'
     +'</div>'
     +'<div style="display:flex;gap:18px;flex-wrap:wrap">'
       +tbl('🔥 최다 픽 TOP 10',byPick,'')
@@ -3371,8 +3381,9 @@ window.showPosMatches=function(player,pos){
 };
 
 // 연결 포인트별 진입 함수
-window.showPlayerChampMatches=function(player,champ){
-  showMatchListPopup(player+' · '+champ+' 출전 경기',window.buildMatchListItems(player,champ,null));
+window.showPlayerChampMatches=function(player,champ,yearFilter){
+  var title=player+' · '+champ+' 출전 경기'+(yearFilter?' ('+yearFilter+')':'');
+  showMatchListPopup(title,window.buildMatchListItems(player,champ,yearFilter||null));
 };
 window.showPlayerAwardMatches=function(player){
   var log=window._matchLog||[];
