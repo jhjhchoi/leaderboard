@@ -360,11 +360,21 @@ function renderChampMeta(matchLog,yearStr,subLbl){
   var byWrLow=pool.slice().sort(function(a,b){return(a.wr-b.wr)||(b.picks-a.picks);}).slice(0,5);
   function row(c,i,showWr){
     var wrCol=c.wr>=60?'#4ade80':c.wr>=50?'#60a5fa':'#f87171';
-    return'<tr><td class="rk">'+(i+1)+'</td>'
+    // 행 클릭 → 최다 픽 선수가 그 챔피언으로 뛴 경기 목록 팝업 (→ 상세 경기로 연결)
+    var click='',cursor='';
+    if(c.master){
+      var _p=c.master.replace(/'/g,"\\'"),_c=c.champ.replace(/'/g,"\\'");
+      click=' onclick="showPlayerChampMatches(\''+_p+'\',\''+_c+'\')" title="'+c.master+'의 '+c.champ+' 출전 경기 보기"';
+      cursor='cursor:pointer';
+    }
+    return'<tr'+click+' style="'+cursor+'"><td class="rk">'+(i+1)+'</td>'
       +'<td class="nm"><span style="display:inline-flex;align-items:center;gap:6px">'+champIcon(c.champ,20)+'<span>'+c.champ+'</span></span></td>'
       +'<td>'+c.picks+'</td>'
       +'<td style="color:'+wrCol+';font-weight:700">'+c.wr+'%</td>'
-      +'<td class="nm" style="font-size:.75rem;color:#94a3b8">'+(c.master||'-')+' <span style="color:#475569">'+c.masterPicks+'</span></td></tr>';
+      +'<td class="nm" style="font-size:.75rem;color:#94a3b8">'
+        +(c.master?'<span style="color:#cbd5e1">'+c.master+'</span> <span style="color:#475569">'+c.masterPicks+'</span>'
+          +' <span style="color:#818cf8;font-size:.68rem">›</span>':'-')
+      +'</td></tr>';
   }
   function tbl(title,arr,note){
     return'<div style="flex:1;min-width:280px">'
@@ -377,7 +387,8 @@ function renderChampMeta(matchLog,yearStr,subLbl){
     +'<div class="kda-section-title">🌐 리그 챔피언 메타 <span class="ka-sub">'+subLbl+' · 선수 전체 합산</span></div>'
     +'<div style="font-size:.74rem;color:#64748b;margin-bottom:10px;line-height:1.6">'
       +'우리 리그에서 어떤 챔피언이 많이 나오고 잘 이기는지 봅니다. 총 <b style="color:#94a3b8">'+list.length+'종</b>이 <b style="color:#94a3b8">'+totalPicks+'번</b> 선택됐습니다. '
-      +'<span style="color:#475569">승률 순위는 '+MIN+'픽 이상만</span>'
+      +'<span style="color:#475569">승률 순위는 '+MIN+'픽 이상만</span><br>'
+      +'<span style="color:#818cf8">📌 행을 클릭하면 「최다 픽」 선수가 그 챔피언으로 뛴 경기 목록이 열립니다</span>'
     +'</div>'
     +'<div style="display:flex;gap:18px;flex-wrap:wrap">'
       +tbl('🔥 최다 픽 TOP 10',byPick,'')
@@ -1276,8 +1287,8 @@ function bRec(d6,dA,sc25r,sc24r){function tp(arr,k){if(!arr||!arr.length)return{
   }).join('');
 
   return sAll+s26+s25+s24
-    +streakSection
     +durSection
+    +streakSection
     +'<h3 class="st">📈 KDA 연도별 추이</h3><table class="t"><thead><tr><th>선수</th><th>2026</th><th>2025</th><th>2024</th><th>추세</th><th>3년 평균</th></tr></thead><tbody>'+tr+'</tbody></table>'
     +winSection
     +mkTrendTbl('💰 승점 <span class="tip-icon" data-tip-id="score">i</span> 연도별 추이',tblScore)
@@ -1341,41 +1352,55 @@ function parseDurMin(s){
   return p[0]+p[1]/60;
 }
 function renderDurationSection(){
-  var log=window._matchLog||[];
-  var withDur=log.map(function(m){return{m:m,min:parseDurMin(m.duration)};})
-    .filter(function(x){return x.min&&x.min>=10&&x.min<=90;});
+  var withDur=[];
+  (window._matchLog||[]).forEach(function(m,idx){
+    var min=parseDurMin(m.duration);
+    if(min&&min>=10&&min<=90)withDur.push({m:m,min:min,idx:idx});   // idx = 상세 팝업 연결용
+  });
   if(!withDur.length)return'';
+  function fmt(v){return Math.floor(v)+'분 '+Math.round((v-Math.floor(v))*60)+'초';}
   var mins=withDur.map(function(x){return x.min;}).sort(function(a,b){return a-b;});
   var avg=mins.reduce(function(a,b){return a+b;},0)/mins.length;
   var med=mins[Math.floor(mins.length/2)];
-  function fmt(v){return Math.floor(v)+'분 '+Math.round((v-Math.floor(v))*60)+'초';}
   var longest=withDur.slice().sort(function(a,b){return b.min-a.min;})[0];
   var shortest=withDur.slice().sort(function(a,b){return a.min-b.min;})[0];
-  // 연도별 평균
-  var byYear={};
-  withDur.forEach(function(x){
-    var y=x.m.year;if(!byYear[y])byYear[y]=[];byYear[y].push(x.min);
-  });
-  var yearRows=Object.keys(byYear).sort().reverse().map(function(y){
-    var a=byYear[y],m=a.reduce(function(s,v){return s+v;},0)/a.length;
-    return'<tr><td style="font-weight:800;color:'+({'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[y]||'#94a3b8')+'">'+y+'</td>'
-      +'<td>'+a.length+'경기</td><td style="font-weight:700">'+fmt(m)+'</td></tr>';
-  }).join('');
-  function card(label,val,sub,col){
-    return'<div style="flex:1;min-width:150px;padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid '+col+'">'
-      +'<div style="font-size:.7rem;color:#64748b;margin-bottom:3px">'+label+'</div>'
-      +'<div style="font-size:1.05rem;font-weight:900;color:'+col+'">'+val+'</div>'
-      +(sub?'<div style="font-size:.68rem;color:#475569;margin-top:2px">'+sub+'</div>':'')
-      +'</div>';
+  // 클릭 시 해당 경기 상세 로그 팝업
+  function lnk(x,col,label){
+    return'<span onclick="showMatchPopup('+x.idx+')" title="'+x.m.date+' 경기 상세 보기" '
+      +'style="cursor:pointer;color:'+col+';font-weight:800;text-decoration:underline;text-decoration-color:rgba(148,163,184,.35)">'
+      +fmt(x.min)+'</span>'
+      +'<div style="font-size:.66rem;color:#475569;margin-top:1px">'+x.m.date+' · '+x.m.result+'</div>';
   }
+  function card(label,inner,col){
+    return'<div style="flex:1;min-width:158px;padding:12px 14px;background:#1e293b;border-radius:10px;border-left:3px solid '+col+'">'
+      +'<div style="font-size:.7rem;color:#64748b;margin-bottom:3px">'+label+'</div>'+inner+'</div>';
+  }
+  // 연도별 평균 · 최장 · 최단
+  var byYear={};
+  withDur.forEach(function(x){var y=x.m.year;if(!byYear[y])byYear[y]=[];byYear[y].push(x);});
+  var yearRows=Object.keys(byYear).sort().reverse().map(function(y){
+    var arr=byYear[y];
+    var m=arr.reduce(function(s,v){return s+v.min;},0)/arr.length;
+    var lg=arr.slice().sort(function(a,b){return b.min-a.min;})[0];
+    var sh=arr.slice().sort(function(a,b){return a.min-b.min;})[0];
+    var yCol={'2026':'#818cf8','2025':'#34d399','2024':'#fb923c'}[y]||'#94a3b8';
+    return'<tr><td style="font-weight:800;color:'+yCol+'">'+y+'</td>'
+      +'<td>'+arr.length+'경기</td>'
+      +'<td style="font-weight:700">'+fmt(m)+'</td>'
+      +'<td>'+lnk(lg,'#f87171')+'</td>'
+      +'<td>'+lnk(sh,'#4ade80')+'</td></tr>';
+  }).join('');
   return'<h3 class="st">⏱ 경기 길이</h3>'
-    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px">경기 시간이 기록된 '+withDur.length+'경기 기준입니다.</div>'
+    +'<div style="font-size:.74rem;color:#64748b;margin-bottom:8px">경기 시간이 기록된 '+withDur.length+'경기 기준입니다. '
+      +'<span style="color:#818cf8">📌 시간을 클릭하면 그 경기의 상세 로그가 열립니다</span></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
-      +card('평균',fmt(avg),'중앙값 '+fmt(med),'#818cf8')
-      +card('최장 경기',fmt(longest.min),longest.m.date,'#f87171')
-      +card('최단 경기',fmt(shortest.min),shortest.m.date,'#4ade80')
+      +card('평균','<div style="font-size:1.05rem;font-weight:900;color:#818cf8">'+fmt(avg)+'</div>'
+            +'<div style="font-size:.68rem;color:#475569;margin-top:2px">중앙값 '+fmt(med)+'</div>','#818cf8')
+      +card('최장 경기','<div style="font-size:1.05rem">'+lnk(longest,'#f87171')+'</div>','#f87171')
+      +card('최단 경기','<div style="font-size:1.05rem">'+lnk(shortest,'#4ade80')+'</div>','#4ade80')
     +'</div>'
-    +'<table class="t"><thead><tr><th>시즌</th><th>경기</th><th>평균 길이</th></tr></thead><tbody>'+yearRows+'</tbody></table>';
+    +'<table class="t"><thead><tr><th>시즌</th><th>경기</th><th>평균 길이</th><th>최장 경기</th><th>최단 경기</th></tr></thead>'
+    +'<tbody>'+yearRows+'</tbody></table>';
 }
 
 // ── 선수 등급 페이지 (STAT SCORE 기반 S/A/B 체계) ─────────────────
@@ -1428,6 +1453,45 @@ function renderGradePage(d6,sc25r,sc24r){
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'+gradeCards+'</div>'
     +'</div>';
 
+  // ── 등급 분포 요약 (3년 종합 단일 기준 — 사이트 전역 배지와 동일) ──
+  var gradeDist=(function(){
+    var G=['S','A','B','C'],COL={S:'#c084fc',A:'#60a5fa',B:'#4ade80',C:'#64748b'};
+    var cnt={S:0,A:0,B:0,C:0},scores=[];
+    ALL.forEach(function(nm){
+      var rs=window._radarStats&&window._radarStats[nm];
+      if(!rs)return;
+      var tot=(rs.atk||0)+(rs.survive||0)+(rs.teamwork||0)+(rs.compete||0)+(rs.stability||0)+(rs.champPool||0);
+      scores.push({name:nm,total:tot});
+      var g=AN[nm]?AN[nm].t:'B';
+      if(cnt[g]!==undefined)cnt[g]++;
+    });
+    if(!scores.length)return'';
+    scores.sort(function(a,b){return b.total-a.total;});
+    var top=scores[0],bot=scores[scores.length-1];
+    var avg=scores.reduce(function(s,x){return s+x.total;},0)/scores.length;
+    var chips=G.filter(function(g){return cnt[g];}).map(function(g){
+      return'<div style="display:flex;align-items:center;gap:7px;padding:6px 11px;background:#1e293b;border-radius:8px;border:1px solid #334155">'
+        +'<span class="at tier-'+g.toLowerCase()+'">'+g+'</span>'
+        +'<span style="font-size:.9rem;font-weight:900;color:'+COL[g]+'">'+cnt[g]+'</span>'
+        +'<span style="font-size:.66rem;color:#475569">명</span></div>';
+    }).join('');
+    function stat(label,val,sub,col){
+      return'<div style="flex:1;min-width:150px;padding:10px 13px;background:#1e293b;border-radius:10px;border-left:3px solid '+col+'">'
+        +'<div style="font-size:.7rem;color:#64748b;margin-bottom:3px">'+label+'</div>'
+        +'<div style="font-size:1rem;font-weight:900;color:'+col+'">'+val+'</div>'
+        +(sub?'<div style="font-size:.68rem;color:#475569;margin-top:2px">'+sub+'</div>':'')
+      +'</div>';
+    }
+    return'<div class="kda-section-wrap" style="margin-bottom:20px">'
+      +'<div class="kda-section-title">🎖️ 등급 분포 <span class="ka-sub">3년 종합 · '+scores.length+'명</span></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+chips+'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+        +stat('최고 STAT SCORE',top.total+'점',top.name,'#c084fc')
+        +stat('평균',avg.toFixed(1)+'점','600점 만점','#60a5fa')
+        +stat('최저',bot.total+'점',bot.name,'#64748b')
+      +'</div></div>';
+  }());
+
   // STAT SCORE 랭킹 테이블 (3년 종합 단일 기준 — 사이트 전역 등급 배지와 동일)
   var stats=window._radarStats||{};
   var entries=ALL.map(function(nm){
@@ -1462,7 +1526,7 @@ function renderGradePage(d6,sc25r,sc24r){
     +'<div class="kda-section-title">📊 선수 등급 랭킹 <span class="ka-sub">STAT SCORE 기준 · 3년 합산</span></div>'
     +'<table class="t"><thead><tr><th>#</th><th>선수</th><th>STAT SCORE</th><th>스탯 상세</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>';
-  return info+tbl;
+  return info+gradeDist+tbl;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1919,55 +1983,81 @@ window.copyRoster=function(){
   });
 };
 
-// 시즌 티어 — 분포 + 승강 하이라이트
+// 시즌 티어 — 연도별 분포 + 전년 대비 승강 하이라이트
+var _TIER_ORDER=['챌린저','다이아몬드','플래티넘','골드','실버','브론즈','아이언'];
+var _TIER_ICO={'챌린저':'👑','다이아몬드':'💎','플래티넘':'🔷','골드':'🥇','실버':'🥈','브론즈':'🥉','아이언':'⚙️'};
+var _TIER_PREV={'2026':'2025','2025':'2024','2024':null};
 function renderTierHighlight(d6,sc25r,sc24r){
-  var TIERS=['챌린저','다이아몬드','플래티넘','골드','실버','브론즈','아이언'];
-  var ICO={'챌린저':'👑','다이아몬드':'💎','플래티넘':'🔷','골드':'🥇','실버':'🥈','브론즈':'🥉','아이언':'⚙️'};
-  var rank={};TIERS.forEach(function(t,i){rank[t]=TIERS.length-i;});  // 높을수록 상위
   var sc26={};(d6||[]).forEach(function(p){sc26[p.name]=p.compScore;});
+  window._tierScoreByYear={'2026':sc26,'2025':sc25r||{},'2024':sc24r||{}};
+  return'<div class="yt" style="margin-bottom:12px">'
+    +['2026','2025','2024'].map(function(y,i){
+      return'<button class="yb2'+(i===0?' act':'')+'" data-tdyr="'+y+'" onclick="setTierDistYear(\''+y+'\')">'+y+'년</button>';
+    }).join('')
+    +'</div><div id="tier-dist-body">'+renderTierDistBody('2026')+'</div>';
+}
+window.setTierDistYear=function(y){
+  document.querySelectorAll('[data-tdyr]').forEach(function(b){b.classList.toggle('act',b.getAttribute('data-tdyr')===y);});
+  var el=document.getElementById('tier-dist-body');
+  if(el)el.innerHTML=renderTierDistBody(y);
+};
+function renderTierDistBody(year){
+  var SC=window._tierScoreByYear||{};
+  var cur=SC[year]||{};
+  var prevYear=_TIER_PREV[year];
+  var prev=prevYear?(SC[prevYear]||{}):null;
+  var rank={};_TIER_ORDER.forEach(function(t,i){rank[t]=_TIER_ORDER.length-i;});
   var rows=ALL.map(function(n){
-    var s6=sc26[n],s5=sc25r?sc25r[n]:null,s4=sc24r?sc24r[n]:null;
-    return{name:n,s6:s6,s5:s5,
-      t6:s6!=null?getTierName(s6):null,t5:s5!=null?getTierName(s5):null,
-      t4:s4!=null?getTierName(s4):null};
-  }).filter(function(x){return x.t6;});
-  if(!rows.length)return'';
-  // 2026 티어 분포
-  var dist={};rows.forEach(function(x){dist[x.t6]=(dist[x.t6]||0)+1;});
-  var distHtml=TIERS.filter(function(t){return dist[t];}).map(function(t){
+    var s=cur[n],ps=prev?prev[n]:null;
+    return{name:n,s:s,ps:ps,
+      t:(s!=null?getTierName(s):null),pt:(ps!=null?getTierName(ps):null)};
+  }).filter(function(x){return x.t;});
+  if(!rows.length){
+    return'<div class="kda-section-wrap" style="margin-bottom:20px">'
+      +'<div style="color:#475569;font-size:.8rem;padding:14px">'+year+' 시즌 데이터가 없습니다.</div></div>';
+  }
+  // 티어 분포
+  var dist={};rows.forEach(function(x){dist[x.t]=(dist[x.t]||0)+1;});
+  var distHtml=_TIER_ORDER.filter(function(t){return dist[t];}).map(function(t){
+    var sample=rows.filter(function(x){return x.t===t;})[0];
     return'<div style="display:flex;align-items:center;gap:7px;padding:6px 11px;background:#1e293b;border-radius:8px;border:1px solid #334155">'
-      +'<span style="font-size:.9rem">'+ICO[t]+'</span>'
+      +'<span style="font-size:.9rem">'+_TIER_ICO[t]+'</span>'
       +'<span style="font-size:.76rem;color:#cbd5e1;font-weight:700">'+t+'</span>'
-      +'<span style="font-size:.9rem;font-weight:900;color:'+tierColor(rows.filter(function(x){return x.t6===t;})[0].s6)+'">'+dist[t]+'</span>'
+      +'<span style="font-size:.9rem;font-weight:900;color:'+tierColor(sample.s)+'">'+dist[t]+'</span>'
       +'<span style="font-size:.66rem;color:#475569">명</span></div>';
   }).join('');
-  // 2025 → 2026 승강
-  var moves=rows.filter(function(x){return x.t5&&x.t6&&x.t5!==x.t6;})
-    .map(function(x){return{name:x.name,from:x.t5,to:x.t6,step:rank[x.t6]-rank[x.t5],diff:(x.s6-x.s5)};})
-    .sort(function(a,b){return Math.abs(b.step)-Math.abs(a.step)||Math.abs(b.diff)-Math.abs(a.diff);});
-  var ups=moves.filter(function(m){return m.step>0;}).slice(0,4);
-  var downs=moves.filter(function(m){return m.step<0;}).slice(0,4);
+  // 전년 대비 승강
   function moveChip(m,up){
     var col=up?'#4ade80':'#f87171';
     return'<div style="padding:8px 12px;background:#1e293b;border-radius:9px;border-left:3px solid '+col+';min-width:195px;flex:1">'
       +'<div style="font-size:.78rem;font-weight:800;color:#f1f5f9">'+m.name+'</div>'
       +'<div style="font-size:.7rem;color:#64748b;margin-top:2px">'
-        +ICO[m.from]+' '+m.from+' <span style="color:'+col+'">→</span> '+ICO[m.to]+' '+m.to
+        +_TIER_ICO[m.from]+' '+m.from+' <span style="color:'+col+'">→</span> '+_TIER_ICO[m.to]+' '+m.to
         +' <span style="color:'+col+';font-weight:800">('+(m.diff>0?'+':'')+m.diff.toFixed(1)+')</span></div>'
     +'</div>';
   }
   var movesHtml='';
-  if(ups.length||downs.length){
-    movesHtml='<div style="margin-top:16px">'
-      +'<div style="font-size:.8rem;font-weight:800;color:#c4b5fd;margin-bottom:6px">📊 2025 → 2026 티어 변동</div>'
-      +(ups.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+ups.map(function(m){return moveChip(m,true);}).join('')+'</div>':'')
-      +(downs.length?'<div style="display:flex;gap:8px;flex-wrap:wrap">'+downs.map(function(m){return moveChip(m,false);}).join('')+'</div>':'')
-      +'</div>';
+  if(!prevYear){
+    movesHtml='<div style="margin-top:14px;font-size:.76rem;color:#475569">'
+      +'2024는 첫 시즌이라 비교할 이전 시즌이 없습니다.</div>';
   }else{
-    movesHtml='<div style="margin-top:14px;font-size:.76rem;color:#475569">2025 대비 티어가 바뀐 선수가 없습니다.</div>';
+    var moves=rows.filter(function(x){return x.pt&&x.t&&x.pt!==x.t;})
+      .map(function(x){return{name:x.name,from:x.pt,to:x.t,step:rank[x.t]-rank[x.pt],diff:(x.s-x.ps)};})
+      .sort(function(a,b){return Math.abs(b.step)-Math.abs(a.step)||Math.abs(b.diff)-Math.abs(a.diff);});
+    var ups=moves.filter(function(m){return m.step>0;}).slice(0,4);
+    var downs=moves.filter(function(m){return m.step<0;}).slice(0,4);
+    if(ups.length||downs.length){
+      movesHtml='<div style="margin-top:16px">'
+        +'<div style="font-size:.8rem;font-weight:800;color:#c4b5fd;margin-bottom:6px">📊 '+prevYear+' → '+year+' 티어 변동</div>'
+        +(ups.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+ups.map(function(m){return moveChip(m,true);}).join('')+'</div>':'')
+        +(downs.length?'<div style="display:flex;gap:8px;flex-wrap:wrap">'+downs.map(function(m){return moveChip(m,false);}).join('')+'</div>':'')
+        +'</div>';
+    }else{
+      movesHtml='<div style="margin-top:14px;font-size:.76rem;color:#475569">'+prevYear+' 대비 티어가 바뀐 선수가 없습니다.</div>';
+    }
   }
   return'<div class="kda-section-wrap" style="margin-bottom:20px">'
-    +'<div class="kda-section-title">🎖️ 2026 티어 분포 <span class="ka-sub">'+rows.length+'명</span></div>'
+    +'<div class="kda-section-title">🎖️ '+year+' 티어 분포 <span class="ka-sub">'+rows.length+'명</span></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+distHtml+'</div>'
     +movesHtml
     +'</div>';
@@ -2629,22 +2719,22 @@ function renderDuoHeatmap(duo,subLbl,minGames){
     return d>=0?'background:rgba(74,222,128,'+a+');color:#e2e8f0'
                :'background:rgba(248,113,113,'+a+');color:#e2e8f0';
   }
-  var head='<th style="position:sticky;left:0;background:#334155;z-index:2"></th>'
+  var head='<th style="position:sticky;left:0;background:#334155;z-index:2;min-width:96px"></th>'
     +ALL.map(function(n){
-      return'<th style="font-size:.6rem;font-weight:700;padding:4px 2px;white-space:nowrap;color:#94a3b8">'+n.slice(0,4)+'</th>';
+      return'<th style="font-size:.72rem;font-weight:700;padding:7px 3px;white-space:nowrap;color:#cbd5e1">'+n.slice(0,4)+'</th>';
     }).join('');
   var rows=ALL.map(function(a){
     var tds=ALL.map(function(b){
       if(a===b)return'<td style="background:#0f172a"></td>';
       var k=a<b?a+'|'+b:b+'|'+a;
       var d=duo[k];
-      if(!d||!d.g)return'<td style="background:#111827;color:#334155;font-size:.6rem">-</td>';
+      if(!d||!d.g)return'<td style="background:#111827;color:#334155;font-size:.78rem;text-align:center">-</td>';
       var wr=Math.round(d.w/d.g*100);
       return'<td title="'+a+' + '+b+' · '+d.g+'판 '+d.w+'승 ('+wr+'%)" '
-        +'style="'+cellColor(wr,d.g)+';font-size:.62rem;font-weight:700;padding:5px 2px;text-align:center">'
+        +'style="'+cellColor(wr,d.g)+';font-size:.88rem;font-weight:800;padding:12px 4px;text-align:center;border-radius:4px">'
         +(d.g>=minGames?wr:'<span style="opacity:.45">'+wr+'</span>')+'</td>';
     }).join('');
-    return'<tr><td style="position:sticky;left:0;background:#1e293b;font-size:.65rem;font-weight:800;color:#e2e8f0;white-space:nowrap;padding:4px 8px;z-index:1">'
+    return'<tr><td style="position:sticky;left:0;background:#1e293b;font-size:.78rem;font-weight:800;color:#e2e8f0;white-space:nowrap;padding:8px 12px;z-index:1">'
       +a+'</td>'+tds+'</tr>';
   }).join('');
   return'<div class="kda-section-wrap" style="margin-top:22px">'
@@ -2655,7 +2745,7 @@ function renderDuoHeatmap(duo,subLbl,minGames){
       +'<span style="color:#475569">흐린 숫자는 '+minGames+'경기 미만(표본 부족)</span>'
     +'</div>'
     +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
-      +'<table style="border-collapse:separate;border-spacing:1px;min-width:480px"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>'
+      +'<table style="border-collapse:separate;border-spacing:2px;width:100%;min-width:700px;table-layout:fixed"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'</div></div>';
 }
 
