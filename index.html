@@ -410,7 +410,12 @@ function renderChampMeta(matchLog,yearStr,subLbl){
 function renderChampPage(champData,insightsOverride,kdaMapOverride,yearStr,subLbl){
   var _ckda=kdaMapOverride||window._champKdaAll||{};
   var _meta=renderChampMeta(window._matchLog||[],yearStr,subLbl||'3년 종합');
-  var html=_meta+'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
+  var html=_meta
+    // 하단 선수별 섹션 — 상단 리그 메타와 시각적으로 분리
+    +'<div style="margin-top:34px;padding-top:26px;border-top:1px solid #334155">'
+      +'<div class="kda-section-title">🃏 선수별 챔피언 메타 <span class="ka-sub">'+(subLbl||'3년 종합')+' · 선수 한 명씩 보기</span></div>'
+    +'</div>'
+    +'<div style="margin-bottom:12px;padding:8px 14px;background:#1e293b;border-radius:8px;border-left:3px solid #818cf8;font-size:.82rem;color:#94a3b8;display:flex;align-items:center;gap:8px"><span>📌 선수명 클릭하면 전체 챔피언 목록이 펼쳐져요</span><span style="margin-left:auto;display:flex;gap:6px"><button id="btn-acc-open"  onclick="toggleAllAcc(true)"  style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 열기</button><button id="btn-acc-close" onclick="toggleAllAcc(false)" style="padding:3px 10px;border-radius:6px;border:1px solid #475569;background:none;color:#64748b;font-size:.72rem;cursor:pointer;font-family:inherit">모두 닫기</button></span></div>';
   ALL.forEach(function(p){
     var data=champData[p]||[];if(!data.length)return;
     var totalPicks=data.reduce(function(s,d){return s+d.picks;},0);
