@@ -202,7 +202,7 @@ th.sh.desc::after{content:' ▼';opacity:1}
   </div>
 </div>
 <div class="ct">
-  <div id="lb" class="pn act"><div id="form-widget"></div><div class="yt"><button class="yb2 act" data-yr="6">2026년</button><button class="yb2" data-yr="5">2025년</button><button class="yb2" data-yr="4">2024년</button><button class="yb2" data-yr="a">🌐 3년 종합</button></div><div id="lb-inner"><div class="spinner">⏳ 로딩 중...</div></div><div id="lb-per-game"></div></div>
+  <div id="lb" class="pn act"><div id="form-widget"></div><div class="yt"><button class="yb2 act" data-yr="6">2026년</button><button class="yb2" data-yr="5">2025년</button><button class="yb2" data-yr="4">2024년</button><button class="yb2" data-yr="a">🌐 3년 종합</button></div><div id="lb-inner"><div class="spinner">⏳ 로딩 중...</div></div></div>
   <div id="poslb" class="pn"><div id="poslb-inner"><div class="spinner">⏳ 데이터 로딩 중...</div></div></div>
   <div id="ptier" class="pn"><div id="ptier-inner"><div class="spinner">⏳ 2026 데이터 로딩 중...</div></div></div>
   <div id="cards" class="pn"><div class="cg" id="cards-inner"></div></div>
@@ -1274,12 +1274,7 @@ function bWinRateLB(d6,yr){
   }).filter(function(p){return p.g>0;})
     .sort(function(a,b){return (b.wr-a.wr)||(b.g-a.g);});
   if(!data.length)return'';
-  function pm(nm){var e=nm.replace(/'/g,"\\'");return'<div class="pm" onclick="showPlayerMatches(\''+e+'\',null)" style="cursor:pointer">'+nm+'</div>';}
-  var podHtml=data.length>=3?'<div class="podium">'
-    +'<div class="pod p2"><div class="pn2">2nd</div>'+pm(data[1].name)+'<div class="pv">'+data[1].wr.toFixed(1)+'%</div></div>'
-    +'<div class="pod p1"><div class="pc">👑</div><div class="pn2">1st</div>'+pm(data[0].name)+'<div class="pv">'+data[0].wr.toFixed(1)+'%</div></div>'
-    +'<div class="pod p3"><div class="pn2">3rd</div>'+pm(data[2].name)+'<div class="pv">'+data[2].wr.toFixed(1)+'%</div></div>'
-  +'</div>':'';
+  var podHtml=pod(data,'wr',function(value){return value.toFixed(1)+'%';});
   function yc(v){if(v==null)return'<td style="color:#475569">-</td>';var col=v>=55?'#4ade80':v>=50?'#60a5fa':'#f87171';return'<td style="color:'+col+'">'+v.toFixed(1)+'%</td>';}
   var thCols=isAll?'<th style="color:#818cf8">2026</th><th style="color:#34d399">2025</th><th style="color:#fb923c">2024</th>':'';
   var rows=data.map(function(p,i){
@@ -1320,45 +1315,66 @@ function recordYearHeaders(seasons){
     return '<th style="color:'+season.color+'">'+season.year+'</th>';
   }).join('');
 }
-function seasonTrendTable(seasons,players,getValue,decimals,includeTotal,showTrend){
-  function trend(values){
-    var latest=values[0], previous=values[1], oldest=values[2];
-    if(latest==null||previous==null)return '—';
-    if(latest===previous)return '<span aria-label="유지">↔️</span>';
-    if(latest<previous)return '<span aria-label="하락">📉</span>';
-    return oldest!=null&&previous>oldest?'<span aria-label="2년 연속 상승">📈📈</span>':'<span aria-label="상승">📈</span>';
+function seasonTrendCells(seasons,records,getValue,decimals,showTrend){
+  var values=records.map(getValue);
+  var cells=values.map(function(value,i){
+    var record=records[i];
+    return '<td style="color:'+seasons[i].color+'">'+recordDisplay(value,decimals)
+      +(record?'<small class="rec-sample">'+record.games+'경기</small>':'')+'</td>';
+  }).join('');
+  if(!showTrend)return cells;
+  var rounded=values.map(function(value){return value==null?null:Number(value.toFixed(decimals));});
+  var latest=rounded[0], previous=rounded[1], oldest=rounded[2];
+  var trend='—';
+  if(latest!=null&&previous!=null){
+    if(latest===previous)trend='<span aria-label="유지">↔️</span>';
+    else if(latest<previous)trend='<span aria-label="하락">📉</span>';
+    else if(oldest!=null&&previous>oldest)trend='<span aria-label="2년 연속 상승">📈📈</span>';
+    else trend='<span aria-label="상승">📈</span>';
   }
-
+  return cells+'<td>'+trend+'</td>';
+}
+function seasonTrendTable(seasons,players,getValue,decimals,includeTotal,showTrend){
   var rows=players.map(function(player){
-    var values=player.records.map(getValue);
-    var cells=values.map(function(value,i){
-      var record=player.records[i];
-      return '<td style="color:'+seasons[i].color+'">'+recordDisplay(value,decimals)
-        +(record?'<small class="rec-sample">'+record.games+'경기</small>':'')+'</td>';
-    }).join('');
-    var trendCell=showTrend?'<td>'+trend(values.map(function(value){
-      return value==null?null:Number(value.toFixed(decimals));
-    }))+'</td>':'';
+    var cells=seasonTrendCells(seasons,player.records,getValue,decimals,showTrend);
     var total=player.total;
-    return '<tr>'+pnc(player.name,AN[player.name]?AN[player.name].t:'B')+cells+trendCell
+    return '<tr>'+pnc(player.name,AN[player.name]?AN[player.name].t:'B')+cells
       +(includeTotal?'<td>'+recordDisplay(total?total.kda:null,decimals)
         +(total?'<small class="rec-sample">'+total.games+'경기</small>':'')+'</td>':'')+'</tr>';
   }).join('');
   var columns=recordYearHeaders(seasons)+(showTrend?'<th>추세</th>':'')+(includeTotal?'<th>통산 KDA</th>':'');
   return {columns:columns,rows:rows};
 }
-function renderPerGameTrends(seasons){
-  var players=ALL.map(function(name){
-    return {name:name,records:seasons.map(function(season){return seasonRecord(name,season);})};
-  });
-  function perGameTable(title,key){
-    var table=seasonTrendTable(seasons,players,function(record){
-      return record&&record[key]!=null?record[key]/record.games:null;
-    },2,false,true);
-    return leaderboardTable(title,'2024-2026','<th>소환사</th>'+table.columns,table.rows);
+function renderPerGameLeaderboards(seasons,year){
+  var isAll=year==='all';
+  var scope=isAll?seasons:seasons.filter(function(season){return season.year===year;});
+  var hasScope=scope.length&&scope.every(function(season){return season.players.length;});
+  var players=hasScope?ALL.map(function(name){
+    var records=scope.map(function(season){return seasonRecord(name,season);});
+    return {name:name,records:records,played:records.filter(Boolean)};
+  }):[];
+  function perGameTable(icon,label,key){
+    var data=players.filter(function(player){
+      return player.played.length&&player.played.every(function(record){return record[key]!=null;});
+    }).map(function(player){
+      var games=player.played.reduce(function(sum,record){return sum+record.games;},0);
+      var total=player.played.reduce(function(sum,record){return sum+record[key];},0);
+      return {name:player.name,records:player.records,games:games,average:total/games};
+    }).sort(function(a,b){return (b.average-a.average)||(b.games-a.games);});
+    var rows=data.map(function(player,i){
+      var history=isAll?seasonTrendCells(seasons,player.records,function(record){
+        return record&&record[key]!=null?record[key]/record.games:null;
+      },2,true):'';
+      return '<tr><td class="rk">'+(i+1)+'</td>'+pnc(player.name,AN[player.name]?AN[player.name].t:'B')
+        +'<td><strong>'+player.average.toFixed(2)+'</strong></td><td>'+player.games+'</td>'+history+'</tr>';
+    }).join('');
+    var columns='<th>#</th><th>소환사</th><th>'+label+'</th><th>경기</th>'
+      +(isAll?recordYearHeaders(seasons)+'<th>추세</th>':'');
+    var podium=pod(data,'average',function(value){return value.toFixed(2);});
+    return leaderboardTable(icon+' '+label+' 리더보드',isAll?'2024-2026 종합':year+'년',columns,
+      rows||'<tr><td colspan="'+(isAll?8:4)+'">집계된 기록이 없습니다.</td></tr>',podium);
   }
-  return perGameTable('⚔️ 경기당 킬 연도별 추이','k')
-    +perGameTable('🤝 경기당 어시스트 연도별 추이','a');
+  return perGameTable('⚔️','경기당 킬','k')+perGameTable('🤝','경기당 어시스트','a');
 }
 function bRec(seasons){
   var minRateGames=10;
@@ -1430,10 +1446,10 @@ function bRec(seasons){
     }).join('')
     +renderDurationSection()+renderStreakSection()
     +trendSection('📈 KDA 연도별 추이','kda',2,true,true)
+    +trendSection('💰 시즌 승점 <span class="tip-icon" data-tip-id="score">i</span>','score',null,false,false)
     +cumulativeSection('🏆 누적 승리수','wins')
     +cumulativeSection('⚔️ 통산 최다 킬','k')
-    +cumulativeSection('🤝 통산 최다 어시스트','a')
-    +trendSection('💰 시즌 승점 <span class="tip-icon" data-tip-id="score">i</span>','score',null,false,false);
+    +cumulativeSection('🤝 통산 최다 어시스트','a');
 }
 // ── 연승·연패 기록 ────────────────────────────────────────────────
 // 경기 로그를 날짜 오름차순으로 훑어 선수별 최장 연승/연패와 현재 진행 중인 기록을 뽑는다
@@ -2250,9 +2266,7 @@ function renderStierPage(d6,sc25r,sc24r){
   return infoBox+renderTierHighlight(d6,sc25r,sc24r)+tierTable;
 }
 var curSort={k:"kda",d:1};var lastD6=null;
-function render(d6,dKA26,dKA25,dKA24){lastD6=d6;if(dKA26)window._dKA26=dKA26;if(dKA25)window._dKA25=dKA25;if(dKA24)window._dKA24=dKA24;var dA=calcAll(d6);var sc25=calcCompScores(d25,'2025');var sc24=calcCompScores(d24,'2024');var lb='<div id="pa" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 통산 KDA 리더보드 <span class="ka-sub">2024-2026 종합</span></div>'+pod(dA.filter(function(p){return p[curSort.k]!=null;}),curSort.k,function(v){var k=curSort.k;if(k==='totalScore')return Number(v).toLocaleString();if(k==='winRate')return Number(v).toFixed(1)+'%';if(k==='totalGames')return Number(v);return Number(v).toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th class="sh desc" data-s="kda">통산 KDA</th><th>승률(W/L)</th><th class="sh" data-s="winRate">합산승점 <span class="tip-icon" data-tip-id="score">i</span></th><th class="sh" data-s="totalScore">총경기</th><th class="sh" data-s="s26">2026</th><th class="sh" data-s="s25">2025</th><th class="sh" data-s="s24">2024</th></tr></thead><tbody>'+aRows(dA,d6)+'</tbody></table></div>'+bWinRateLB(d6,'all')+'</div>'+'<div id="p6" class="yp act"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2026년</span></div>'+pod(d6,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>DPM</th><th>GPM</th><th>종합 <span class="tip-icon" data-tip-id="cs26">i</span></th></tr></thead><tbody>'+r6(d6)+'</tbody></table></div>'+bWinRateLB(d6,'26')+'</div>'+'<div id="p5" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2025년</span></div>'+pod(d25,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d25,sc25)+'</tbody></table></div>'+bWinRateLB(d6,'25')+'</div>'+'<div id="p4" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024년</span></div>'+pod(d24,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점</th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d24,sc24)+'</tbody></table></div>'+bWinRateLB(d6,'24')+'</div>';document.getElementById('lb-inner').innerHTML=lb;document.getElementById('cards-inner').innerHTML=bCards(d6,sc25,sc24);
-var seasons=recordSeasons(d6,window._dKA26,window._dKA25,window._dKA24);
-document.getElementById('lb-per-game').innerHTML=renderPerGameTrends(seasons);
+function render(d6,dKA26,dKA25,dKA24){lastD6=d6;if(dKA26)window._dKA26=dKA26;if(dKA25)window._dKA25=dKA25;if(dKA24)window._dKA24=dKA24;var dA=calcAll(d6);var sc25=calcCompScores(d25,'2025');var sc24=calcCompScores(d24,'2024');var seasons=recordSeasons(d6,window._dKA26,window._dKA25,window._dKA24);var lb='<div id="pa" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 통산 KDA 리더보드 <span class="ka-sub">2024-2026 종합</span></div>'+pod(dA.filter(function(p){return p[curSort.k]!=null;}),curSort.k,function(v){var k=curSort.k;if(k==='totalScore')return Number(v).toLocaleString();if(k==='winRate')return Number(v).toFixed(1)+'%';if(k==='totalGames')return Number(v);return Number(v).toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th class="sh desc" data-s="kda">통산 KDA</th><th>승률(W/L)</th><th class="sh" data-s="winRate">합산승점 <span class="tip-icon" data-tip-id="score">i</span></th><th class="sh" data-s="totalScore">총경기</th><th class="sh" data-s="s26">2026</th><th class="sh" data-s="s25">2025</th><th class="sh" data-s="s24">2024</th></tr></thead><tbody>'+aRows(dA,d6)+'</tbody></table></div>'+bWinRateLB(d6,'all')+renderPerGameLeaderboards(seasons,'all')+'</div>'+'<div id="p6" class="yp act"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2026년</span></div>'+pod(d6,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>DPM</th><th>GPM</th><th>종합 <span class="tip-icon" data-tip-id="cs26">i</span></th></tr></thead><tbody>'+r6(d6)+'</tbody></table></div>'+bWinRateLB(d6,'26')+renderPerGameLeaderboards(seasons,'2026')+'</div>'+'<div id="p5" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2025년</span></div>'+pod(d25,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점 <span class="tip-icon" data-tip-id="score">i</span></th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d25,sc25)+'</tbody></table></div>'+bWinRateLB(d6,'25')+renderPerGameLeaderboards(seasons,'2025')+'</div>'+'<div id="p4" class="yp"><div class="kda-section-wrap"><div class="kda-section-title">📊 평균 KDA 리더보드 <span class="ka-sub">2024년</span></div>'+pod(d24,'kda',function(v){return v.toFixed(2);})+'<table class="t"><thead><tr><th>#</th><th>소환사</th><th>티어 <span class="tip-icon" data-tip-id="tier">i</span></th><th>KDA</th><th>승률(W/L)</th><th>승점</th><th>경기</th><th>종합 <span class="tip-icon" data-tip-id="cs2425">i</span></th></tr></thead><tbody>'+yR(d24,sc24)+'</tbody></table></div>'+bWinRateLB(d6,'24')+renderPerGameLeaderboards(seasons,'2024')+'</div>';document.getElementById('lb-inner').innerHTML=lb;document.getElementById('cards-inner').innerHTML=bCards(d6,sc25,sc24);
 document.getElementById('rec-inner').innerHTML=bRec(seasons);
 document.getElementById('stier-inner').innerHTML=renderStierPage(d6,sc25,sc24);var shh=document.querySelectorAll('th.sh');for(var ssi=0;ssi<shh.length;ssi++){(function(thEl){thEl.addEventListener('click',function(){var k=thEl.getAttribute('data-s');if(curSort.k===k){curSort.d*=-1;}else{curSort.k=k;curSort.d=1;}document.querySelectorAll('th.sh').forEach(function(t){t.classList.remove('asc','desc');});thEl.classList.add(curSort.d===1?'desc':'asc');if(lastD6){var _curYr=null;['pa','p6','p5','p4'].forEach(function(id){var el=document.getElementById(id);if(el&&el.classList.contains('act'))_curYr=id;});render(lastD6);if(_curYr&&_curYr!=='p6'){sY(_curYr==='pa'?'a':_curYr.replace('p',''));}}});})(shh[ssi]);}var yb=document.querySelectorAll('[data-yr]');for(var i=0;i<yb.length;i++){yb[i].addEventListener('click',(function(b){return function(){sY(b.getAttribute('data-yr'));};})(yb[i]));}}
 // ── 그룹핑 탭 내비게이션: 전 탭 상시 노출, 원클릭 이동 ─────────────
