@@ -1738,13 +1738,13 @@ function posTagBox(pos){
 }
 
 // 선수의 주요 포지션 배열 (출전 비중 ≥15% 기준, 빈도 높은 순)
-function getDataPositions(playerName){
+function getDataPositions(playerName,minShare=0.15,minGames=1){
   var pd=window._posData;
   if(!pd||!pd.stats[playerName])return null;
   var st=pd.stats[playerName];
   var total=(st.T||0)+(st.J||0)+(st.M||0)+(st.B||0)+(st.S||0);
   if(!total)return null;
-  var pos=['T','J','M','B','S'].filter(function(p){return(st[p]||0)/total>=0.15;});
+  var pos=['T','J','M','B','S'].filter(function(p){return (st[p]||0)>=minGames&&(st[p]||0)/total>=minShare;});
   pos.sort(function(a,b){return(st[b]||0)-(st[a]||0);});
   return pos.length?pos:null;
 }
@@ -1836,26 +1836,33 @@ function rosterFit(p,pos){
   if(idx<0)return 0;
   return idx===0?4:idx===1?3:2;
 }
-// 팀 내 최적 포지션 배정: 전 순열 탐색(팀원 ≤5 → ≤120가지)으로 적합도 합 최대화
-function rosterBestAssign(team,posOrder){
-  var n=posOrder.length;
-  var best=null,bestFit=-1;
-  var perm=[],used=new Array(team.length);
-  (function go(depth,fitSum){
-    if(depth===n){
-      if(fitSum>bestFit){bestFit=fitSum;best=perm.slice();}
+// 팀 내 가능한 포지션 배정 순회 (최대 5!개)
+function rosterEachAssignment(team,posOrder,visit,fitFor=rosterFit){
+  var lineup=[],used=new Array(team.length);
+  (function go(depth,fit,offPos){
+    if(depth===posOrder.length){
+      visit(lineup,fit,offPos);
       return;
     }
     for(var i=0;i<team.length;i++){
       if(used[i])continue;
-      used[i]=true;perm.push(i);
-      go(depth+1,fitSum+rosterFit(team[i],posOrder[depth]));
-      perm.pop();used[i]=false;
+      var player=team[i], quality=fitFor(player,posOrder[depth]);
+      used[i]=true;
+      lineup.push(player);
+      go(depth+1,fit+quality,offPos+(quality===0?1:0));
+      lineup.pop();
+      used[i]=false;
     }
-  })(0,0);
-  var res={};
-  if(best)best.forEach(function(pi,d){res[posOrder[d]]=team[pi];});
-  return{assign:res,fit:bestFit};
+  })(0,0,0);
+}
+function rosterBestAssign(team,posOrder){
+  var best=[],bestFit=-1;
+  rosterEachAssignment(team,posOrder,function(lineup,fit){
+    if(fit>bestFit){bestFit=fit;best=lineup.slice();}
+  });
+  var assign={};
+  best.forEach(function(player,i){assign[posOrder[i]]=player;});
+  return assign;
 }
 // 맞라인 점수 격차 합산 (복합점수 기준)
 function rosterLaneCost(t1,t2,posOrder){
@@ -1888,6 +1895,72 @@ function rosterLaneSwapPass(t1,t2,posOrder){
     });
   }
 }
+// 팀을 고른 뒤 양 팀 포지션을 함께 평가해 맞라인과 포지션 반복을 조정한다.
+function rosterShufflePositions(seed,posOrder,history){
+  var maxFitLoss=3;
+  var maxExtraTotalGap=10;
+  var nearBestLaneGap=6;
+  var nearBestTotalGap=10;
+
+  function rotationFit(player,pos){
+    return rosterFit(player,pos)||(player.flexPositions&&player.flexPositions.includes(pos)?1:0);
+  }
+  var original=[seed.t1,seed.t2].map(function(team){
+    var lineup=posOrder.map(function(pos){return team[pos];});
+    var quality=lineup.map(function(player,i){return rotationFit(player,posOrder[i]);});
+    return {lineup:lineup,fit:quality.reduce(function(sum,value){return sum+value;},0),
+      offPos:quality.filter(function(value){return value===0;}).length};
+  });
+  function gaps(left,right){
+    var total=0,worst=0;
+    for(var i=0;i<posOrder.length;i++){
+      var gap=Math.abs(left[i].score-right[i].score);
+      total+=gap;
+      worst=Math.max(worst,gap);
+    }
+    return {total:total,worst:worst};
+  }
+  var baseline=gaps(original[0].lineup,original[1].lineup);
+  var minFit=original[0].fit+original[1].fit-maxFitLoss;
+  var options=original.map(function(team){
+    var assignments=[];
+    rosterEachAssignment(team.lineup,posOrder,function(lineup,fit,offPos){
+      if(offPos>team.offPos)return;
+      var repeats=lineup.reduce(function(sum,player,i){
+        return sum+history.reduce(function(weight,past,j){
+          return weight+(past[player.name]===posOrder[i]?history.length-j:0);
+        },0);
+      },0);
+      assignments.push({lineup:lineup.slice(),fit:fit,repeats:repeats});
+    },rotationFit);
+    return assignments;
+  });
+
+  var candidates=[],bestWorst=baseline.worst;
+  options[0].forEach(function(left){
+    options[1].forEach(function(right){
+      if(left.fit+right.fit<minFit)return;
+      var difference=gaps(left.lineup,right.lineup);
+      if(difference.worst>baseline.worst||difference.total>baseline.total+maxExtraTotalGap)return;
+      bestWorst=Math.min(bestWorst,difference.worst);
+      candidates.push({left:left,right:right,worst:difference.worst,total:difference.total,repeats:left.repeats+right.repeats});
+    });
+  });
+  var close=candidates.filter(function(c){return c.worst<=bestWorst+nearBestLaneGap;});
+  var bestTotal=close.reduce(function(best,c){return Math.min(best,c.total);},Infinity);
+  close=close.filter(function(c){return c.total<=bestTotal+nearBestTotalGap;});
+  var leastRepeated=close.reduce(function(best,c){return Math.min(best,c.repeats);},Infinity);
+  var pool=close.filter(function(c){return c.repeats===leastRepeated;});
+  var selected=pool[Math.floor(Math.random()*pool.length)];
+
+  function toTeam(option){
+    var team={};
+    posOrder.forEach(function(pos,i){team[pos]=option.lineup[i];});
+    return team;
+  }
+  return {t1:toTeam(selected.left),t2:toTeam(selected.right)};
+}
+var rosterPositionHistory=[];
 // k-조합 열거
 function rosterCombos(n,k){
   var res=[],idx=[];
@@ -1936,7 +2009,8 @@ window.generateRoster=function(){
     if(useRecent&&recentWR[nm]!=null)composite=composite*0.7+(recentWR[nm]*600)*0.3;
     var a=AN[nm]||{p:''};
     var dataPos=getDataPositions(nm);
-    return{name:nm,score:composite,rawScore:ss,wr:Math.round(adjWR*100),positions:dataPos&&dataPos.length?dataPos:parsePosString(a.p)};
+    return{name:nm,score:composite,rawScore:ss,wr:Math.round(adjWR*100),
+      positions:dataPos&&dataPos.length?dataPos:parsePosString(a.p),flexPositions:getDataPositions(nm,0.05,5)};
   });
 
   var n=playerData.length;
@@ -1969,7 +2043,7 @@ window.generateRoster=function(){
       // 동일 팀 구성의 포지션 배정은 캐시 재사용 (벤치 조합 간 중복 다수)
       function cachedAssign(team){
         var ck=team.map(function(p){return p.name;}).sort().join('|');
-        if(!assignCache[ck])assignCache[ck]=rosterBestAssign(team,posOrder).assign;
+        if(!assignCache[ck])assignCache[ck]=rosterBestAssign(team,posOrder);
         var src=assignCache[ck],copy={};
         posOrder.forEach(function(pos){if(src[pos])copy[pos]=src[pos];});
         return copy;
@@ -2004,7 +2078,16 @@ window.generateRoster=function(){
   var picked=pool[Math.floor(Math.random()*pool.length)];
   window._lastRosterKey=picked.key;
 
-  var t1=picked.t1,t2=picked.t2,subs=picked.subs;
+  var assignment=rosterShufflePositions(picked,posOrder,rosterPositionHistory);
+  var t1=assignment.t1,t2=assignment.t2,subs=picked.subs;
+  var playedPositions={};
+  posOrder.forEach(function(pos){
+    playedPositions[t1[pos].name]=pos;
+    playedPositions[t2[pos].name]=pos;
+  });
+  rosterPositionHistory.unshift(playedPositions);
+  if(rosterPositionHistory.length>5)rosterPositionHistory.pop();
+
   var t1Total=picked.s1,t2Total=picked.s2;
   var balance=Math.round(Math.min(t1Total,t2Total)/Math.max(t1Total,t2Total)*100);
   // 예상 승률: 팀 복합점수 차 → Elo 로지스틱 환산 (스케일 600 = 점수차 50 ≈ 55%)
@@ -2077,8 +2160,8 @@ window.generateRoster=function(){
           +'<div style="font-size:.8rem;font-weight:700;color:#7dd3fc;margin-bottom:6px">팀 배정 공식</div>'
           +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
             +'<b style="color:#e2e8f0">가능한 모든 팀 분할을 전수 탐색</b>해 ① 팀 점수차 ② 맞라인 격차 ③ 비선호 포지션 배정을 종합한 비용이 가장 낮은 조합들을 찾습니다. '
-            +'그중 <b style="color:#e2e8f0">균형 상위 후보들 중에서 무작위로 1개</b>를 선택하므로, 다시 뽑을 때마다 조합은 달라져도 균형은 항상 유지됩니다. '
-            +'선수 점수에 랜덤 변동을 주던 기존 방식과 달리, 실력 측정은 고정하고 선택에만 랜덤성을 부여합니다.<br>'
+            +'균형 상위 후보에서 팀을 고른 뒤 양 팀 포지션을 함께 다시 평가합니다. '
+            +'맞라인 점수 차가 작고 포지션 경험이 비슷한 배정 중에서, 최근에 덜 맡은 포지션을 우선합니다.<br>'
             +'<span style="color:#4ade80;font-size:.72rem">🎲 이번 생성 — 총 '+window._rosterResult.totalCombos.toLocaleString()+'개 조합 평가 → 균형 상위 '+window._rosterResult.poolSize+'개 후보 중 무작위 선택</span><br>'
             +'<span style="color:#818cf8;font-size:.72rem">⚖️ 승률 가중치 — 2026 × 5 · 2025 × 2 · 2024 × 0.5 (최근 기록 집중 반영) · 벤치(식스맨)도 균형 탐색에 포함되어 매번 달라질 수 있음</span>'
           +'</div>'
