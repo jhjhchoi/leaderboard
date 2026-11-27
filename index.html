@@ -1855,14 +1855,17 @@ function rosterEachAssignment(team,posOrder,visit,fitFor=rosterFit){
     }
   })(0,0,0);
 }
-function rosterBestAssign(team,posOrder){
-  var best=[],bestFit=-1;
+function rosterBestAssignments(team,posOrder,anchor){
+  var best={};
   rosterEachAssignment(team,posOrder,function(lineup,fit){
-    if(fit>bestFit){bestFit=fit;best=lineup.slice();}
+    var lane=anchor?posOrder[lineup.findIndex(function(player){return player.name===anchor;})]:'any';
+    if(!best[lane]||fit>best[lane].fit){
+      var assignment={};
+      lineup.forEach(function(player,i){assignment[posOrder[i]]=player;});
+      best[lane]={assignment:assignment,fit:fit};
+    }
   });
-  var assign={};
-  best.forEach(function(player,i){assign[posOrder[i]]=player;});
-  return assign;
+  return best;
 }
 // 맞라인 점수 격차 합산 (복합점수 기준)
 function rosterLaneCost(t1,t2,posOrder){
@@ -1873,7 +1876,7 @@ function rosterLaneCost(t1,t2,posOrder){
   return s;
 }
 // 맞라인 개선 스왑: 적합도를 해치지 않는 범위에서 라인별 점수차 축소
-function rosterLaneSwapPass(t1,t2,posOrder){
+function rosterLaneSwapPass(t1,t2,posOrder,lockedLane){
   var improved=true,maxIter=30;
   while(improved&&maxIter-->0){
     improved=false;
@@ -1882,6 +1885,7 @@ function rosterLaneSwapPass(t1,t2,posOrder){
       for(var i=0;i<posOrder.length;i++){
         for(var j=i+1;j<posOrder.length;j++){
           var pi=posOrder[i],pj=posOrder[j];
+          if(pi===lockedLane||pj===lockedLane)continue;
           var a=team[pi],b=team[pj];
           if(!a||!b)continue;
           var fitBefore=rosterFit(a,pi)+rosterFit(b,pj);
@@ -1897,6 +1901,7 @@ function rosterLaneSwapPass(t1,t2,posOrder){
 }
 // 팀을 고른 뒤 양 팀 포지션을 함께 평가해 맞라인과 포지션 반복을 조정한다.
 function rosterShufflePositions(seed,posOrder,history){
+  var matchups=seed.matchups;
   var maxFitLoss=3;
   var maxExtraTotalGap=10;
   var nearBestLaneGap=6;
@@ -1922,7 +1927,7 @@ function rosterShufflePositions(seed,posOrder,history){
   }
   var baseline=gaps(original[0].lineup,original[1].lineup);
   var minFit=original[0].fit+original[1].fit-maxFitLoss;
-  var options=original.map(function(team){
+  var options=original.map(function(team,side){
     var assignments=[];
     rosterEachAssignment(team.lineup,posOrder,function(lineup,fit,offPos){
       if(offPos>team.offPos)return;
@@ -1931,7 +1936,11 @@ function rosterShufflePositions(seed,posOrder,history){
           return weight+(past[player.name]===posOrder[i]?history.length-j:0);
         },0);
       },0);
-      assignments.push({lineup:lineup.slice(),fit:fit,repeats:repeats});
+      function laneFor(pair){
+        return pair?lineup.findIndex(function(player){return player.name===pair[side];}):-1;
+      }
+      assignments.push({lineup:lineup.slice(),fit:fit,repeats:repeats,
+        requiredLane:laneFor(matchups.required),preferredLane:laneFor(matchups.preferred)});
     },rotationFit);
     return assignments;
   });
@@ -1939,16 +1948,19 @@ function rosterShufflePositions(seed,posOrder,history){
   var candidates=[],bestWorst=baseline.worst;
   options[0].forEach(function(left){
     options[1].forEach(function(right){
-      if(left.fit+right.fit<minFit)return;
+      if(left.requiredLane!==right.requiredLane||left.fit+right.fit<minFit)return;
       var difference=gaps(left.lineup,right.lineup);
       if(difference.worst>baseline.worst||difference.total>baseline.total+maxExtraTotalGap)return;
       bestWorst=Math.min(bestWorst,difference.worst);
-      candidates.push({left:left,right:right,worst:difference.worst,total:difference.total,repeats:left.repeats+right.repeats});
+      candidates.push({left:left,right:right,worst:difference.worst,total:difference.total,
+        preferred:left.preferredLane===right.preferredLane,repeats:left.repeats+right.repeats});
     });
   });
   var close=candidates.filter(function(c){return c.worst<=bestWorst+nearBestLaneGap;});
   var bestTotal=close.reduce(function(best,c){return Math.min(best,c.total);},Infinity);
   close=close.filter(function(c){return c.total<=bestTotal+nearBestTotalGap;});
+  var preferred=close.filter(function(c){return c.preferred;});
+  if(preferred.length)close=preferred;
   var leastRepeated=close.reduce(function(best,c){return Math.min(best,c.repeats);},Infinity);
   var pool=close.filter(function(c){return c.repeats===leastRepeated;});
   var selected=pool[Math.floor(Math.random()*pool.length)];
@@ -1961,6 +1973,8 @@ function rosterShufflePositions(seed,posOrder,history){
   return {t1:toTeam(selected.left),t2:toTeam(selected.right)};
 }
 var rosterPositionHistory=[];
+var rosterTopPair=['xoxo','우주최강승원'];
+var rosterNextPair=['jhgogo','찰스킹'];
 // k-조합 열거
 function rosterCombos(n,k){
   var res=[],idx=[];
@@ -2031,35 +2045,48 @@ window.generateRoster=function(){
     var playing=playerData.filter(function(_,i){return!benchSet[i];});
     // 팀 분할: 첫 번째 선수를 1팀에 고정해 중복 제거 → C(2k-1, k-1)가지
     var rest=playing.slice(1);
+    var playingNames=new Set(playing.map(function(player){return player.name;}));
+    var topPairActive=rosterTopPair.every(function(name){return playingNames.has(name);});
+    var nextPairActive=topPairActive&&rosterNextPair.every(function(name){return playingNames.has(name);});
     rosterCombos(rest.length,teamSize-1).forEach(function(idxs){
       var inT1={};idxs.forEach(function(i){inT1[i]=true;});
       var team1=[playing[0]],team2=[];
       rest.forEach(function(p,i){if(inT1[i])team1.push(p);else team2.push(p);});
       evalCount++;
+      var team1Names=new Set(team1.map(function(player){return player.name;}));
+      function splitPair(pair){
+        var firstOnTeam1=team1Names.has(pair[0]),secondOnTeam1=team1Names.has(pair[1]);
+        if(firstOnTeam1===secondOnTeam1)return null;
+        return firstOnTeam1?pair:[pair[1],pair[0]];
+      }
+      var required=topPairActive?splitPair(rosterTopPair):null;
+      var preferred=nextPairActive?splitPair(rosterNextPair):null;
+      if((topPairActive&&!required)||(nextPairActive&&!preferred))return;
+
       var s1=team1.reduce(function(s,p){return s+p.score;},0);
       var s2=team2.reduce(function(s,p){return s+p.score;},0);
       var scoreDiff=Math.abs(s1-s2);
       if(scoreDiff>Math.max(s1,s2)*0.12)return; // 명백한 불균형은 조기 탈락
-      // 동일 팀 구성의 포지션 배정은 캐시 재사용 (벤치 조합 간 중복 다수)
-      function cachedAssign(team){
-        var ck=team.map(function(p){return p.name;}).sort().join('|');
-        if(!assignCache[ck])assignCache[ck]=rosterBestAssign(team,posOrder);
-        var src=assignCache[ck],copy={};
-        posOrder.forEach(function(pos){if(src[pos])copy[pos]=src[pos];});
-        return copy;
+      // 강제 맞라인이 있으면 두 선수가 맡을 수 있는 각 위치를 팀 후보 비용에 반영한다.
+      function cachedAssignments(team,anchor){
+        var ck=team.map(function(p){return p.name;}).sort().join('|')+'/'+(anchor||'');
+        if(!assignCache[ck])assignCache[ck]=rosterBestAssignments(team,posOrder,anchor);
+        return assignCache[ck];
       }
-      var t1=cachedAssign(team1),t2=cachedAssign(team2);
-      rosterLaneSwapPass(t1,t2,posOrder);
-      // 비선호 포지션 배정 수
-      var offPos=0;
-      posOrder.forEach(function(pos){
-        if(t1[pos]&&rosterFit(t1[pos],pos)===0)offPos++;
-        if(t2[pos]&&rosterFit(t2[pos],pos)===0)offPos++;
+      var left=cachedAssignments(team1,required&&required[0]);
+      var right=cachedAssignments(team2,required&&required[1]);
+      var best=null;
+      (required?posOrder:['any']).forEach(function(lane){
+        var t1={...left[lane].assignment},t2={...right[lane].assignment};
+        rosterLaneSwapPass(t1,t2,posOrder,required?lane:null);
+        var offPos=posOrder.reduce(function(count,pos){
+          return count+Number(rosterFit(t1[pos],pos)===0)+Number(rosterFit(t2[pos],pos)===0);
+        },0);
+        var cost=scoreDiff+rosterLaneCost(t1,t2,posOrder)*0.3+offPos*100;
+        if(!best||cost<best.cost)best={t1:t1,t2:t2,cost:cost};
       });
-      var laneCost=rosterLaneCost(t1,t2,posOrder);
-      var cost=scoreDiff+laneCost*0.3+offPos*100;
       var key=team1.map(function(p){return p.name;}).sort().join(',')+'/'+benchIdx.join('.');
-      candidates.push({t1:t1,t2:t2,s1:s1,s2:s2,cost:cost,key:key,
+      candidates.push({...best,s1:s1,s2:s2,key:key,matchups:{required:required,preferred:preferred},
         subs:playerData.filter(function(_,i){return benchSet[i];})});
     });
   });
@@ -2161,7 +2188,8 @@ window.generateRoster=function(){
           +'<div style="font-size:.75rem;color:#94a3b8;line-height:1.6">'
             +'<b style="color:#e2e8f0">가능한 모든 팀 분할을 전수 탐색</b>해 ① 팀 점수차 ② 맞라인 격차 ③ 비선호 포지션 배정을 종합한 비용이 가장 낮은 조합들을 찾습니다. '
             +'균형 상위 후보에서 팀을 고른 뒤 양 팀 포지션을 함께 다시 평가합니다. '
-            +'맞라인 점수 차가 작고 포지션 경험이 비슷한 배정 중에서, 최근에 덜 맡은 포지션을 우선합니다.<br>'
+            +'xoxo와 우주최강승원이 함께 출전하면 상대 팀의 같은 포지션에 배정합니다. 네 선수가 모두 출전하면 jhgogo와 찰스킹도 팀을 나누고, 균형이 비슷한 후보에서 맞라인을 우선합니다. '
+            +'그 안에서 최근에 덜 맡은 포지션을 우선합니다.<br>'
             +'<span style="color:#4ade80;font-size:.72rem">🎲 이번 생성 — 총 '+window._rosterResult.totalCombos.toLocaleString()+'개 조합 평가 → 균형 상위 '+window._rosterResult.poolSize+'개 후보 중 무작위 선택</span><br>'
             +'<span style="color:#818cf8;font-size:.72rem">⚖️ 승률 가중치 — 2026 × 5 · 2025 × 2 · 2024 × 0.5 (최근 기록 집중 반영) · 벤치(식스맨)도 균형 탐색에 포함되어 매번 달라질 수 있음</span>'
           +'</div>'
